@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2025 Analog Devices Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&i2c2_scl_p0_30 {
+	power-source = <MAX32_VSEL_VDDIOH>;
+};
+
+&i2c2_sda_p0_31 {
+	power-source = <MAX32_VSEL_VDDIOH>;
+};
+
+&i2c2 {
+	pinctrl-0 = <&i2c2_scl_p0_30 &i2c2_sda_p0_31>;
+	pinctrl-names = "default";
+	status = "okay";
+
+	max40109: max40109@4D {
+		status = "okay";
+    	compatible = "adi,max40109";
+    	reg = <0x4D>;
+  };
+};
