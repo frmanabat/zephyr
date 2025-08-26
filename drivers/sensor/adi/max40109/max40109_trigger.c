@@ -26,7 +26,6 @@ int max40109_trigger_set(const struct device *dev, const struct sensor_trigger *
     switch(trig->type) {
         
     }
-
 }
 
 int max40109_init_interrupt(const struct device *dev)

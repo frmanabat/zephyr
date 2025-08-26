@@ -104,21 +104,33 @@
 #define INT_UV_INP_PLUS_EN_MASK         BIT(1)
 #define INT_OV_INP_PLUS_EN_MASK         BIT(0)
 
+/** MTP Status Register Masks */
+#define MTP_BURN_DONE_MASK         BIT(7)
+#define MTP_ECC_ERR_2_BIT_MASK     BIT(6)
+#define MTP_ECC_ERR_1_BIT_MASK     BIT(5)
+#define MTP_VPP_INIT_FAIL_MASK     BIT(3)
+#define MTP_FULL_MASK              BIT(2)
+#define MTP_VERIFICATION_FAIL_MASK BIT(1)
+#define MTP_VPP_ACT_MASK           BIT(0)
+
 /** TEMP MODE Register Masks */
 #define DRV_SCALE_MASK GENMASK(4, 3)
-#define TEMP_MODE_MASK       GENMASK(2, 0)
+#define TEMP_MODE_MASK GENMASK(2, 0)
 
 /** SENSOR OFFSET CAL CONFIG Register Masks */
 #define CONNECT_TRIM_RESISTOR_MASK              BIT(2)
 #define CONNECT_OFFSET_CALIBRATION_CURRENT_MASK BIT(1)
 #define PGA_FUNCTIONALITY_MASK                  BIT(0)
 
+/** MTP DATA LENGTH */
+#define MAX40109_MTP_DATA_LENGTH 2
+
 struct max40109_config {
 	struct i2c_dt_spec i2c;
 
 #if defined(CONFIG_MAX40109_TRIGGER)
 	struct gpio_dt_spec interrupt_gpio;
-#endif  
+#endif
 };
 
 struct max40109_data {
@@ -133,10 +145,10 @@ struct max40109_data {
 	bool pressure_cal_bypass;
 	uint8_t pressure_rate;
 	uint8_t temperature_rate;
-    uint16_t uncalibrated_pressure;
-    uint16_t uncalibrated_temperature;
-    uint16_t calibrated_pressure;
-    uint16_t calibrated_temperature;
+	uint16_t uncalibrated_pressure;
+	uint16_t uncalibrated_temperature;
+	uint16_t calibrated_pressure;
+	uint16_t calibrated_temperature;
 	uint8_t digital_filter_setup;
 	uint8_t analog_filter_bw_setup;
 	uint8_t pga_pressure_gain;
@@ -148,26 +160,26 @@ struct max40109_data {
 	uint8_t pga_input_mux;
 
 #ifdef CONFIG_MAX40109_TRIGGER
-    const struct device *dev;
-    struct gpio_callback gpio_cb;
-    struct k_sem gpio_sem;
+	const struct device *dev;
+	struct gpio_callback gpio_cb;
+	struct k_sem gpio_sem;
 
-    sensor_trigger_handler_t drv_fault_handler;
-    sensor_trigger_handler_t int_fault_handler;
-    sensor_trigger_handler_t temp_data_rdy_handler;
-    sensor_trigger_handler_t pressure_data_rdy_handler;
-    sensor_trigger_handler_t uv_drv_handler;
-    sensor_trigger_handler_t ov_drv_handler;
-    sensor_trigger_handler_t uv_int_handler;
-    sensor_trigger_handler_t ov_int_handler;
-    sensor_trigger_handler_t uv_inp_minus_handler;
-    sensor_trigger_handler_t ov_inp_minus_handler;
-    sensor_trigger_handler_t uv_inp_plus_handler;
-    sensor_trigger_handler_t ov_inp_plus_handler;
-    
+	sensor_trigger_handler_t drv_fault_handler;
+	sensor_trigger_handler_t int_fault_handler;
+	sensor_trigger_handler_t temp_data_rdy_handler;
+	sensor_trigger_handler_t pressure_data_rdy_handler;
+	sensor_trigger_handler_t uv_drv_handler;
+	sensor_trigger_handler_t ov_drv_handler;
+	sensor_trigger_handler_t uv_int_handler;
+	sensor_trigger_handler_t ov_int_handler;
+	sensor_trigger_handler_t uv_inp_minus_handler;
+	sensor_trigger_handler_t ov_inp_minus_handler;
+	sensor_trigger_handler_t uv_inp_plus_handler;
+	sensor_trigger_handler_t ov_inp_plus_handler;
+
 #if defined(CONFIG_MAX40109_TRIGGER_OWN_THREAD)
-    struct k_thread thread;
-    K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_MAX40109_THREAD_STACK_SIZE);
+	struct k_thread thread;
+	K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_MAX40109_THREAD_STACK_SIZE);
 #elif defined(CONFIG_MAX40109_TRIGGER_GLOBAL_THREAD)
 	struct k_work work;
 #endif
