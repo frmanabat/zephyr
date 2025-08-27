@@ -116,10 +116,10 @@ int max40109_mtp_update(const struct device *dev, uint8_t mtp_addr, uint16_t mas
 	}
 
 	uint16_t reg = (reg_val[0] << 8) | reg_val[1]; // Combine MSB and LSB into a 16-bit value
-	reg &= ~mask;                 // Clear the bits specified by the mask
-	reg |= FIELD_PREP(mask, val); // Set the bits specified by val
-	reg_val[0] = (reg >> 8) & 0xFF; // MSB
-	reg_val[1] = reg & 0xFF;        // LSB
+	reg &= ~mask;                                  // Clear the bits specified by the mask
+	reg |= FIELD_PREP(mask, val);                  // Set the bits specified by val
+	reg_val[0] = (reg >> 8) & 0xFF;                // MSB
+	reg_val[1] = reg & 0xFF;                       // LSB
 
 	return max40109_mtp_write(dev, mtp_addr, reg_val);
 }
@@ -184,21 +184,20 @@ static int max40109_is_burn_successful(const struct device *dev)
 	ret = max40109_reg_read(dev, MAX40109_MTP_STATUS, &mtp_status, 1);
 	if (ret) {
 		return ret; // Error reading MTP status
-	}
-	else {
-
-	if (mtp_status & (MTP_ECC_ERR_2_BIT_MASK | MTP_ECC_ERR_1_BIT_MASK | MTP_VPP_INIT_FAIL_MASK |
-			  MTP_FULL_MASK | MTP_VERIFICATION_FAIL_MASK | MTP_VPP_ACT_MASK)) {
-		LOG_ERR("MTP ECC error detected");
-		return -EIO; // MTP ECC error detected
-	}
-	else if (mtp_status & MTP_BURN_DONE_MASK) {
-		LOG_INF("MTP burn successful");
-		return 0; // MTP burn completed successfully
 	} else {
-		LOG_ERR("MTP burn not completed successfully");
-		return -EIO; // MTP burn not completed successfully
-	}
+
+		if (mtp_status &
+		    (MTP_ECC_ERR_2_BIT_MASK | MTP_ECC_ERR_1_BIT_MASK | MTP_VPP_INIT_FAIL_MASK |
+		     MTP_FULL_MASK | MTP_VERIFICATION_FAIL_MASK | MTP_VPP_ACT_MASK)) {
+			LOG_ERR("MTP ECC error detected");
+			return -EIO; // MTP ECC error detected
+		} else if (mtp_status & MTP_BURN_DONE_MASK) {
+			LOG_INF("MTP burn successful");
+			return 0; // MTP burn completed successfully
+		} else {
+			LOG_ERR("MTP burn not completed successfully");
+			return -EIO; // MTP burn not completed successfully
+		}
 	}
 
 	return 0;
@@ -322,12 +321,12 @@ int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration
 }
 
 int max40109_mtp_calibration_read(const struct device *dev,
-				 enum max40109_calibration_coefficients coeff, float *value)
+				  enum max40109_calibration_coefficients coeff, float *value)
 {
 	const struct max40109_config *config = dev->config;
 	uint8_t mtp_addr = 0;
-	uint8_t buf_msb [2] = {0,0};
-	uint8_t buf_lsb [2] = {0,0};
+	uint8_t buf_msb[2] = {0, 0};
+	uint8_t buf_lsb[2] = {0, 0};
 	int ret = 0;
 
 	if (coeff < MAX40109_CALIBRATION_K0 || coeff > MAX40109_CALIBRATION_M3) {
@@ -421,7 +420,6 @@ int max40109_mtp_burn(const struct device *dev, uint8_t mtp_addr, const uint8_t 
 	const struct max40109_config *config = dev->config;
 	int ret = 0;
 
-
 	ret = max40109_mtp_initialize(dev);
 	if (ret < 0) {
 		return ret; // Error initializing MTP
@@ -477,6 +475,15 @@ static int max40109_init(const struct device *dev)
 		return ret;
 	}
 
+#ifdef CONFIG_MAX40109_TRIGGER
+	if (config->interrupt_gpio.port) {
+		if (max40109_init_interrupt(dev) < 0) {
+			LOG_ERR("Failed to initialize interrupts");
+			return -EIO;
+		}
+	}
+#endif
+
 	return 0;
 }
 
@@ -498,13 +505,12 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		if (pressure_rate < 1000 || pressure_rate > 16000) {
 			return -EINVAL; // Invalid pressure rate value
 		}
-		data->pressure_rate = pressure_rate;
 
 		int temperature_rate = val->val2;
 		if (temperature_rate < 1 || temperature_rate > 10) {
 			return -EINVAL; // Invalid temperature rate value
 		}
-		data->temperature_rate = temperature_rate;
+
 		if (pressure_rate == 1000 && temperature_rate == 1) {
 			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
 						 SENSOR_SAMPLING_RATE_MAX40109_1000HZ_1HZ);
@@ -565,8 +571,6 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			if (pressure_gain < 5) {
 				return -EINVAL; // Invalid gain value
 			}
-
-			data->pga_pressure_gain = pressure_gain;
 
 			if (pressure_gain == 5) {
 				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
@@ -679,8 +683,6 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			if (temperature_gain < 1) {
 				return -EINVAL;
 			}
-
-			data->pga_temperature_gain = temperature_gain;
 
 			if (temperature_gain == 1 && temperature_gain_decimal == 5) {
 				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
@@ -874,75 +876,146 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 	case SENSOR_ATTR_CALIB_TARGET:
 		int coeff = 0;
 		switch (chan) {
-			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K0:
-				coeff = MAX40109_CALIBRATION_K0;
-				break;
-			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K1:
-				coeff = MAX40109_CALIBRATION_K1;
-				break;
-			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K2:
-				coeff = MAX40109_CALIBRATION_K2;
-				break;
-			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K3:	
-				coeff = MAX40109_CALIBRATION_K3;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H0:
-				coeff = MAX40109_CALIBRATION_H0;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H1:
-				coeff = MAX40109_CALIBRATION_H1;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H2:
-				coeff = MAX40109_CALIBRATION_H2;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H3:
-				coeff = MAX40109_CALIBRATION_H3;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G0:
-				coeff = MAX40109_CALIBRATION_G0;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G1:
-				coeff = MAX40109_CALIBRATION_G1;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G2:
-				coeff = MAX40109_CALIBRATION_G2;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G3:
-				coeff = MAX40109_CALIBRATION_G3;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N0:
-				coeff = MAX40109_CALIBRATION_N0;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N1:
-				coeff = MAX40109_CALIBRATION_N1;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N2:
-				coeff = MAX40109_CALIBRATION_N2;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N3:
-				coeff = MAX40109_CALIBRATION_N3;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M0:
-				coeff = MAX40109_CALIBRATION_M0;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M1:
-				coeff = MAX40109_CALIBRATION_M1;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M2:
-				coeff = MAX40109_CALIBRATION_M2;
-				break;
-			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M3:
-				coeff = MAX40109_CALIBRATION_M3;
-				break;
-			default:
-				return -ENOTSUP; // Unsupported channel for calibration
-				break;
+		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K0:
+			coeff = MAX40109_CALIBRATION_K0;
+			break;
+		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K1:
+			coeff = MAX40109_CALIBRATION_K1;
+			break;
+		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K2:
+			coeff = MAX40109_CALIBRATION_K2;
+			break;
+		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K3:
+			coeff = MAX40109_CALIBRATION_K3;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H0:
+			coeff = MAX40109_CALIBRATION_H0;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H1:
+			coeff = MAX40109_CALIBRATION_H1;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H2:
+			coeff = MAX40109_CALIBRATION_H2;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H3:
+			coeff = MAX40109_CALIBRATION_H3;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G0:
+			coeff = MAX40109_CALIBRATION_G0;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G1:
+			coeff = MAX40109_CALIBRATION_G1;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G2:
+			coeff = MAX40109_CALIBRATION_G2;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G3:
+			coeff = MAX40109_CALIBRATION_G3;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N0:
+			coeff = MAX40109_CALIBRATION_N0;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N1:
+			coeff = MAX40109_CALIBRATION_N1;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N2:
+			coeff = MAX40109_CALIBRATION_N2;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N3:
+			coeff = MAX40109_CALIBRATION_N3;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M0:
+			coeff = MAX40109_CALIBRATION_M0;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M1:
+			coeff = MAX40109_CALIBRATION_M1;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M2:
+			coeff = MAX40109_CALIBRATION_M2;
+			break;
+		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M3:
+			coeff = MAX40109_CALIBRATION_M3;
+			break;
+		default:
+			return -ENOTSUP; // Unsupported channel for calibration
+			break;
 		}
 		float calibration_value = val->val1 + (val->val2 / 1000000.0f);
 
 		ret = max40109_mtp_calibration(dev, coeff, calibration_value, false);
 		if (ret < 0) {
 			return ret; // Error setting calibration coefficient
+		}
+		break;
+
+	case MAX40109_OVER_PRESSURE_THRESHOLD_POSITIVE:
+
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_over_pos = val->val1;
+
+		ret = max40109_mtp_update(dev, DIAG_DATA0, OVER_PRESSURE_POSITIVE_MASK,
+					  threshold_over_pos);
+		if (ret < 0) {
+			return ret; // Error setting over-pressure positive threshold
+		}
+		break;
+
+	case MAX40109_UNDER_PRESSURE_THRESHOLD_POSITIVE:
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_under_pos = val->val1;
+
+		ret = max40109_mtp_update(dev, DIAG_DATA0, UNDER_PRESSURE_POSITIVE_MASK,
+					  threshold_under_pos);
+		if (ret < 0) {
+			return ret; // Error setting under-pressure threshold
+		}
+		break;
+
+	case MAX40109_OVER_PRESSURE_THRESHOLD_NEGATIVE:
+
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_over_neg = val->val1;
+
+		ret = max40109_mtp_update(dev, DIAG_DATA1, OVER_PRESSURE_NEGATIVE_MASK,
+					  threshold_over_neg);
+		if (ret < 0) {
+			return ret; // Error setting over-pressure negative threshold
+		}
+		break;
+
+	case MAX40109_UNDER_PRESSURE_THRESHOLD_NEGATIVE:
+
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_under_neg = val->val1;
+
+		ret = max40109_mtp_update(dev, DIAG_DATA1, UNDER_PRESSURE_NEGATIVE_MASK,
+					  threshold_under_neg);
+		if (ret < 0) {
+			return ret; // Error setting under-pressure negative threshold
 		}
 		break;
 
@@ -1012,11 +1085,57 @@ static DEVICE_API(sensor, max40109_driver_api) = {
 #endif
 };
 
+#define MAX40109_CONFIG(inst)                                                                      \
+	.digital_filter_setup = DT_INST_PROP(inst, digital_filter),                                \
+	.alert_mode = DT_INST_PROP(inst, alert_mode),                                              \
+	.temp_current = DT_INST_PROP(inst, temp_current),                                          \
+	.pga_pressure_gain = DT_INST_PROP(inst, pga_pressure_gain),                                \
+	.current_source = DT_INST_PROP(inst, current_source),                                      \
+	.adc_sample_rate = DT_INST_PROP(inst, adc_sample_rate),                                    \
+	.pga_temperature_gain = DT_INST_PROP(inst, pga_temperature_gain),                          \
+	.bridge_drive = DT_INST_PROP(inst, bridge_drive),                                          \
+	.temp_mode = DT_INST_PROP(inst, temp_mode), .drv_scale = DT_INST_PROP(inst, drv_scale),    \
+	.analog_filter_bw_setup = DT_INST_PROP(inst, analog_filter_bw),                            \
+	.analog_output_stage = DT_INST_PROP(inst, analog_output_stage),                            \
+	.k0 = (float)DT_INST_PROP(inst, k0) / 1000.0f,                                             \
+	.k1 = (float)DT_INST_PROP(inst, k1) / 1000.0f,                                             \
+	.k2 = (float)DT_INST_PROP(inst, k2) / 1000.0f,                                             \
+	.k3 = (float)DT_INST_PROP(inst, k3) / 1000.0f,                                             \
+	.h0 = (float)DT_INST_PROP(inst, h0) / 1000.0f,                                             \
+	.h1 = (float)DT_INST_PROP(inst, h1) / 1000.0f,                                             \
+	.h2 = (float)DT_INST_PROP(inst, h2) / 1000.0f,                                             \
+	.h3 = (float)DT_INST_PROP(inst, h3) / 1000.0f,                                             \
+	.g0 = (float)DT_INST_PROP(inst, g0) / 1000.0f,                                             \
+	.g1 = (float)DT_INST_PROP(inst, g1) / 1000.0f,                                             \
+	.g2 = (float)DT_INST_PROP(inst, g2) / 1000.0f,                                             \
+	.g3 = (float)DT_INST_PROP(inst, g3) / 1000.0f,                                             \
+	.n0 = (float)DT_INST_PROP(inst, n0) / 1000.0f,                                             \
+	.n1 = (float)DT_INST_PROP(inst, n1) / 1000.0f,                                             \
+	.n2 = (float)DT_INST_PROP(inst, n2) / 1000.0f,                                             \
+	.n3 = (float)DT_INST_PROP(inst, n3) / 1000.0f,                                             \
+	.m0 = (float)DT_INST_PROP(inst, m0) / 1000.0f,                                             \
+	.m1 = (float)DT_INST_PROP(inst, m1) / 1000.0f,                                             \
+	.m2 = (float)DT_INST_PROP(inst, m2) / 1000.0f,                                             \
+	.m3 = (float)DT_INST_PROP(inst, m3) / 1000.0f,                                             \
+	.overpressure_threshold_positive = DT_INST_PROP(inst, overpressure_threshold_pos),         \
+	.underpressure_threshold_positive = DT_INST_PROP(inst, underpressure_threshold_pos),       \
+	.overpressure_threshold_negative = DT_INST_PROP(inst, overpressure_threshold_neg),         \
+	.underpressure_threshold_negative = DT_INST_PROP(inst, underpressure_threshold_neg),       \
+	.overvoltage_temperature = DT_INST_PROP(inst, overtemp_threshold),                         \
+	.undervoltage_temperature = DT_INST_PROP(inst, undertemp_threshold),                       \
+	.overvoltage_drive = DT_INST_PROP(inst, overvoltage_drv),                                  \
+	.undervoltage_drive = DT_INST_PROP(inst, undervoltage_drv), \
+	.primary_threshold_pressure_value = DT_INST_PROP(inst, primary_threshold_pressure_value),       \
+	.hysteresis_threshold_pressure_value = DT_INST_PROP(inst, hysteresis_threshold_pressure_value)
+
+
 #define MAX40109_DEFINE(inst)                                                                      \
 	static struct max40109_data max40109_prv_data_##inst;                                      \
 	static const struct max40109_config max40109_config_##inst = {                             \
 		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
-	};                                                                                         \
+		MAX40109_CONFIG(inst),                                                             \
+		IF_ENABLED(CONFIG_MAX40109_TRIGGER, (.interrupt_gpio = GPIO_DT_SPEC_INST_GET_OR(        \
+			inst, interrupt_gpios, {0}),)) };        \
 	SENSOR_DEVICE_DT_INST_DEFINE(inst, &max40109_init, NULL, &max40109_prv_data_##inst,        \
 				     &max40109_config_##inst, POST_KERNEL,                         \
 				     CONFIG_SENSOR_INIT_PRIORITY, &max40109_driver_api);

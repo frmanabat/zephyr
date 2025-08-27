@@ -8,6 +8,12 @@ menuconfig MAX40109
 
 if MAX40109
 
+config MAX40109_CALIBRATION
+	bool "Enable calibration"
+	default y
+	help
+	  Enable MTP Calibration
+
 config MAX40109_TRIGGER
 	bool
 

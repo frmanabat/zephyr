@@ -12,3 +12,367 @@ include: [sensor-device.yaml, i2c-device.yaml]
 properties:
   reg:
     required: true
+  
+  interrupt-gpios:
+    required: false
+    type: phandle
+    description: "GPIO connected to the INT pin of the MAX40109 device."
+  
+  digital-filter:
+    default: 0 
+    type: int
+    description: Digital filter setting. Average among Samples = 2^(N+1)
+    enum:
+      - 0x00 # No Average
+      - 0x01 # Average among 4 samples
+      - 0x02 # Average among 8 samples
+      - 0x03 # Average among 16 samples
+      - 0x04 # Average among 32 samples
+      - 0x05 # Average among 64 samples
+      - 0x06 # Average among 128 samples
+
+  alert-mode:
+    default: 0x00
+    type: int
+    description: Alert mode setting.
+    enum:
+      - 0x00 # ALERT issues interrupts
+      - 0x01 # ALERT issues temperature data in PWM fashion
+      - 0x02 # ALERT issues pressure digital output - case 1
+      - 0x03 # ALERT issues pressure digital output - case 2
+      - 0x04 # ALERT issues pressure digital output - case 3
+      - 0x05 # ALERT issues pressure digital output - case 4
+      - 0x06 # Not Used
+      - 0x07 # Not Used
+  
+  temp-current:
+    default: 0x00
+    type: int
+    description: Temperature sensor current setting.
+    enum:
+      - 0x00 # 150uA
+      - 0x01 # 250uA
+      - 0x02 # 500uA
+      - 0x03 # 750uA
+  pga-pressure-gain:
+    default: 0x0F
+    type: int
+    description: Pressure PGA gain setting.
+    enum:
+      - 0x0F # Gain = 5
+      - 0x00 # Gain = 10
+      - 0x01 # Gain = 15
+      - 0x02 # Gain = 20
+      - 0x03 # Gain = 24
+      - 0x04 # Gain = 40
+      - 0x05 # Gain = 60
+      - 0x06 # Gain = 72
+      - 0x07 # Gain = 90
+      - 0x08 # Gain = 108
+      - 0x09 # Gain = 126
+      - 0x0A # Gain = 144
+      - 0x0B # Gain = 160
+      - 0x0C # Gain = 180
+      - 0x0D # Gain = 200
+      - 0x0E # Gain = 252
+      - 0x10 # Gain = 540
+      - 0x11 # Gain = 1080
+      - 0x12 # Gain = 1440
+      - 0x13 # Gain = 2520
+
+  current-source:
+    default: 0
+    type: int
+    description: Current source setting.
+    enum:
+      - 0x00 # 250uA
+      - 0x01 # 300uA
+      - 0x02 # 400uA
+      - 0x03 # 450uA
+      - 0x04 # 500uA
+      - 0x05 # 550uA
+      - 0x06 # 650uA
+      - 0x07 # 750uA
+
+  adc-sample-rate:
+    default: 0
+    type: int
+    description: ADC sample rate setting for pressure and temperature measurements.
+    enum:
+      - 0x00 # Pressure: 1kSPS, Temperature: 1SPS
+      - 0x01 # Pressure: 1kSPS, Temperature: 10SPS
+      - 0x02 # Pressure: 2kSPS, Temperature: 1SPS
+      - 0x03 # Pressure: 2kSPS, Temperature: 10SPS
+      - 0x04 # Pressure: 4kSPS, Temperature: 1SPS
+      - 0x05 # Pressure: 4kSPS, Temperature: 10SPS
+      - 0x06 # Pressure: 8kSPS, Temperature: 1SPS
+      - 0x07 # Pressure: 8kSPS, Temperature: 10SPS
+      - 0x08 # Pressure: 16kSPS, Temperature: 1SPS
+      - 0x09 # Pressure: 16kSPS, Temperature: 10SPS 
+
+  pga-temperature-gain:
+    default: 0x00
+    type: int
+    description: Temperature PGA gain setting.
+    enum:
+      - 0x00 # Gain = 1.5
+      - 0x01 # Gain = 2
+      - 0x02 # Gain = 3
+      - 0x03 # Gain = 5
+      - 0x04 # Gain = 6
+      - 0x05 # Gain = 10
+      - 0x06 # Gain = 15
+      - 0x07 # Gain = 20
+      - 0x08 # Gain = 24
+      - 0x09 # Gain = 30
+      - 0x0A # Gain = 36
+      - 0x0B # Gain = 40
+      - 0x0C # Gain = 45
+      - 0x0D # Gain = 60
+      - 0x0E # Gain = 72
+      - 0x0F # Gain = 90
+
+  bridge-drive:
+    default: 0x00
+    type: int
+    description: Bridge drive setting.
+    enum:
+      - 0x00 # Disconnected, Default mode at device power up
+      - 0x01 # Current Source, The ADC reference is connected to the internal reference
+      - 0x02 # Voltage Source at 4V, The ADC reference is connected to the bridge voltage
+      - 0x03 # Voltage Source at 3.3V, The ADC reference is connected to the bridge voltage
+      - 0x04 # Voltage Source at 1.8V, The ADC reference is connected to the bridge voltage
+      - 0x05 # Voltage Source at 2.3V, The ADC reference is connected to the bridge voltage
+
+  temp-mode:
+    default: 0x00
+    type: int
+    description: Temperature measurement mode.
+    enum:
+      - 0x00 # Single-ended with G = 1. Input Pin: INT
+      - 0x01 # Single-ended with G > 1. Input Pin: INT
+      - 0x02 # Differential with DAC’s Offset. Input Pin: INT
+      - 0x03 # Single-ended with G = 1. Input Pin: DRV
+      - 0x04 # Differential with DAC’s Offset. Input Pin: DRV
+      - 0x05 # Not Used
+      - 0x06 # Not Used
+      - 0x07 # Not Used
+
+  drv-scale:
+    default: 0x00
+    type: int
+    description: DRV Input scale setting.
+    enum:
+        - 0x00 # 1.0x
+        - 0x01 # 0.5x
+        - 0x02 # 0.375x
+        - 0x03 # 0.25x
+  analog-filter-bw:
+    default: 0 
+    type: int
+    description: Analog filter bandwidth setting.
+    enum:
+        - 0x00 # 1.2kHz
+        - 0x01 # 9kHz
+        - 0x02 # 37kHz
+        - 0x03 # 45kHz
+
+  analog-output-stage:
+    default: 0x00
+    type: int
+    enum:
+      - 0x00 # Disabled
+      - 0x02
+      - 0x03
+      - 0x04
+      - 0x05
+      - 0x06
+      - 0x07
+      - 0x08
+      - 0x09
+      - 0x0A
+      - 0x0B
+      - 0x0C
+      - 0x0D
+      - 0x0E
+      - 0x0F
+
+  k0:
+    required: false
+    type: int
+    description: Calibration coefficient K0 for Temperature calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  k1:
+    required: false
+    type: int
+    description: Calibration coefficient K1 for Temperature calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  k2:
+    required: false
+    type: int
+    description: Calibration coefficient K2 for Temperature calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  k3:
+    required: false
+    type: int
+    description: Calibration coefficient K3 for Temperature calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  h0:
+    required: false
+    type: int
+    description: Calibration coefficient H0 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  h1:
+    required: false
+    type: int
+    description: Calibration coefficient H1 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  h2:
+    required: false
+    type: int
+    description: Calibration coefficient H2 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  h3:
+    required: false
+    type: int
+    description: Calibration coefficient H3 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+
+  g0:
+    required: false
+    type: int
+    description: Calibration coefficient G0 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  g1:
+    required: false
+    type: int
+    description: Calibration coefficient G1 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  g2:
+    required: false
+    type: int
+    description: Calibration coefficient G2 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  g3:
+    required: false
+    type: int
+    description: Calibration coefficient G3 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  n0:
+    required: false
+    type: int
+    description: Calibration coefficient N0 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  n1:
+    required: false
+    type: int
+    description: Calibration coefficient N1 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  n2:
+    required: false
+    type: int
+    description: Calibration coefficient N2 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  n3:
+    required: false
+    type: int
+    description: Calibration coefficient N3 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  m0:
+    required: false
+    type: int
+    description: Calibration coefficient M0 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  m1:
+    required: false
+    type: int
+    description: Calibration coefficient M1 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  m2:
+    required: false
+    type: int
+    description: Calibration coefficient M2 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+  
+  m3:
+    required: false
+    type: int
+    description: Calibration coefficient M3 for Pressure calculation in thousandths. Default value is 0 (0.0).
+    default: 0
+
+  overpressure-threshold-pos:
+    required: false
+    type: int
+    description: Overpressure threshold positive limit in Pa. Default value is 0 (disabled).
+    default: 0
+  
+  underpressure-threshold-pos:
+    required: false
+    type: int
+    description: Underpressure threshold positive limit in Pa. Default value is 0 (disabled).
+    default: 0
+  
+  overpressure-threshold-neg:
+    required: false
+    type: int
+    description: Overpressure threshold negative limit in Pa. Default value is 0 (disabled).
+    default: 0
+
+  underpressure-threshold-neg:
+    required: false
+    type: int
+    description: Underpressure threshold negative limit in Pa. Default value is 0 (disabled).
+    default: 0
+  
+  overtemp-threshold:
+    required: false
+    type: int
+    description: Overtemperature threshold in degree Celsius. Default value is 0 (disabled).
+    default: 0
+
+  undertemp-threshold:
+    required: false
+    type: int
+    description: Undertemperature threshold in degree Celsius. Default value is 0 (disabled).
+    default: 0
+  
+  overvoltage-drv:
+    required: false
+    type: int
+    description: Overvoltage threshold for DRV pin. Default value is 0 (disabled).
+    default: 0
+
+  undervoltage-drv:
+    required: false
+    type: int
+    description: Undervoltage threshold for DRV pin. Default value is 0 (disabled).
+    default: 0
+  
+  primary-threshold-pressure-value:
+    required: false
+    type: int
+    description: Primary threshold pressure value in Pa for ALERT pin functionality. Default value is 0 (disabled).
+    default: 0
+
+  hysteresis-threshold-pressure-value:
+    required: false
+    type: int
+    description: Hysteresis for pressure threshold in Pa. Default value is 0.
+    default: 0

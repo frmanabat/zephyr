@@ -131,33 +131,93 @@ struct max40109_config {
 #if defined(CONFIG_MAX40109_TRIGGER)
 	struct gpio_dt_spec interrupt_gpio;
 #endif
+	uint8_t digital_filter_setup;
+	uint8_t alert_mode;
+	uint8_t temp_current;
+	uint8_t pga_pressure_gain;
+	uint8_t current_source;
+	uint8_t adc_sample_rate;
+	uint8_t pga_temperature_gain;
+	uint8_t analog_filter_bw_setup;
+	uint8_t bridge_drive;
+	uint8_t temp_mode;
+	uint8_t drv_scale;
+	uint8_t analog_filter_bw;
+	uint8_t analog_output_stage;
+	uint8_t pga_input_mux;
+
+	/** Calibration Coefficients */
+
+	/** Temperature Calibration Coefficients */
+	float k0;
+	float k1;
+	float k2;
+	float k3;
+
+	/** Zeroth-Order Pressure Calibration Coefficient */
+	float h0;
+	float h1;
+	float h2;
+	float h3;
+
+	/**	First-Order Pressure Calibration Coefficient */
+	float g0;
+	float g1;
+	float g2;
+	float g3;
+
+	/** Second-Order Pressure Calibration Coefficient */
+	float n0;
+	float n1;
+	float n2;
+	float n3;
+
+	/** Third-Order Pressure Calibration Coefficient */
+	float m0;
+	float m1;
+	float m2;
+	float m3;
+
+	/** Overpressure Threshold Positive */
+	uint8_t overpressure_threshold_positive;
+
+	/** Underpressure Threshold Positive */
+	uint8_t underpressure_threshold_positive;
+
+	/** Overpressure Threshold Negative */
+	uint8_t overpressure_threshold_negative;
+
+	/** Underpressure Threshold Negative */
+	uint8_t underpressure_threshold_negative;
+
+	/** Overvoltage Temperature */
+	uint8_t overvoltage_temperature;
+
+	/** Undervoltage Temperature */
+	uint8_t undervoltage_temperature;
+
+	/** Overvoltage Drive */
+	uint8_t overvoltage_drive;
+
+	/** Undervoltage Drive */
+	uint8_t undervoltage_drive;
+
+	/** Primary Threshold Pressure Value */
+	uint8_t primary_threshold_pressure_value;
+
+	/** Hysteresis Threshold Pressure Value */
+	uint8_t hysteresis_threshold_pressure_value;
 };
 
 struct max40109_data {
 	uint8_t status_msb;
 	uint8_t status_lsb;
-	uint8_t config_msb;
-	uint8_t config_lsb;
-	uint8_t interrupt_enable_msb;
-	uint8_t interrupt_enable_lsb;
-
 	bool temp_cal_bypass;
 	bool pressure_cal_bypass;
-	uint8_t pressure_rate;
-	uint8_t temperature_rate;
 	uint16_t uncalibrated_pressure;
 	uint16_t uncalibrated_temperature;
 	uint16_t calibrated_pressure;
 	uint16_t calibrated_temperature;
-	uint8_t digital_filter_setup;
-	uint8_t analog_filter_bw_setup;
-	uint8_t pga_pressure_gain;
-	uint8_t pga_temperature_gain;
-	uint8_t current_source_reference_resistor;
-	uint8_t ref_internal_external_sel;
-	uint8_t alert_mode;
-	uint8_t temp_current;
-	uint8_t pga_input_mux;
 
 #ifdef CONFIG_MAX40109_TRIGGER
 	const struct device *dev;
