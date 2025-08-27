@@ -105,7 +105,7 @@ int max40109_mtp_write(const struct device *dev, uint8_t mtp_addr, const uint8_t
 					   MAX40109_MTP_DATA_LENGTH);
 }
 
-int max40109_mtp_update(const struct device *dev, uint8_t mtp_addr, uint8_t mask, uint8_t val)
+int max40109_mtp_update(const struct device *dev, uint8_t mtp_addr, uint16_t mask, uint16_t val)
 {
 	uint8_t reg_val[2] = {0};
 	int ret;
@@ -115,8 +115,11 @@ int max40109_mtp_update(const struct device *dev, uint8_t mtp_addr, uint8_t mask
 		return ret; // Error reading MTP data
 	}
 
-	reg_val[0] &= ~mask;                 // Clear the bits specified by the mask
-	reg_val[0] |= FIELD_PREP(mask, val); // Set the bits specified by val
+	uint16_t reg = (reg_val[0] << 8) | reg_val[1]; // Combine MSB and LSB into a 16-bit value
+	reg &= ~mask;                 // Clear the bits specified by the mask
+	reg |= FIELD_PREP(mask, val); // Set the bits specified by val
+	reg_val[0] = (reg >> 8) & 0xFF; // MSB
+	reg_val[1] = reg & 0xFF;        // LSB
 
 	return max40109_mtp_write(dev, mtp_addr, reg_val);
 }
@@ -484,12 +487,6 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 	struct max40109_data *data = dev->data;
 
 	int ret = 0;
-
-	/* Support only SENSOR_CHAN_PRESSURE and SENSOR_CHAN_TEMP */
-	if (chan != SENSOR_CHAN_ALL || chan != SENSOR_CHAN_PRESS ||
-	    chan != SENSOR_CHAN_AMBIENT_TEMP) {
-		return -ENOTSUP;
-	}
 
 	switch (attr) {
 	case SENSOR_ATTR_SAMPLING_FREQUENCY:
@@ -872,6 +869,81 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			}
 		}
 
+		break;
+
+	case SENSOR_ATTR_CALIB_TARGET:
+		int coeff = 0;
+		switch (chan) {
+			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K0:
+				coeff = MAX40109_CALIBRATION_K0;
+				break;
+			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K1:
+				coeff = MAX40109_CALIBRATION_K1;
+				break;
+			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K2:
+				coeff = MAX40109_CALIBRATION_K2;
+				break;
+			case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K3:	
+				coeff = MAX40109_CALIBRATION_K3;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H0:
+				coeff = MAX40109_CALIBRATION_H0;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H1:
+				coeff = MAX40109_CALIBRATION_H1;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H2:
+				coeff = MAX40109_CALIBRATION_H2;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H3:
+				coeff = MAX40109_CALIBRATION_H3;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G0:
+				coeff = MAX40109_CALIBRATION_G0;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G1:
+				coeff = MAX40109_CALIBRATION_G1;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G2:
+				coeff = MAX40109_CALIBRATION_G2;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G3:
+				coeff = MAX40109_CALIBRATION_G3;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N0:
+				coeff = MAX40109_CALIBRATION_N0;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N1:
+				coeff = MAX40109_CALIBRATION_N1;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N2:
+				coeff = MAX40109_CALIBRATION_N2;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N3:
+				coeff = MAX40109_CALIBRATION_N3;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M0:
+				coeff = MAX40109_CALIBRATION_M0;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M1:
+				coeff = MAX40109_CALIBRATION_M1;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M2:
+				coeff = MAX40109_CALIBRATION_M2;
+				break;
+			case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M3:
+				coeff = MAX40109_CALIBRATION_M3;
+				break;
+			default:
+				return -ENOTSUP; // Unsupported channel for calibration
+				break;
+		}
+		float calibration_value = val->val1 + (val->val2 / 1000000.0f);
+
+		ret = max40109_mtp_calibration(dev, coeff, calibration_value, false);
+		if (ret < 0) {
+			return ret; // Error setting calibration coefficient
+		}
 		break;
 
 	default:
