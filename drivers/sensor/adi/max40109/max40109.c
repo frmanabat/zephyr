@@ -75,6 +75,10 @@ int max40109_mtp_read(const struct device *dev, uint8_t mtp_addr, uint8_t *val)
 	const struct max40109_config *config = dev->config;
 	int ret = 0;
 
+	ret = max40109_reg_write(dev, MAX40109_MTP_CONTROL, 0x10);
+	if (ret < 0) {
+		return ret; // Error writing MTP control register
+	}
 	ret = max40109_reg_write(dev, MAX40109_MTP_PROT_ADDR, mtp_addr);
 	if (ret < 0) {
 		return ret; // Error reading MTP protection address
@@ -88,6 +92,10 @@ int max40109_mtp_write(const struct device *dev, uint8_t mtp_addr, const uint8_t
 	const struct max40109_config *config = dev->config;
 	int ret = 0;
 
+	ret = max40109_reg_write(dev, MAX40109_MTP_CONTROL, 0x10);
+	if (ret < 0) {
+		return ret; // Error writing MTP control register
+	}
 	ret = max40109_reg_write(dev, MAX40109_MTP_PROT_ADDR, mtp_addr);
 	if (ret < 0) {
 		return ret; // Error writing MTP protection address
@@ -122,171 +130,72 @@ static void coeff_hex_to_bytes(const uint32_t hex, uint8_t *buf_msb, uint8_t *bu
 	buf_lsb[1] = hex & 0xFF; // LSB
 }
 
-static bool max40109_is_mtp_initialized(const struct device *dev)
-{
-	const struct max40109_config *config = dev->config;
-	int ret;
-	uint8_t buf[2] = {0, 0};
-
-	ret = max40109_reg_read(dev, MAX40109_CP_CONTROL_1, buf[0], 1);
-	if (ret < 0) {
-		LOG_ERR("Failed to read CP_CONTROL_1 register");
-		return false; // Error reading CP_CONTROL_1 register
-	}
-
-	if (buf[0] & 0x80) {
-		LOG_INF("CP_CONTROL_1 register is initialized");
-	} else {
-		LOG_ERR("CP_CONTROL_1 register is not initialized");
-		return false; // CP_CONTROL_1 register not initialized
-	}
-
-	ret = max40109_reg_read(dev, MAX40109_CP_CONTROL_2, buf[0], 1);
-	if (ret < 0) {
-		LOG_ERR("Failed to read CP_CONTROL_2 register");
-		return false; // Error reading CP_CONTROL_2 register
-	}
-	if (buf[0] & 0x1B) {
-		LOG_INF("CP_CONTROL_2 register is initialized");
-	} else {
-		LOG_ERR("CP_CONTROL_2 register is not initialized");
-		return false; // CP_CONTROL_2 register not initialized
-	}
-
-	ret = max40109_reg_read(dev, MAX40109_SLP_MR, buf, 2);
-	if (ret < 0) {
-		LOG_ERR("Failed to read SLP_MR register");
-		return false; // Error reading SLP_MR register
-	}
-	if (buf[0] == 0x03 && buf[1] == 0x02) {
-		LOG_INF("SLP_MR register is initialized");
-	} else {
-		LOG_ERR("SLP_MR register is not initialized");
-		return false; // SLP_MR register not initialized
-	}
-	ret = max40109_reg_read(dev, MAX40109_SLP_MREF, buf, 2);
-	if (ret < 0) {
-		LOG_ERR("Failed to read SLP_MREF register");
-		return false; // Error reading SLP_MREF register
-	}
-	if (buf[0] == 0x02 && buf[1] == 0x00) {
-		LOG_INF("SLP_MREF register is initialized");
-	} else {
-		LOG_ERR("SLP_MREF register is not initialized");
-		return false; // SLP_MREF register not initialized
-	}
-	ret = max40109_reg_read(dev, MAX40109_SLP_MRV_MSB, buf, 2);
-	if (ret < 0) {
-		LOG_ERR("Failed to read SLP_MRV register");
-		return false; // Error reading SLP_MRV register
-	}
-	if (buf[0] == 0x03 && buf[1] == 0x00) {
-		LOG_INF("SLP_MRV register is initialized");
-	} else {
-		LOG_ERR("SLP_MRV register is not initialized");
-		return false; // SLP_MRV register not initialized
-	}
-	ret = max40109_reg_read(dev, MAX40109_SLP_MREFV_MSB, buf, 2);
-	if (ret < 0) {
-		LOG_ERR("Failed to read SLP_MREFV register");
-		return false; // Error reading SLP_MREFV register
-	}
-	if (buf[0] == 0x04 && buf[1] == 0x01) {
-		LOG_INF("SLP_MREFV register is initialized");
-	} else {
-		LOG_ERR("SLP_MREFV register is not initialized");
-		return false; // SLP_MREFV register not initialized
-	}
-	return true; // All registers are initialized
-}
-
 int max40109_mtp_initialize(const struct device *dev)
 {
 	const struct max40109_config *config = dev->config;
 	int ret = 0;
 
-	if (!max40109_is_mtp_initialized(dev)) {
-		LOG_INF("MTP is not initialized, initializing now");
+	ret = max40109_reg_write(dev, MAX40109_CP_CONTROL_1, 0x80);
+	if (ret) {
+		return ret;
+	}
 
-		ret = max40109_reg_write(dev, MAX40109_CP_CONTROL_1, 0x80);
-		if (ret) {
-			return ret;
-		}
+	ret = max40109_reg_write(dev, MAX40109_CP_CONTROL_2, 0x1B);
+	if (ret) {
+		return ret;
+	}
 
-		ret = max40109_reg_write(dev, MAX40109_CP_CONTROL_2, 0x1B);
-		if (ret) {
-			return ret;
-		}
+	uint8_t slp_mr[2] = {0x03, 0x02};
+	ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MR, slp_mr, 2);
+	if (ret < 0) {
+		return ret; // Error writing SLP_MR register
+	}
 
-		uint8_t slp_mr[2] = {0x03, 0x02};
-		ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MR, slp_mr, 2);
-		if (ret < 0) {
-			return ret; // Error writing SLP_MR register
-		}
+	uint8_t slp_mref[2] = {0x02, 0x00};
+	ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MREF, slp_mref, 2);
+	if (ret < 0) {
+		return ret; // Error writing SLP_MREF register
+	}
 
-		uint8_t slp_mref[2] = {0x02, 0x00};
-		ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MREF, slp_mref, 2);
-		if (ret < 0) {
-			return ret; // Error writing SLP_MREF register
-		}
+	uint8_t slp_mrv[2] = {0x03, 0x00};
+	ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MRV_MSB, slp_mrv, 2);
+	if (ret < 0) {
+		return ret; // Error writing SLP_MRV register
+	}
 
-		uint8_t slp_mrv[2] = {0x03, 0x00};
-		ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MRV_MSB, slp_mrv, 2);
-		if (ret < 0) {
-			return ret; // Error writing SLP_MRV register
-		}
-
-		uint8_t slp_mrefv[2] = {0x04, 0x01};
-		ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MREFV_MSB, slp_mrefv, 2);
-		if (ret < 0) {
-			return ret; // Error writing SLP_MREFV register
-		}
-	} else {
-		LOG_INF("MTP is already initialized");
+	uint8_t slp_mrefv[2] = {0x04, 0x01};
+	ret = max40109_reg_write_multiple(dev, MAX40109_SLP_MREFV_MSB, slp_mrefv, 2);
+	if (ret < 0) {
+		return ret; // Error writing SLP_MREFV register
 	}
 
 	return 0;
 }
 
-static bool max40109_is_burn_successful(const struct device *dev)
+static int max40109_is_burn_successful(const struct device *dev)
 {
 	const struct max40109_config *config = dev->config;
 	uint8_t mtp_status = 0;
 	int ret;
 
 	ret = max40109_reg_read(dev, MAX40109_MTP_STATUS, &mtp_status, 1);
-	if (ret < 0) {
-		return false; // Error reading MTP status
+	if (ret) {
+		return ret; // Error reading MTP status
 	}
+	else {
 
-	if (mtp_status & MTP_VPP_ACT_MASK) {
-		LOG_ERR("VPP activation failed, MTP burn not successful");
-		return false; // MTP burn failed, VPP activation error
+	if (mtp_status & (MTP_ECC_ERR_2_BIT_MASK | MTP_ECC_ERR_1_BIT_MASK | MTP_VPP_INIT_FAIL_MASK |
+			  MTP_FULL_MASK | MTP_VERIFICATION_FAIL_MASK | MTP_VPP_ACT_MASK)) {
+		LOG_ERR("MTP ECC error detected");
+		return -EIO; // MTP ECC error detected
 	}
-
-	if (mtp_status & MTP_VERIFICATION_FAIL_MASK) {
-		LOG_ERR("MTP verification failed, MTP burn not successful");
-		return false; // MTP burn failed, verification error
-	}
-
-	if (mtp_status & MTP_FULL_MASK) {
-		LOG_ERR("MTP is full, cannot burn new data");
-		return false; // MTP is full, cannot burn new data
-	}
-	if (mtp_status & MTP_ECC_ERR_1_BIT_MASK) {
-		LOG_ERR("MTP ECC error detected, MTP burn not successful");
-		return false; // MTP burn failed, ECC error
-	}
-	if (mtp_status & MTP_ECC_ERR_2_BIT_MASK) {
-		LOG_ERR("MTP ECC error detected, MTP burn not successful");
-		return false; // MTP burn failed, ECC error
-	}
-	if (mtp_status & MTP_BURN_DONE_MASK) {
+	else if (mtp_status & MTP_BURN_DONE_MASK) {
 		LOG_INF("MTP burn successful");
-		return true; // MTP burn completed successfully
+		return 0; // MTP burn completed successfully
 	} else {
 		LOG_ERR("MTP burn not completed successfully");
-		return false; // MTP burn not completed successfully
+		return -EIO; // MTP burn not completed successfully
+	}
 	}
 
 	return 0;
@@ -308,15 +217,9 @@ int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration
 	}
 	coeff_hex_to_bytes(hex, buf_msb, buf_lsb);
 
-	if (!max40109_is_mtp_initialized(dev)) {
-		LOG_ERR("MTP is not initialized, cannot perform calibration");
-		ret = max40109_mtp_initialize(dev);
-		if (ret < 0) {
-			return ret; // Error initializing MTP
-		}
-		LOG_INF("MTP initialized successfully, proceeding with calibration");
-	} else {
-		LOG_INF("MTP is already initialized, proceeding with calibration");
+	ret = max40109_mtp_initialize(dev);
+	if (ret < 0) {
+		return ret; // Error initializing MTP
 	}
 
 	switch (coeff) {
@@ -415,20 +318,110 @@ int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration
 	return 0; // Success
 }
 
+int max40109_mtp_calibration_read(const struct device *dev,
+				 enum max40109_calibration_coefficients coeff, float *value)
+{
+	const struct max40109_config *config = dev->config;
+	uint8_t mtp_addr = 0;
+	uint8_t buf_msb [2] = {0,0};
+	uint8_t buf_lsb [2] = {0,0};
+	int ret = 0;
+
+	if (coeff < MAX40109_CALIBRATION_K0 || coeff > MAX40109_CALIBRATION_M3) {
+		LOG_ERR("Invalid calibration coefficient");
+		return -EINVAL; // Invalid coefficient
+	}
+
+	switch (coeff) {
+	case MAX40109_CALIBRATION_K0:
+		mtp_addr = CAL_DATA0;
+		break;
+	case MAX40109_CALIBRATION_K1:
+		mtp_addr = CAL_DATA2;
+		break;
+	case MAX40109_CALIBRATION_K2:
+		mtp_addr = CAL_DATA4;
+		break;
+	case MAX40109_CALIBRATION_K3:
+		mtp_addr = CAL_DATA6;
+		break;
+	case MAX40109_CALIBRATION_H0:
+		mtp_addr = CAL_DATA8;
+		break;
+	case MAX40109_CALIBRATION_H1:
+		mtp_addr = CAL_DATA10;
+		break;
+	case MAX40109_CALIBRATION_H2:
+		mtp_addr = CAL_DATA12;
+		break;
+	case MAX40109_CALIBRATION_H3:
+		mtp_addr = CAL_DATA14;
+		break;
+	case MAX40109_CALIBRATION_G0:
+		mtp_addr = CAL_DATA16;
+		break;
+	case MAX40109_CALIBRATION_G1:
+		mtp_addr = CAL_DATA18;
+		break;
+	case MAX40109_CALIBRATION_G2:
+		mtp_addr = CAL_DATA20;
+		break;
+	case MAX40109_CALIBRATION_G3:
+		mtp_addr = CAL_DATA22;
+		break;
+	case MAX40109_CALIBRATION_N0:
+		mtp_addr = CAL_DATA24;
+		break;
+	case MAX40109_CALIBRATION_N1:
+		mtp_addr = CAL_DATA26;
+		break;
+	case MAX40109_CALIBRATION_N2:
+		mtp_addr = CAL_DATA28;
+		break;
+	case MAX40109_CALIBRATION_N3:
+		mtp_addr = CAL_DATA30;
+		break;
+	case MAX40109_CALIBRATION_M0:
+		mtp_addr = CAL_DATA32;
+		break;
+	case MAX40109_CALIBRATION_M1:
+		mtp_addr = CAL_DATA34;
+		break;
+	case MAX40109_CALIBRATION_M2:
+		mtp_addr = CAL_DATA36;
+		break;
+	case MAX40109_CALIBRATION_M3:
+		mtp_addr = CAL_DATA38;
+		break;
+	default:
+		LOG_ERR("Invalid calibration coefficient");
+		return -EINVAL; // Invalid coefficient
+	}
+	ret = max40109_mtp_read(dev, mtp_addr, buf_lsb);
+	if (ret < 0) {
+		LOG_ERR("Failed to read MTP data for coefficient %d", coeff);
+		return ret; // Error reading MTP data
+	}
+	ret = max40109_mtp_read(dev, mtp_addr + 1, buf_msb);
+	if (ret < 0) {
+		LOG_ERR("Failed to read MTP data for coefficient %d", coeff);
+		return ret; // Error reading MTP data
+	}
+	uint32_t hex = (buf_msb[0] << 24) | (buf_msb[1] << 16) | (buf_lsb[0] << 8) | buf_lsb[1];
+
+	*value = *((float *)&hex);
+	return 0; // Success
+}
+
 int max40109_mtp_burn(const struct device *dev, uint8_t mtp_addr, const uint8_t *val)
 {
 	const struct max40109_config *config = dev->config;
 	int ret = 0;
 
-	if (!max40109_is_mtp_initialized(dev)) {
-		LOG_ERR("MTP is not initialized, cannot burn data");
-		ret = max40109_mtp_initialize(dev);
-		if (ret < 0) {
-			return ret; // Error initializing MTP
-		}
-		LOG_INF("MTP initialized successfully, proceeding with burn");
-	} else {
-		LOG_INF("MTP is already initialized, proceeding with burn");
+
+	ret = max40109_mtp_initialize(dev);
+	if (ret < 0) {
+		return ret; // Error initializing MTP
 	}
 
 	ret = max40109_reg_write(dev, MAX40109_MTP_ADDR, mtp_addr);
@@ -449,7 +442,8 @@ int max40109_mtp_burn(const struct device *dev, uint8_t mtp_addr, const uint8_t 
 		return ret; // Error writing MTP control register
 	}
 
-	if (!max40109_is_burn_successful(dev)) {
+	ret = max40109_is_burn_successful(dev);
+	if (ret < 0) {
 		LOG_ERR("MTP burn failed, check MTP status");
 		return -EIO; // MTP burn not successful
 	}
