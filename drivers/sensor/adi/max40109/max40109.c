@@ -564,38 +564,55 @@ int max40109_mtp_burn(const struct device *dev, uint8_t mtp_addr, const uint8_t 
 	return 0;
 }
 
-static int max40109_init(const struct device *dev)
+static int max40109_probe(const struct device *dev)
 {
 	const struct max40109_config *config = dev->config;
+	struct max40109_data *data = dev->data;
+	int ret;
 
-	if (!i2c_is_ready_dt(&config->i2c)) {
-		return -ENODEV;
-	}
+	/** Set ADC Sampling Rate */
+	ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE, config->adc_sample_rate);
 
-	/* Reset the STATUS Register */
-	int ret = 0;
-	uint8_t status_reg[2];
-
-	ret = max40109_reg_read(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
 	if (ret < 0) {
-		return ret;
+		return ret; // Error setting ADC sampling rate
 	}
 
-	ret = max40109_reg_write_multiple(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
+	/** Set Pressure PGA Gain */
+	ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN, config->pga_pressure_gain);
 	if (ret < 0) {
-		return ret;
+		return ret; // Error setting pressure PGA gain
 	}
 
-#ifdef CONFIG_MAX40109_TRIGGER
-	if (config->interrupt_gpio.port) {
-		if (max40109_init_interrupt(dev) < 0) {
-			LOG_ERR("Failed to initialize interrupts");
-			return -EIO;
-		}
+	/** Set Temperature PGA Gain */
+	ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN, config->pga_temperature_gain);
+	if (ret < 0) {
+		return ret; // Error setting temperature PGA gain
 	}
-#endif
 
-	return 0;
+	/** Set Alert Mode */
+	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK, config->alert_mode);
+	if (ret < 0) {
+		return ret; // Error setting alert mode
+	}
+
+	/** Set DRV Scale */
+	ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK, config->drv_scale);
+	if (ret < 0) {
+		return ret; // Error setting DRV scale
+	}
+
+	/** Set Analog Filter Bandwidth */
+	ret = max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW, config->analog_filter_bw);
+	if (ret < 0) {
+		return ret; // Error setting analog filter bandwidth
+	}
+
+	/** Set Digital Filter Setup */
+	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
+				   config->digital_filter_setup);
+	if (ret < 0) {
+		return ret; // Error setting digital filter setup
+	}
 }
 
 static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
@@ -925,6 +942,46 @@ static int max40109_sample_fetch(const struct device *dev, enum sensor_channel c
 		data->calibrated_temperature = (calibrated_data[0] << 8) | calibrated_data[1];
 	}
 
+	return 0;
+}
+
+static int max40109_init(const struct device *dev)
+{
+	const struct max40109_config *config = dev->config;
+
+	if (!i2c_is_ready_dt(&config->i2c)) {
+		return -ENODEV;
+	}
+
+	/* Reset the STATUS Register */
+	int ret = 0;
+	uint8_t status_reg[2];
+
+	ret = max40109_reg_read(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = max40109_reg_write_multiple(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
+	if (ret < 0) {
+		return ret;
+	}
+
+#ifdef CONFIG_MAX40109_TRIGGER
+	if (config->interrupt_gpio.port) {
+		if (max40109_init_interrupt(dev) < 0) {
+			LOG_ERR("Failed to initialize interrupts");
+			return -EIO;
+		}
+	}
+#endif
+
+	ret = max40109_probe(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to initialize the sensor");
+		return ret;
+	}
+	LOG_INF("MAX40109 sensor initialized successfully");
 	return 0;
 }
 

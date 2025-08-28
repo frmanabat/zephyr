@@ -26,6 +26,21 @@ int main(void)
 	}
 	printf("MAX40109 device is ready: %s\n", max40109_dev->name);
     int ret = 0;
+    uint8_t digital_filter_setup = 0;
+    ret = max40109_reg_read(max40109_dev, 0x00, &digital_filter_setup, 1);
+    if (ret < 0) {
+        printf("Failed to read digital filter setup: %d\n", ret);
+        return ret;
+    }
+    printf("Digital Filter Setup Register: 0x%02X\n", digital_filter_setup);
+
+    uint8_t adc_sample_rate = 0;
+    ret = max40109_reg_read(max40109_dev, 0x0A, &adc_sample_rate, 1);
+    if (ret < 0) {
+        printf("Failed to read ADC sample rate: %d\n", ret);
+        return ret;
+    }
+    printf("ADC Sample Rate Register: 0x%02X\n", adc_sample_rate);
 #if 0
     uint8_t interrupt_enable_reg [2];
     uint16_t int_setup;
