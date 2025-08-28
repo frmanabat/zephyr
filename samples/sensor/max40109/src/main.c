@@ -166,5 +166,22 @@ int main(void)
         return ret;
     }
     printf("MTP Data Read After Update: 0x%02X 0x%02X\n", val_updated[0], val_updated[1]);
+
+    ret = max40109_mtp_calibration(max40109_dev, MAX40109_CALIBRATION_H0, 3.14159, false);
+    if (ret < 0) {
+        printf("Failed to set calibration coefficient H0: %d\n", ret);
+        return ret;
+    }
+    printf("Calibration coefficient H0 set successfully to %f\n", 3.14159);
+
+    float h0_value = 0.0;
+
+    ret = max40109_mtp_calibration_read(max40109_dev, MAX40109_CALIBRATION_H0, &h0_value);
+    if (ret < 0) {
+        printf("Failed to read calibration coefficient H0: %d\n", ret);
+        return ret;
+    }
+    printf("Calibration coefficient H0 read successfully: %f\n", h0_value);
     return 0;
+    
 }

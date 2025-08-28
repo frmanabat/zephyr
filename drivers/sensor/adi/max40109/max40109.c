@@ -203,6 +203,30 @@ static int max40109_is_burn_successful(const struct device *dev)
 	return 0;
 }
 
+static const struct calibration_coeff_map cal_table[] = {
+	{MAX40109_CALIBRATION_K0, CAL_DATA0},  {MAX40109_CALIBRATION_K1, CAL_DATA2},
+	{MAX40109_CALIBRATION_K2, CAL_DATA4},  {MAX40109_CALIBRATION_K3, CAL_DATA6},
+	{MAX40109_CALIBRATION_H0, CAL_DATA8},  {MAX40109_CALIBRATION_H1, CAL_DATA10},
+	{MAX40109_CALIBRATION_H2, CAL_DATA12}, {MAX40109_CALIBRATION_H3, CAL_DATA14},
+	{MAX40109_CALIBRATION_G0, CAL_DATA16}, {MAX40109_CALIBRATION_G1, CAL_DATA18},
+	{MAX40109_CALIBRATION_G2, CAL_DATA20}, {MAX40109_CALIBRATION_G3, CAL_DATA22},
+	{MAX40109_CALIBRATION_N0, CAL_DATA24}, {MAX40109_CALIBRATION_N1, CAL_DATA26},
+	{MAX40109_CALIBRATION_N2, CAL_DATA28}, {MAX40109_CALIBRATION_N3, CAL_DATA30},
+	{MAX40109_CALIBRATION_M0, CAL_DATA32}, {MAX40109_CALIBRATION_M1, CAL_DATA34},
+	{MAX40109_CALIBRATION_M2, CAL_DATA36}, {MAX40109_CALIBRATION_M3, CAL_DATA38},
+};
+
+static int get_calibration_address(uint8_t cal_coeff, uint8_t *mtp_addr)
+{
+	for (size_t i = 0; i < sizeof(cal_table) / sizeof(cal_table[0]); i++) {
+		if (cal_table[i].cal_coeff == cal_coeff) {
+			*mtp_addr = cal_table[i].cal_start_addr;
+			return 0;
+		}
+	}
+	return -EINVAL; // Invalid calibration ID
+}
+
 int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration_coefficients coeff,
 			     float value, bool burn)
 {
@@ -224,70 +248,10 @@ int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration
 		return ret; // Error initializing MTP
 	}
 
-	switch (coeff) {
-	case MAX40109_CALIBRATION_K0:
-		mtp_addr = CAL_DATA0;
-		break;
-	case MAX40109_CALIBRATION_K1:
-		mtp_addr = CAL_DATA2;
-		break;
-	case MAX40109_CALIBRATION_K2:
-		mtp_addr = CAL_DATA4;
-		break;
-	case MAX40109_CALIBRATION_K3:
-		mtp_addr = CAL_DATA6;
-		break;
-	case MAX40109_CALIBRATION_H0:
-		mtp_addr = CAL_DATA8;
-		break;
-	case MAX40109_CALIBRATION_H1:
-		mtp_addr = CAL_DATA10;
-		break;
-	case MAX40109_CALIBRATION_H2:
-		mtp_addr = CAL_DATA12;
-		break;
-	case MAX40109_CALIBRATION_H3:
-		mtp_addr = CAL_DATA14;
-		break;
-	case MAX40109_CALIBRATION_G0:
-		mtp_addr = CAL_DATA16;
-		break;
-	case MAX40109_CALIBRATION_G1:
-		mtp_addr = CAL_DATA18;
-		break;
-	case MAX40109_CALIBRATION_G2:
-		mtp_addr = CAL_DATA20;
-		break;
-	case MAX40109_CALIBRATION_G3:
-		mtp_addr = CAL_DATA22;
-		break;
-	case MAX40109_CALIBRATION_N0:
-		mtp_addr = CAL_DATA24;
-		break;
-	case MAX40109_CALIBRATION_N1:
-		mtp_addr = CAL_DATA26;
-		break;
-	case MAX40109_CALIBRATION_N2:
-		mtp_addr = CAL_DATA28;
-		break;
-	case MAX40109_CALIBRATION_N3:
-		mtp_addr = CAL_DATA30;
-		break;
-	case MAX40109_CALIBRATION_M0:
-		mtp_addr = CAL_DATA32;
-		break;
-	case MAX40109_CALIBRATION_M1:
-		mtp_addr = CAL_DATA34;
-		break;
-	case MAX40109_CALIBRATION_M2:
-		mtp_addr = CAL_DATA36;
-		break;
-	case MAX40109_CALIBRATION_M3:
-		mtp_addr = CAL_DATA38;
-		break;
-	default:
-		LOG_ERR("Invalid calibration coefficient");
-		return -EINVAL; // Invalid coefficient
+	ret = get_calibration_address(coeff, &mtp_addr);
+	if (ret < 0) {
+		LOG_ERR("Failed to get MTP address for coefficient %d", coeff);
+		return ret; // Error getting MTP address
 	}
 
 	if (burn) {
@@ -320,6 +284,212 @@ int max40109_mtp_calibration(const struct device *dev, enum max40109_calibration
 	return 0; // Success
 }
 
+static const struct temp_gain_map temp_gain_table[] = {
+	{1, 5, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_1_5},
+	{2, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_2},
+	{3, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_3},
+	{5, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_5},
+	{6, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_6},
+	{10, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_10},
+	{15, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_15},
+	{20, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_20},
+	{24, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_24},
+	{30, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_30},
+	{36, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_36},
+	{40, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_40},
+	{45, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_45},
+	{60, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_60},
+	{72, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_72},
+	{90, 0, SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_90},
+};
+
+static const struct pressure_gain_map pressure_gain_table[] = {
+	{5, SENSOR_MAX40109_PGA_PRESSURE_GAIN_5},
+	{10, SENSOR_MAX40109_PGA_PRESSURE_GAIN_10},
+	{15, SENSOR_MAX40109_PGA_PRESSURE_GAIN_15},
+	{20, SENSOR_MAX40109_PGA_PRESSURE_GAIN_20},
+	{24, SENSOR_MAX40109_PGA_PRESSURE_GAIN_24},
+	{40, SENSOR_MAX40109_PGA_PRESSURE_GAIN_40},
+	{60, SENSOR_MAX40109_PGA_PRESSURE_GAIN_60},
+	{72, SENSOR_MAX40109_PGA_PRESSURE_GAIN_72},
+	{90, SENSOR_MAX40109_PGA_PRESSURE_GAIN_90},
+	{108, SENSOR_MAX40109_PGA_PRESSURE_GAIN_108},
+	{126, SENSOR_MAX40109_PGA_PRESSURE_GAIN_126},
+	{144, SENSOR_MAX40109_PGA_PRESSURE_GAIN_144},
+	{160, SENSOR_MAX40109_PGA_PRESSURE_GAIN_160},
+	{180, SENSOR_MAX40109_PGA_PRESSURE_GAIN_180},
+	{200, SENSOR_MAX40109_PGA_PRESSURE_GAIN_200},
+	{252, SENSOR_MAX40109_PGA_PRESSURE_GAIN_252},
+	{540, SENSOR_MAX40109_PGA_PRESSURE_GAIN_540},
+	{1080, SENSOR_MAX40109_PGA_PRESSURE_GAIN_1080},
+	{1440, SENSOR_MAX40109_PGA_PRESSURE_GAIN_1440},
+	{2520, SENSOR_MAX40109_PGA_PRESSURE_GAIN_2520},
+};
+
+static const struct sampling_rate_entry sampling_rate_table[] = {
+	{1000, 1, SENSOR_SAMPLING_RATE_MAX40109_1000HZ_1HZ},
+	{1000, 10, SENSOR_SAMPLING_RATE_MAX40109_1000HZ_10HZ},
+	{2000, 1, SENSOR_SAMPLING_RATE_MAX40109_2000HZ_1HZ},
+	{2000, 10, SENSOR_SAMPLING_RATE_MAX40109_2000HZ_10HZ},
+	{4000, 1, SENSOR_SAMPLING_RATE_MAX40109_4000HZ_1HZ},
+	{4000, 10, SENSOR_SAMPLING_RATE_MAX40109_4000HZ_10HZ},
+	{8000, 1, SENSOR_SAMPLING_RATE_MAX40109_8000HZ_1HZ},
+	{8000, 10, SENSOR_SAMPLING_RATE_MAX40109_8000HZ_10HZ},
+	{16000, 1, SENSOR_SAMPLING_RATE_MAX40109_16000HZ_1HZ},
+	{16000, 10, SENSOR_SAMPLING_RATE_MAX40109_16000HZ_10HZ},
+};
+
+static const struct drv_scale_entry drv_scale_table[] = {
+	{1, 0, MAX40109_DRV_SCALE_1_0},
+	{0, 500000, MAX40109_DRV_SCALE_0_5},
+	{0, 375000, MAX40109_DRV_SCALE_0_375},
+	{0, 250000, MAX40109_DRV_SCALE_0_25},
+};
+
+static const struct calib_map calib_map_table[] = {
+	{SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K0, MAX40109_CALIBRATION_K0},
+	{SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K1, MAX40109_CALIBRATION_K1},
+	{SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K2, MAX40109_CALIBRATION_K2},
+	{SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K3, MAX40109_CALIBRATION_K3},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_H0, MAX40109_CALIBRATION_H0},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_H1, MAX40109_CALIBRATION_H1},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_H2, MAX40109_CALIBRATION_H2},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_H3, MAX40109_CALIBRATION_H3},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_G0, MAX40109_CALIBRATION_G0},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_G1, MAX40109_CALIBRATION_G1},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_G2, MAX40109_CALIBRATION_G2},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_G3, MAX40109_CALIBRATION_G3},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_N0, MAX40109_CALIBRATION_N0},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_N1, MAX40109_CALIBRATION_N1},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_N2, MAX40109_CALIBRATION_N2},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_N3, MAX40109_CALIBRATION_N3},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_M0, MAX40109_CALIBRATION_M0},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_M1, MAX40109_CALIBRATION_M1},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_M2, MAX40109_CALIBRATION_M2},
+	{SENSOR_CHAN_PRESSURE_CALIB_COEFF_M3, MAX40109_CALIBRATION_M3},
+};
+
+static const struct analog_bw_map bw_table[] = {
+	{1200, MAX40109_ANALOG_FILTER_BW_1200HZ},
+	{900, MAX40109_ANALOG_FILTER_BW_900HZ},
+	{37000, MAX40109_ANALOG_FILTER_BW_37000HZ},
+	{45000, MAX40109_ANALOG_FILTER_BW_45000HZ},
+};
+
+static const struct digital_filter_map filter_table[] = {
+	{0, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_NONE},
+	{4, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_4},
+	{8, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_8},
+	{16, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_16},
+	{32, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_32},
+	{64, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_64},
+	{128, MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_128},
+};
+
+static int max40109_set_sampling_rate(const struct device *dev, int pressure_rate,
+				      int temperature_rate)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(sampling_rate_table); i++) {
+		if (sampling_rate_table[i].pressure_rate == pressure_rate &&
+		    sampling_rate_table[i].temperature_rate == temperature_rate) {
+			return max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
+						  sampling_rate_table[i].reg_value);
+		}
+	}
+	return -EINVAL;
+}
+
+static int max40109_set_pressure_gain(const struct device *dev, int val1)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(pressure_gain_table); i++) {
+		if (pressure_gain_table[i].val1 == val1) {
+			return max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
+						  pressure_gain_table[i].reg_value);
+		}
+	}
+	return -EINVAL;
+}
+
+static int max40109_set_temperature_gain(const struct device *dev, int val1, int val2)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(temp_gain_table); i++) {
+		if (temp_gain_table[i].val1 == val1 && temp_gain_table[i].val2 == val2) {
+			return max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
+						  temp_gain_table[i].reg_value);
+		}
+	}
+	return -EINVAL;
+}
+
+static int max40109_set_alert_mode(const struct device *dev, uint8_t mode)
+{
+	if (mode < MAX40109_ALERT_ISSUES_INTERRUPT ||
+	    mode > MAX40109_ALERT_ISSUES_PRESSURE_DIGITAL_OUTPUT_CASE_4) {
+		return -EINVAL; // Invalid alert mode
+	}
+	return max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK, mode);
+}
+
+static int max40109_set_drv_scale(const struct device *dev, int val1, int val2)
+{
+	for (size_t i = 0; i < ARRAY_SIZE(drv_scale_table); i++) {
+		if (drv_scale_table[i].val1 == val1 && drv_scale_table[i].val2 == val2) {
+			return max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK,
+						   drv_scale_table[i].reg_value);
+		}
+	}
+	return -EINVAL;
+}
+
+static int set_analog_filter_bw(struct device *dev, int analog_filter_bw)
+{
+	for (size_t i = 0; i < sizeof(bw_table) / sizeof(bw_table[0]); i++) {
+		if (bw_table[i].bw == analog_filter_bw) {
+			return max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW,
+						  bw_table[i].reg_val);
+		}
+	}
+	return -EINVAL; // Invalid bandwidth value
+}
+
+static int set_digital_filter_setup(struct device *dev, int digital_filter_setup)
+{
+	for (size_t i = 0; i < sizeof(filter_table) / sizeof(filter_table[0]); i++) {
+		if (filter_table[i].setup == digital_filter_setup) {
+			return max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB,
+						   DIGITAL_FILTER_MASK, filter_table[i].reg_val);
+		}
+	}
+	return -EINVAL; // Invalid digital filter setup value
+}
+
+int max40109_set_calibration_coeff(const struct device *dev, enum sensor_channel chan,
+				   const struct sensor_value *val)
+{
+	uint8_t coeff = 0;
+	bool found = false;
+
+	for (size_t i = 0; i < ARRAY_SIZE(calib_map_table); i++) {
+		if (calib_map_table[i].chan == chan) {
+			coeff = calib_map_table[i].coeff;
+			found = true;
+			break;
+		}
+	}
+
+	if (!found) {
+		return -ENOTSUP; // Unsupported calibration channel
+	}
+
+	float calibration_value = val->val1 + (val->val2 / 1000000.0f);
+	int ret = max40109_mtp_calibration(dev, coeff, calibration_value, false);
+	if (ret < 0) {
+		return ret; // Error applying calibration
+	}
+
+	return 0; // Success
+}
+
 int max40109_mtp_calibration_read(const struct device *dev,
 				  enum max40109_calibration_coefficients coeff, float *value)
 {
@@ -334,71 +504,12 @@ int max40109_mtp_calibration_read(const struct device *dev,
 		return -EINVAL; // Invalid coefficient
 	}
 
-	switch (coeff) {
-	case MAX40109_CALIBRATION_K0:
-		mtp_addr = CAL_DATA0;
-		break;
-	case MAX40109_CALIBRATION_K1:
-		mtp_addr = CAL_DATA2;
-		break;
-	case MAX40109_CALIBRATION_K2:
-		mtp_addr = CAL_DATA4;
-		break;
-	case MAX40109_CALIBRATION_K3:
-		mtp_addr = CAL_DATA6;
-		break;
-	case MAX40109_CALIBRATION_H0:
-		mtp_addr = CAL_DATA8;
-		break;
-	case MAX40109_CALIBRATION_H1:
-		mtp_addr = CAL_DATA10;
-		break;
-	case MAX40109_CALIBRATION_H2:
-		mtp_addr = CAL_DATA12;
-		break;
-	case MAX40109_CALIBRATION_H3:
-		mtp_addr = CAL_DATA14;
-		break;
-	case MAX40109_CALIBRATION_G0:
-		mtp_addr = CAL_DATA16;
-		break;
-	case MAX40109_CALIBRATION_G1:
-		mtp_addr = CAL_DATA18;
-		break;
-	case MAX40109_CALIBRATION_G2:
-		mtp_addr = CAL_DATA20;
-		break;
-	case MAX40109_CALIBRATION_G3:
-		mtp_addr = CAL_DATA22;
-		break;
-	case MAX40109_CALIBRATION_N0:
-		mtp_addr = CAL_DATA24;
-		break;
-	case MAX40109_CALIBRATION_N1:
-		mtp_addr = CAL_DATA26;
-		break;
-	case MAX40109_CALIBRATION_N2:
-		mtp_addr = CAL_DATA28;
-		break;
-	case MAX40109_CALIBRATION_N3:
-		mtp_addr = CAL_DATA30;
-		break;
-	case MAX40109_CALIBRATION_M0:
-		mtp_addr = CAL_DATA32;
-		break;
-	case MAX40109_CALIBRATION_M1:
-		mtp_addr = CAL_DATA34;
-		break;
-	case MAX40109_CALIBRATION_M2:
-		mtp_addr = CAL_DATA36;
-		break;
-	case MAX40109_CALIBRATION_M3:
-		mtp_addr = CAL_DATA38;
-		break;
-	default:
-		LOG_ERR("Invalid calibration coefficient");
-		return -EINVAL; // Invalid coefficient
+	ret = get_calibration_address(coeff, &mtp_addr);
+	if (ret < 0) {
+		LOG_ERR("Failed to get MTP address for coefficient %d", coeff);
+		return ret; // Error getting MTP address
 	}
+
 	ret = max40109_mtp_read(dev, mtp_addr, buf_lsb);
 	if (ret < 0) {
 		LOG_ERR("Failed to read MTP data for coefficient %d", coeff);
@@ -511,59 +622,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			return -EINVAL; // Invalid temperature rate value
 		}
 
-		if (pressure_rate == 1000 && temperature_rate == 1) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_1000HZ_1HZ);
-		}
-
-		if (pressure_rate == 1000 && temperature_rate == 10) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_1000HZ_10HZ);
-		}
-
-		else if (pressure_rate == 2000 && temperature_rate == 1) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_2000HZ_1HZ);
-		}
-
-		else if (pressure_rate == 2000 && temperature_rate == 10) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_2000HZ_10HZ);
-		}
-
-		else if (pressure_rate == 4000 && temperature_rate == 1) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_4000HZ_1HZ);
-		}
-
-		else if (pressure_rate == 4000 && temperature_rate == 10) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_4000HZ_10HZ);
-		}
-
-		else if (pressure_rate == 8000 && temperature_rate == 1) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_8000HZ_1HZ);
-		}
-
-		else if (pressure_rate == 8000 && temperature_rate == 10) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_8000HZ_10HZ);
-		}
-
-		else if (pressure_rate == 16000 && temperature_rate == 1) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_16000HZ_1HZ);
-		}
-
-		else if (pressure_rate == 16000 && temperature_rate == 10) {
-			ret = max40109_reg_write(dev, MAX40109_ADC_SAMPLE_RATE,
-						 SENSOR_SAMPLING_RATE_MAX40109_16000HZ_10HZ);
-		}
-
-		else {
-			return -EINVAL;
-		}
+		ret = max40109_set_sampling_rate(dev, pressure_rate, temperature_rate);
 		break;
 	case SENSOR_ATTR_GAIN:
 		if (chan == SENSOR_CHAN_PRESS) {
@@ -571,201 +630,19 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			if (pressure_gain < 5) {
 				return -EINVAL; // Invalid gain value
 			}
-
-			if (pressure_gain == 5) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_5);
-			}
-
-			else if (pressure_gain == 10) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_10);
-			}
-
-			else if (pressure_gain == 15) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_15);
-			}
-
-			else if (pressure_gain == 20) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_20);
-			}
-
-			else if (pressure_gain == 24) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_24);
-			}
-
-			else if (pressure_gain == 40) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_40);
-			}
-
-			else if (pressure_gain == 60) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_60);
-			}
-
-			else if (pressure_gain == 72) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_72);
-			}
-
-			else if (pressure_gain == 90) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_90);
-			}
-
-			else if (pressure_gain == 108) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_108);
-			}
-
-			else if (pressure_gain == 126) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_126);
-			}
-
-			else if (pressure_gain == 144) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_144);
-			}
-
-			else if (pressure_gain == 160) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_160);
-			}
-
-			else if (pressure_gain == 180) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_180);
-			}
-
-			else if (pressure_gain == 200) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_200);
-			}
-
-			else if (pressure_gain == 252) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_252);
-			}
-
-			else if (pressure_gain == 540) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_540);
-			}
-
-			else if (pressure_gain == 1080) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_1080);
-			}
-
-			else if (pressure_gain == 1440) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_1440);
-			}
-
-			else if (pressure_gain == 2520) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN,
-							 SENSOR_MAX40109_PGA_PRESSURE_GAIN_2520);
-			}
-
-			else {
-				return -EINVAL; // Invalid pressure gain value
-			}
+			ret = max40109_set_pressure_gain(dev, pressure_gain);
 		}
 		if (chan == SENSOR_CHAN_AMBIENT_TEMP) {
 			int temperature_gain = val->val1;
-			int temperature_gain_decimal = val->val2;
+			int temperature_gain_decimal = val->val2 / 1000000;
 
 			if (temperature_gain < 1) {
 				return -EINVAL;
 			}
-
-			if (temperature_gain == 1 && temperature_gain_decimal == 5) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_1_5);
-			}
-
-			else if (temperature_gain == 2 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_2);
-			}
-
-			else if (temperature_gain == 3 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_3);
-			}
-
-			else if (temperature_gain == 5 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_5);
-			}
-
-			else if (temperature_gain == 6 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_6);
-			}
-
-			else if (temperature_gain == 10 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_10);
-			}
-
-			else if (temperature_gain == 15 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_15);
-			}
-
-			else if (temperature_gain == 20 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_20);
-			}
-
-			else if (temperature_gain == 24 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_24);
-			}
-
-			else if (temperature_gain == 30 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_30);
-			}
-
-			else if (temperature_gain == 36 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_36);
-			}
-
-			else if (temperature_gain == 40 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_40);
-			}
-
-			else if (temperature_gain == 45 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_45);
-			}
-
-			else if (temperature_gain == 60 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_60);
-			}
-
-			else if (temperature_gain == 72 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_72);
-			}
-
-			else if (temperature_gain == 90 && temperature_gain_decimal == 0) {
-				ret = max40109_reg_write(dev, MAX40109_PGA_TEMPERATURE_GAIN,
-							 SENSOR_MAX40109_PGA_TEMPERATURE_GAIN_90);
-			}
-
-			else {
-				return -EINVAL; // Invalid temperature gain value
+			ret = max40109_set_temperature_gain(dev, temperature_gain,
+							    temperature_gain_decimal);
+			if (ret < 0) {
+				return ret;
 			}
 		}
 		break;
@@ -777,20 +654,9 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		int analog_filter_bw = val->val1;
 
-		if (analog_filter_bw == 1200) {
-			ret = max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW,
-						 MAX40109_ANALOG_FILTER_BW_1200HZ);
-		} else if (analog_filter_bw == 900) {
-			ret = max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW,
-						 MAX40109_ANALOG_FILTER_BW_900HZ);
-		} else if (analog_filter_bw == 37000) {
-			ret = max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW,
-						 MAX40109_ANALOG_FILTER_BW_37000HZ);
-		} else if (analog_filter_bw == 45000) {
-			ret = max40109_reg_write(dev, MAX40109_ANALOG_FILTER_BW,
-						 MAX40109_ANALOG_FILTER_BW_45000HZ);
-		} else {
-			return -EINVAL; // Invalid bandwidth value
+		ret = set_analog_filter_bw((struct device *)dev, analog_filter_bw);
+		if (ret < 0) {
+			return ret;
 		}
 		break;
 
@@ -800,29 +666,9 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		int digital_filter_setup = val->val1;
 
-		if (digital_filter_setup == 0) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_NONE);
-		} else if (digital_filter_setup == 4) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_4);
-		} else if (digital_filter_setup == 8) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_8);
-		} else if (digital_filter_setup == 16) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_16);
-		} else if (digital_filter_setup == 32) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_32);
-		} else if (digital_filter_setup == 64) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_64);
-		} else if (digital_filter_setup == 128) {
-			ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-						  MAX40109_DIGITAL_FILTER_SETUP_AVERAGE_128);
-		} else {
-			return -EINVAL; // Invalid digital filter setup value
+		ret = set_digital_filter_setup((struct device *)dev, digital_filter_setup);
+		if (ret < 0) {
+			return ret;
 		}
 		break;
 
@@ -832,8 +678,10 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		int alert_mode = val->val1;
 
-		ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK,
-					  alert_mode);
+		ret = max40109_set_alert_mode(dev, alert_mode);
+		if (ret < 0) {
+			return ret;
+		}
 		break;
 
 	case MAX40109_DRV_SCALE:
@@ -847,105 +695,20 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 			return -EINVAL; // Scale value must be 1.0
 		}
 
-		if (val->val1 == 1) {
-			ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK,
-						  MAX40109_DRV_SCALE_1_0);
-
-			if (ret) {
-				return ret;
-			}
-		}
-
-		else {
-			if (val->val2 == 500000) {
-				ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK,
-							  MAX40109_DRV_SCALE_0_5);
-			} else if (val->val2 == 375000) {
-				ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK,
-							  MAX40109_DRV_SCALE_0_375);
-			} else if (val->val2 == 250000) {
-				ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, DRV_SCALE_MASK,
-							  MAX40109_DRV_SCALE_0_25);
-			} else {
-				return -EINVAL; // Invalid scale value
-			}
+		ret = max40109_set_drv_scale(dev, val->val1, val->val2);
+		if (ret < 0) {
+			return ret;
 		}
 
 		break;
 
 	case SENSOR_ATTR_CALIB_TARGET:
-		int coeff = 0;
-		switch (chan) {
-		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K0:
-			coeff = MAX40109_CALIBRATION_K0;
-			break;
-		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K1:
-			coeff = MAX40109_CALIBRATION_K1;
-			break;
-		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K2:
-			coeff = MAX40109_CALIBRATION_K2;
-			break;
-		case SENSOR_CHAN_AMBIENT_TEMP_CALIB_COEFF_K3:
-			coeff = MAX40109_CALIBRATION_K3;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H0:
-			coeff = MAX40109_CALIBRATION_H0;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H1:
-			coeff = MAX40109_CALIBRATION_H1;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H2:
-			coeff = MAX40109_CALIBRATION_H2;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_H3:
-			coeff = MAX40109_CALIBRATION_H3;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G0:
-			coeff = MAX40109_CALIBRATION_G0;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G1:
-			coeff = MAX40109_CALIBRATION_G1;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G2:
-			coeff = MAX40109_CALIBRATION_G2;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_G3:
-			coeff = MAX40109_CALIBRATION_G3;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N0:
-			coeff = MAX40109_CALIBRATION_N0;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N1:
-			coeff = MAX40109_CALIBRATION_N1;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N2:
-			coeff = MAX40109_CALIBRATION_N2;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_N3:
-			coeff = MAX40109_CALIBRATION_N3;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M0:
-			coeff = MAX40109_CALIBRATION_M0;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M1:
-			coeff = MAX40109_CALIBRATION_M1;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M2:
-			coeff = MAX40109_CALIBRATION_M2;
-			break;
-		case SENSOR_CHAN_PRESSURE_CALIB_COEFF_M3:
-			coeff = MAX40109_CALIBRATION_M3;
-			break;
-		default:
-			return -ENOTSUP; // Unsupported channel for calibration
-			break;
-		}
-		float calibration_value = val->val1 + (val->val2 / 1000000.0f);
 
-		ret = max40109_mtp_calibration(dev, coeff, calibration_value, false);
+		ret = max40109_set_calibration_coeff(dev, chan, val);
 		if (ret < 0) {
-			return ret; // Error setting calibration coefficient
+			return ret; // Error applying calibration
 		}
+
 		break;
 
 	case MAX40109_OVER_PRESSURE_THRESHOLD_POSITIVE:
@@ -1017,6 +780,96 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		if (ret < 0) {
 			return ret; // Error setting under-pressure negative threshold
 		}
+		break;
+
+	case MAX40109_OVER_TEMPERATURE_VOLTAGE_THRESHOLD:
+		if (chan != SENSOR_CHAN_AMBIENT_TEMP) {
+			return -ENOTSUP;
+		}
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_over_temp = val->val1;
+		ret = max40109_mtp_update(dev, DIAG_DATA2, OVER_TEMPERATURE_VOLTAGE_MASK,
+					  threshold_over_temp);
+		if (ret < 0) {
+			return ret; // Error setting over-temperature threshold
+		}
+
+		break;
+
+	case MAX40109_UNDER_TEMPERATURE_VOLTAGE_THRESHOLD:
+		if (chan != SENSOR_CHAN_AMBIENT_TEMP) {
+			return -ENOTSUP;
+		}
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_under_temp = val->val1;
+		ret = max40109_mtp_update(dev, DIAG_DATA2, UNDER_TEMPERATURE_VOLTAGE_MASK,
+					  threshold_under_temp);
+		if (ret < 0) {
+			return ret; // Error setting under-temperature threshold
+		}
+
+		break;
+
+	case MAX40109_OVER_VOLTAGE_DRIVE_THRESHOLD:
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+
+		uint16_t threshold_over_drv = val->val1;
+		ret = max40109_mtp_update(dev, DIAG_DATA3, OVER_VOLTAGE_DRIVE_MASK,
+					  threshold_over_drv);
+		if (ret < 0) {
+			return ret; // Error setting over-voltage drive threshold
+		}
+		break;
+
+	case MAX40109_UNDER_VOLTAGE_DRIVE_THRESHOLD:
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_under_drv = val->val1;
+		ret = max40109_mtp_update(dev, DIAG_DATA3, UNDER_VOLTAGE_DRIVE_MASK,
+					  threshold_under_drv);
+		if (ret < 0) {
+			return ret; // Error setting under-voltage drive threshold
+		}
+
+		break;
+
+	case MAX40109_PRIMARY_THRESHOLD_PRESSURE_VALUE:
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_primary = val->val1;
+		ret = max40109_mtp_update(dev, PRESSURE_THRESHOLD,
+					  PRIMARY_THRESHOLD_PRESSURE_VALUE_MASK, threshold_primary);
+		if (ret < 0) {
+			return ret; // Error setting primary threshold pressure value
+		}
+		break;
+
+	case MAX40109_HYSTERESIS_THRESHOLD_PRESSURE_VALUE:
+		if (chan != SENSOR_CHAN_PRESS) {
+			return -ENOTSUP;
+		}
+		if (val->val1 < 0 || val->val1 > 0xFF) {
+			return -EINVAL; // Invalid threshold value
+		}
+		uint16_t threshold_hysteresis = val->val1;
+		ret = max40109_mtp_update(dev, PRESSURE_THRESHOLD,
+					  HYSTERESIS_THRESHOLD_PRESSURE_VALUE_MASK,
+					  threshold_hysteresis);
+		if (ret < 0) {
+			return ret; // Error setting hysteresis threshold pressure value
+		}
+
 		break;
 
 	default:
@@ -1124,10 +977,10 @@ static DEVICE_API(sensor, max40109_driver_api) = {
 	.overvoltage_temperature = DT_INST_PROP(inst, overtemp_threshold),                         \
 	.undervoltage_temperature = DT_INST_PROP(inst, undertemp_threshold),                       \
 	.overvoltage_drive = DT_INST_PROP(inst, overvoltage_drv),                                  \
-	.undervoltage_drive = DT_INST_PROP(inst, undervoltage_drv), \
-	.primary_threshold_pressure_value = DT_INST_PROP(inst, primary_threshold_pressure_value),       \
-	.hysteresis_threshold_pressure_value = DT_INST_PROP(inst, hysteresis_threshold_pressure_value)
-
+	.undervoltage_drive = DT_INST_PROP(inst, undervoltage_drv),                                \
+	.primary_threshold_pressure_value = DT_INST_PROP(inst, primary_threshold_pressure_value),  \
+	.hysteresis_threshold_pressure_value =                                                     \
+		DT_INST_PROP(inst, hysteresis_threshold_pressure_value)
 
 #define MAX40109_DEFINE(inst)                                                                      \
 	static struct max40109_data max40109_prv_data_##inst;                                      \

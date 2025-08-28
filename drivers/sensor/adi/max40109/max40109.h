@@ -209,6 +209,50 @@ struct max40109_config {
 	uint8_t hysteresis_threshold_pressure_value;
 };
 
+struct temp_gain_map {
+	int val1;
+	int val2;
+	uint8_t reg_value;
+};
+
+struct pressure_gain_map {
+	int val1;
+	uint8_t reg_value;
+};
+
+struct sampling_rate_entry {
+	int pressure_rate;
+	int temperature_rate;
+	uint8_t reg_value;
+};
+
+struct drv_scale_entry {
+	int val1;
+	int val2;
+	uint8_t reg_value;
+};
+
+struct analog_bw_map {
+	int bw;
+	uint8_t reg_val;
+};
+
+struct digital_filter_map {
+	int setup;
+	uint8_t reg_val;
+};
+
+struct calib_map {
+	enum sensor_channel chan;
+	enum max40109_calibration_coefficients coeff;
+};
+
+struct calibration_coeff_map {
+	uint8_t cal_coeff;
+	uint8_t cal_start_addr;
+};
+
+
 struct max40109_data {
 	uint8_t status_msb;
 	uint8_t status_lsb;
