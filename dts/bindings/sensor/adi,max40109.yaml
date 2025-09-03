@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Analog Devices Inc. 
 # SPDX-License-Identifier: Apache-2.0
 #
-# This file contains the binding for ad2s1210 sensor
+# This file contains the binding for MAX40109 sensor
 
 description: MAX40109, a low-power, precision sensor interface SoC that includes a high-precision, programmable Analog frontend (AFE), Analog-to-Digital Converter (ADC), calibration memory, and digital signal processing.
 

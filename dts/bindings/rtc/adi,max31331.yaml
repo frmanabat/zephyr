@@ -1,0 +1,15 @@
+# Copyright (c) 2025 Analog Devices Inc. 
+# SPDX-License-Identifier: Apache-2.0
+#
+# This file contains the binding for MAX31331 RTC from Analog Devices.
+
+description: MAX31331, an Ultra-Low-Power, I2C Real-Time Clock.
+
+compatible: "adi,max31331"
+
+include: [rtc-device.yaml, i2c-device.yaml]
+
+properties:
+  reg:
+    required: true
+    
