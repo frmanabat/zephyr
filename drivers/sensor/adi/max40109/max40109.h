@@ -11,7 +11,9 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
 #include <zephyr/sys/util.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/logging/log.h>
 #include <zephyr/drivers/sensor/max40109.h>
 #include <zephyr/types.h>
 #include <zephyr/sys/byteorder.h>
@@ -67,60 +69,60 @@
 
 /** CONFIG Register Masks */
 
-#define MTP_ENABLE_MASK                        BIT(7)
-#define TEMP_CAL_BYPASS_MASK                   BIT(6)
-#define PRESSURE_CAL_BYPASS_MASK               BIT(5)
-#define DIGITAL_FILTER_MASK                    GENMASK(4, 2)
-#define REFIN_INTERNAL_EXTERNAL_SEL_MASK       BIT(1)
-#define CURRENT_SOURCE_REFERENCE_RESISTOR_MASK BIT(0)
-#define SHUTDOWN_MASK                          BIT(7)
-#define TEMP_CURRENT_MASK                      GENMASK(5, 4)
-#define ALERT_MODE_MASK                        GENMASK(3, 1)
-#define PGA_INPUT_MASK                         BIT(0)
+#define MTP_ENABLE_MASK                        		BIT(7)
+#define TEMP_CAL_BYPASS_MASK                   		BIT(6)
+#define PRESSURE_CAL_BYPASS_MASK               		BIT(5)
+#define DIGITAL_FILTER_MASK                    		GENMASK(4, 2)
+#define REFIN_INTERNAL_EXTERNAL_SEL_MASK       		BIT(1)
+#define CURRENT_SOURCE_REFERENCE_RESISTOR_MASK 		BIT(0)
+#define SHUTDOWN_MASK                          		BIT(7)
+#define TEMP_CURRENT_MASK                      		GENMASK(5, 4)
+#define ALERT_MODE_MASK                        		GENMASK(3, 1)
+#define PGA_INPUT_MASK                         		BIT(0)
 
 /** STATUS Register Masks */
-#define DRV_FAULT_MASK           BIT(3)
-#define INT_FAULT_MASK           BIT(2)
-#define TEMP_DATA_READY_MASK     BIT(1)
-#define PRESSURE_DATA_READY_MASK BIT(0)
-#define UV_DRV_MASK              BIT(7)
-#define OV_DRV_MASK              BIT(6)
-#define UV_INT_MASK              BIT(5)
-#define OV_INT_MASK              BIT(4)
-#define UV_INP_MINUS_MASK        BIT(3)
-#define OV_INP_MINUS_MASK        BIT(2)
-#define UV_INP_PLUS_MASK         BIT(1)
-#define OV_INP_PLUS_MASK         BIT(0)
+#define DRV_FAULT_MASK           			BIT(3)
+#define INT_FAULT_MASK           			BIT(2)
+#define TEMP_DATA_READY_MASK     			BIT(1)
+#define PRESSURE_DATA_READY_MASK 			BIT(0)
+#define UV_DRV_MASK              			BIT(7)
+#define OV_DRV_MASK              			BIT(6)
+#define UV_INT_MASK              			BIT(5)
+#define OV_INT_MASK              			BIT(4)
+#define UV_INP_MINUS_MASK        			BIT(3)
+#define OV_INP_MINUS_MASK        			BIT(2)
+#define UV_INP_PLUS_MASK         			BIT(1)
+#define OV_INP_PLUS_MASK         			BIT(0)
 
 /** INTERRUPT ENABLE Register Masks */
-#define INT_TEMP_DATA_READY_EN_MASK     BIT(1)
-#define INT_PRESSURE_DATA_READY_EN_MASK BIT(0)
-#define INT_UV_DRV_EN_MASK              BIT(7)
-#define INT_OV_DRV_EN_MASK              BIT(6)
-#define INT_UV_INT_EN_MASK              BIT(5)
-#define INT_OV_INT_EN_MASK              BIT(4)
-#define INT_UV_INP_MINUS_EN_MASK        BIT(3)
-#define INT_OV_INP_MINUS_EN_MASK        BIT(2)
-#define INT_UV_INP_PLUS_EN_MASK         BIT(1)
-#define INT_OV_INP_PLUS_EN_MASK         BIT(0)
+#define INT_TEMP_DATA_READY_EN_MASK     		BIT(1)
+#define INT_PRESSURE_DATA_READY_EN_MASK 		BIT(0)
+#define INT_UV_DRV_EN_MASK              		BIT(7)
+#define INT_OV_DRV_EN_MASK              		BIT(6)
+#define INT_UV_INT_EN_MASK              		BIT(5)
+#define INT_OV_INT_EN_MASK              		BIT(4)
+#define INT_UV_INP_MINUS_EN_MASK        		BIT(3)
+#define INT_OV_INP_MINUS_EN_MASK        		BIT(2)
+#define INT_UV_INP_PLUS_EN_MASK         		BIT(1)
+#define INT_OV_INP_PLUS_EN_MASK         		BIT(0)
 
 /** MTP Status Register Masks */
-#define MTP_BURN_DONE_MASK         BIT(7)
-#define MTP_ECC_ERR_2_BIT_MASK     BIT(6)
-#define MTP_ECC_ERR_1_BIT_MASK     BIT(5)
-#define MTP_VPP_INIT_FAIL_MASK     BIT(3)
-#define MTP_FULL_MASK              BIT(2)
-#define MTP_VERIFICATION_FAIL_MASK BIT(1)
-#define MTP_VPP_ACT_MASK           BIT(0)
+#define MTP_BURN_DONE_MASK         			BIT(7)
+#define MTP_ECC_ERR_2_BIT_MASK     			BIT(6)
+#define MTP_ECC_ERR_1_BIT_MASK     			BIT(5)
+#define MTP_VPP_INIT_FAIL_MASK     			BIT(3)
+#define MTP_FULL_MASK              			BIT(2)
+#define MTP_VERIFICATION_FAIL_MASK 			BIT(1)
+#define MTP_VPP_ACT_MASK           			BIT(0)
 
 /** TEMP MODE Register Masks */
-#define DRV_SCALE_MASK GENMASK(4, 3)
-#define TEMP_MODE_MASK GENMASK(2, 0)
+#define DRV_SCALE_MASK 					GENMASK(4, 3)
+#define TEMP_MODE_MASK 					GENMASK(2, 0)
 
 /** SENSOR OFFSET CAL CONFIG Register Masks */
-#define CONNECT_TRIM_RESISTOR_MASK              BIT(2)
-#define CONNECT_OFFSET_CALIBRATION_CURRENT_MASK BIT(1)
-#define PGA_FUNCTIONALITY_MASK                  BIT(0)
+#define CONNECT_TRIM_RESISTOR_MASK              	BIT(2)
+#define CONNECT_OFFSET_CALIBRATION_CURRENT_MASK 	BIT(1)
+#define PGA_FUNCTIONALITY_MASK                  	BIT(0)
 
 /** MTP DATA LENGTH */
 #define MAX40109_MTP_DATA_LENGTH 2
@@ -145,38 +147,6 @@ struct max40109_config {
 	uint8_t analog_filter_bw;
 	uint8_t analog_output_stage;
 	uint8_t pga_input_mux;
-
-	/** Calibration Coefficients */
-
-	/** Temperature Calibration Coefficients */
-	float k0;
-	float k1;
-	float k2;
-	float k3;
-
-	/** Zeroth-Order Pressure Calibration Coefficient */
-	float h0;
-	float h1;
-	float h2;
-	float h3;
-
-	/**	First-Order Pressure Calibration Coefficient */
-	float g0;
-	float g1;
-	float g2;
-	float g3;
-
-	/** Second-Order Pressure Calibration Coefficient */
-	float n0;
-	float n1;
-	float n2;
-	float n3;
-
-	/** Third-Order Pressure Calibration Coefficient */
-	float m0;
-	float m1;
-	float m2;
-	float m3;
 
 	/** Overpressure Threshold Positive */
 	uint8_t overpressure_threshold_positive;
@@ -207,6 +177,9 @@ struct max40109_config {
 
 	/** Hysteresis Threshold Pressure Value */
 	uint8_t hysteresis_threshold_pressure_value;
+
+	/** Calibration coefficients */
+	float calib_coeff [20];
 };
 
 struct temp_gain_map {
@@ -252,7 +225,6 @@ struct calibration_coeff_map {
 	uint8_t cal_start_addr;
 };
 
-
 struct max40109_data {
 	uint8_t status_msb;
 	uint8_t status_lsb;
@@ -276,10 +248,23 @@ struct max40109_data {
 	sensor_trigger_handler_t ov_drv_handler;
 	sensor_trigger_handler_t uv_int_handler;
 	sensor_trigger_handler_t ov_int_handler;
-	sensor_trigger_handler_t uv_inp_minus_handler;
-	sensor_trigger_handler_t ov_inp_minus_handler;
-	sensor_trigger_handler_t uv_inp_plus_handler;
-	sensor_trigger_handler_t ov_inp_plus_handler;
+	sensor_trigger_handler_t uv_inp_negative_handler;
+	sensor_trigger_handler_t ov_inp_negative_handler;
+	sensor_trigger_handler_t uv_inp_positive_handler;
+	sensor_trigger_handler_t ov_inp_positive_handler;
+
+	const struct sensor_trigger *drv_fault_trigger;
+	const struct sensor_trigger *int_fault_trigger;
+	const struct sensor_trigger *temp_data_rdy_trigger;
+	const struct sensor_trigger *pressure_data_rdy_trigger;
+	const struct sensor_trigger *uv_drv_trigger;
+	const struct sensor_trigger *ov_drv_trigger;
+	const struct sensor_trigger *uv_int_trigger;
+	const struct sensor_trigger *ov_int_trigger;
+	const struct sensor_trigger *uv_inp_negative_trigger;
+	const struct sensor_trigger *ov_inp_negative_trigger;
+	const struct sensor_trigger *uv_inp_positive_trigger;
+	const struct sensor_trigger *ov_inp_positive_trigger;
 
 #if defined(CONFIG_MAX40109_TRIGGER_OWN_THREAD)
 	struct k_thread thread;
@@ -289,5 +274,9 @@ struct max40109_data {
 #endif
 #endif
 };
+
+int max40109_init_interrupt(const struct device *dev);
+int max40109_trigger_set(const struct device *dev, const struct sensor_trigger *trig,
+			 sensor_trigger_handler_t handler);
 
 #endif

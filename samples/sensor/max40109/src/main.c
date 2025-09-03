@@ -17,6 +17,49 @@
 
 static const struct device *max40109_dev = DEVICE_DT_GET(MAX40109_NODE);
 
+
+void pressure_ready_callback(const struct device *dev,
+                   const struct sensor_trigger *trig)
+{
+    struct sensor_value pressure;
+    // printf("Data ready interrupt received\n");
+
+    int ret = sensor_sample_fetch_chan(dev, SENSOR_CHAN_ALL);
+    if (ret < 0) {
+        printf("Failed to fetch sensor data: %d\n", ret);
+        return ret;
+    }
+
+    ret = sensor_channel_get(dev, SENSOR_CHAN_PRESS_RAW, &pressure);
+    if (ret < 0) {
+        printf("Failed to get pressure data: %d\n", ret);
+        return ret;
+    }
+    printf("Pressure: %f kPa\n", sensor_value_to_float(&pressure));
+    return 0;
+}
+
+void temp_ready_callback(const struct device *dev,
+                   const struct sensor_trigger *trig)
+{
+    struct sensor_value temp;
+    // printf("Temperature Data ready interrupt received\n");
+
+    int ret = sensor_sample_fetch_chan(dev, SENSOR_CHAN_ALL);
+    if (ret < 0) {
+        printf("Failed to fetch sensor data: %d\n", ret);
+        return ret;
+    }
+
+    ret = sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &temp);
+    if (ret < 0) {
+        printf("Failed to get temperature data: %d\n", ret);
+        return ret;
+    }
+    printf("Temperature: %f C\n", sensor_value_to_float(&temp));
+    return 0;
+}
+
 int main(void)
 {
 	printf("Starting MAX40109 sample application\n");
@@ -26,21 +69,28 @@ int main(void)
 	}
 	printf("MAX40109 device is ready: %s\n", max40109_dev->name);
     int ret = 0;
-    uint8_t digital_filter_setup = 0;
-    ret = max40109_reg_read(max40109_dev, 0x00, &digital_filter_setup, 1);
+    float k0_value = 0;
+    ret = max40109_mtp_calibration_read(max40109_dev, MAX40109_CALIBRATION_K0, &k0_value);
     if (ret < 0) {
-        printf("Failed to read digital filter setup: %d\n", ret);
+        printf("Failed to read calibration coefficient K0: %d\n", ret);
         return ret;
     }
-    printf("Digital Filter Setup Register: 0x%02X\n", digital_filter_setup);
+    printf("Calibration coefficient K0 read successfully: %f\n", k0_value);
+    // uint8_t digital_filter_setup = 0;
+    // ret = max40109_reg_read(max40109_dev, 0x00, &digital_filter_setup, 1);
+    // if (ret < 0) {
+    //     printf("Failed to read digital filter setup: %d\n", ret);
+    //     return ret;
+    // }
+    // printf("Digital Filter Setup Register: 0x%02X\n", digital_filter_setup);
 
-    uint8_t adc_sample_rate = 0;
-    ret = max40109_reg_read(max40109_dev, 0x0A, &adc_sample_rate, 1);
-    if (ret < 0) {
-        printf("Failed to read ADC sample rate: %d\n", ret);
-        return ret;
-    }
-    printf("ADC Sample Rate Register: 0x%02X\n", adc_sample_rate);
+    // uint8_t adc_sample_rate = 0;
+    // ret = max40109_reg_read(max40109_dev, 0x0A, &adc_sample_rate, 1);
+    // if (ret < 0) {
+    //     printf("Failed to read ADC sample rate: %d\n", ret);
+    //     return ret;
+    // }
+    // printf("ADC Sample Rate Register: 0x%02X\n", adc_sample_rate);
 #if 0
     uint8_t interrupt_enable_reg [2];
     uint16_t int_setup;
@@ -152,6 +202,7 @@ int main(void)
     printf("MTP Data Read After Burn: 0x%02X 0x%02X\n", buff_burn[0], buff_burn[1]);
     return 0;
 #endif
+#if 0
     uint8_t val [2] = {0xFF, 0xCD};
     ret = max40109_mtp_write(max40109_dev, SP_DATA5, val);
     if (ret < 0) {
@@ -197,6 +248,86 @@ int main(void)
         return ret;
     }
     printf("Calibration coefficient H0 read successfully: %f\n", h0_value);
-    return 0;
+
+    uint8_t status_reg[2];
+    ret = max40109_reg_read(max40109_dev, 0x00, status_reg, 2);
+    if (ret < 0) {
+        printf("Failed to read status register: %d\n", ret);
+        return ret;
+    }
+
+    printf("Status Register Before Clear: 0x%02X 0x%02X\n", status_reg[0], status_reg[1]);
+#endif
+
+#if TRIGGER_SET_TEST
+    struct sensor_trigger pressure_trig = {
+        .type = SENSOR_TRIG_DATA_READY,
+        .chan = SENSOR_CHAN_PRESS_RAW,
+    };
+    struct sensor_trigger temp_trig = {
+        .type = SENSOR_TRIG_TEMP_DATA_READY,
+        .chan = SENSOR_CHAN_AMBIENT_TEMP,
+    };
+
+    ret = max40109_reg_write_multiple(max40109_dev, 0x0B, (uint8_t[]){0x00, 0x00}, 2);
+    if (ret < 0) {
+        printf("Failed to clear interrupt enable register: %d\n", ret);
+        return ret;
+    }
+    ret = max40109_trigger_set(max40109_dev, &pressure_trig, pressure_ready_callback);
+    if (ret < 0) {
+        printf("Failed to set pressure trigger: %d\n", ret);
+        return ret;
+    }
+    printf("Pressure trigger set successfully\n");
+
+    ret = max40109_trigger_set(max40109_dev, &temp_trig, temp_ready_callback);
+    if (ret < 0) {
+        printf("Failed to set temperature trigger: %d\n", ret);
+        return ret;
+    }
+    uint8_t interrupt_enable_reg [2] = {0,0};
+    ret = max40109_reg_read (max40109_dev, 0x0B, interrupt_enable_reg, 2);
+    if (ret < 0) {
+        printf("Failed to read interrupt enable register: %d\n", ret);
+        return ret;
+    }
+    int int_setup = (interrupt_enable_reg[0] << 8) | interrupt_enable_reg[1];
+    printf("Interrupt Enable Register After Trigger Set: 0x%04X\n", int_setup);
+    printf("Temperature trigger set successfully\n");
+
+    printf("Waiting for interrupts...\n");
+    uint8_t stat[2] = {0,0};
+    ret = max40109_reg_read(max40109_dev, 0x02, stat, 2);
+    if (ret < 0) {
+        printf("Failed to read status register: %d\n", ret);
+        return ret;
+    }
+
+    ret = max40109_reg_write_multiple(max40109_dev, 0x02, stat, 2);
+    if (ret < 0) {
+        printf("Failed to clear status register: %d\n", ret);
+        return ret;
+    }
+
+    struct sensor_value pressure;
+while(1){
+
+    k_sleep(K_MSEC(1000));
     
+    ret = max40109_reg_read(max40109_dev, 0x02,stat, 2);
+    if (ret < 0) {
+        printf("Failed to read status register: %d\n", ret);
+        return ret;
+    }
+    printf("Status Register: 0x%02X 0x%02X\n", stat[0], stat[1]);
+
+    ret = max40109_reg_write_multiple(max40109_dev, 0x02, stat, 2);
+    if (ret < 0) {
+        printf("Failed to clear status register: %d\n", ret);
+        return ret;
+    }
+}
+
+#endif
 }

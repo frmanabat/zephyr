@@ -410,6 +410,16 @@ static int max40109_set_pressure_gain(const struct device *dev, int val1)
 	return -EINVAL;
 }
 
+static int set_analog_output_stage(const struct device *dev, uint8_t mode)
+{
+	if (mode < MAX40109_AOS_SHUTDOWN || mode > MAX40109_AOS_RATIO_METRIC_VDD5V_1X_ALT3 ||
+	    mode == 0x01) {
+		return -EINVAL; // Invalid analog output stage mode
+	}
+
+	return max40109_reg_write(dev, MAX40109_ANALOG_OUTPUT_STAGE, mode);
+}
+
 static int max40109_set_temperature_gain(const struct device *dev, int val1, int val2)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(temp_gain_table); i++) {
@@ -428,6 +438,16 @@ static int max40109_set_alert_mode(const struct device *dev, uint8_t mode)
 		return -EINVAL; // Invalid alert mode
 	}
 	return max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK, mode);
+}
+
+static int max40109_set_temp_mode(const struct device *dev, uint8_t mode)
+{
+	if (mode < MAX40109_TEMP_MODE_INT_SE_GAIN_1 ||
+	    mode > MAX40109_TEMP_MODE_DRV_DIFF_DAC_OFFSET) {
+		return -EINVAL; // Invalid temperature mode
+	}
+
+	return max40109_reg_update(dev, MAX40109_TEMP_MODE, TEMP_MODE_MASK, mode);
 }
 
 static int max40109_set_drv_scale(const struct device *dev, int val1, int val2)
@@ -576,6 +596,12 @@ static int max40109_probe(const struct device *dev)
 	if (ret < 0) {
 		return ret; // Error setting ADC sampling rate
 	}
+	
+	/** Disable Interrupts at Startup */
+	ret = max40109_reg_write_multiple(dev, MAX40109_INTERRUPT_ENABLE_MSB, (uint8_t[]){0x00, 0x00}, 2);
+	if (ret < 0) {
+		return ret; // Error disabling interrupts
+	}
 
 	/** Set Pressure PGA Gain */
 	ret = max40109_reg_write(dev, MAX40109_PGA_PRESSURE_GAIN, config->pga_pressure_gain);
@@ -590,9 +616,21 @@ static int max40109_probe(const struct device *dev)
 	}
 
 	/** Set Alert Mode */
-	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK, config->alert_mode);
+	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, ALERT_MODE_MASK,
+				  config->alert_mode);
 	if (ret < 0) {
 		return ret; // Error setting alert mode
+	}
+
+	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_LSB, TEMP_CURRENT_MASK,
+				  config->temp_current);
+	if (ret < 0) {
+		return ret; // Error setting temperature current
+	}
+
+	ret = max40109_reg_update(dev, MAX40109_TEMP_MODE, TEMP_MODE_MASK, config->temp_mode);
+	if (ret < 0) {
+		return ret; // Error setting temperature mode
 	}
 
 	/** Set DRV Scale */
@@ -609,9 +647,29 @@ static int max40109_probe(const struct device *dev)
 
 	/** Set Digital Filter Setup */
 	ret = max40109_reg_update(dev, MAX40109_REG_CONFIG_MSB, DIGITAL_FILTER_MASK,
-				   config->digital_filter_setup);
+				  config->digital_filter_setup);
 	if (ret < 0) {
 		return ret; // Error setting digital filter setup
+	}
+
+	/** Set Analog Output Stage */
+	ret = max40109_reg_write(dev, MAX40109_ANALOG_OUTPUT_STAGE, config->analog_output_stage);
+	if (ret < 0) {
+		return ret; // Error setting analog output stage
+	}
+
+	/** Set Bridge Drive */
+	ret = max40109_reg_write(dev, MAX40109_BRIDGE_DRIVE, config->bridge_drive);
+	if (ret < 0) {
+		return ret; // Error setting bridge drive
+	}
+
+	for (int i = 0; i < ARRAY_SIZE(config->calib_coeff); i++) {
+		ret = max40109_mtp_calibration(dev, i,
+					       config->calib_coeff[i], false);
+		if (ret < 0) {
+			return ret; // Error applying calibration
+		}
 	}
 }
 
@@ -664,7 +722,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_ANALOG_FILTER_BW_SETUP:
+	case SENSOR_ATTR_MAX40109_ANALOG_FILTER_BW_SETUP:
 		if (val->val1 < 0) {
 			return -EINVAL; // Invalid bandwidth value
 		}
@@ -677,7 +735,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_DIGITAL_FILTER_SETUP:
+	case SENSOR_ATTR_MAX40109_DIGITAL_FILTER_SETUP:
 		if (val->val1 < 0) {
 			return -EINVAL; // Invalid digital filter setup value
 		}
@@ -689,7 +747,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_ALERT_MODE:
+	case SENSOR_ATTR_MAX40109_ALERT_MODE:
 		if (val->val1 < 0) {
 			return -EINVAL; // Invalid alert mode value
 		}
@@ -701,7 +759,19 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_DRV_SCALE:
+	case SENSOR_ATTR_MAX40109_TEMP_MODE:
+		if (val->val1 < 0) {
+			return -EINVAL; // Invalid temperature mode value
+		}
+		int temp_mode = val->val1;
+
+		ret = max40109_set_temp_mode(dev, temp_mode);
+		if (ret < 0) {
+			return ret;
+		}
+		break;
+
+	case SENSOR_ATTR_MAX40109_DRV_SCALE:
 		if (val == NULL) {
 			return -EINVAL; // Invalid value
 		}
@@ -719,6 +789,19 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		break;
 
+	case SENSOR_ATTR_MAX40109_ANALOG_OUTPUT_STAGE:
+		if (val->val1 < 0 || val->val1 > 0x0F || val->val1 == 0x01) {
+			return -EINVAL; // Invalid analog output stage mode
+		}
+		uint8_t aos_mode = val->val1;
+
+		ret = set_analog_output_stage(dev, aos_mode);
+		if (ret < 0) {
+			return ret; // Error setting analog output stage
+		}
+
+		break;
+
 	case SENSOR_ATTR_CALIB_TARGET:
 
 		ret = max40109_set_calibration_coeff(dev, chan, val);
@@ -728,7 +811,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		break;
 
-	case MAX40109_OVER_PRESSURE_THRESHOLD_POSITIVE:
+	case SENSOR_ATTR_MAX40109_OVER_PRESSURE_THRESHOLD_POSITIVE:
 
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
@@ -746,7 +829,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_UNDER_PRESSURE_THRESHOLD_POSITIVE:
+	case SENSOR_ATTR_MAX40109_UNDER_PRESSURE_THRESHOLD_POSITIVE:
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
 		}
@@ -763,7 +846,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_OVER_PRESSURE_THRESHOLD_NEGATIVE:
+	case SENSOR_ATTR_MAX40109_OVER_PRESSURE_THRESHOLD_NEGATIVE:
 
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
@@ -781,7 +864,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_UNDER_PRESSURE_THRESHOLD_NEGATIVE:
+	case SENSOR_ATTR_MAX40109_UNDER_PRESSURE_THRESHOLD_NEGATIVE:
 
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
@@ -799,7 +882,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_OVER_TEMPERATURE_VOLTAGE_THRESHOLD:
+	case SENSOR_ATTR_MAX40109_OVER_TEMPERATURE_VOLTAGE_THRESHOLD:
 		if (chan != SENSOR_CHAN_AMBIENT_TEMP) {
 			return -ENOTSUP;
 		}
@@ -815,7 +898,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		break;
 
-	case MAX40109_UNDER_TEMPERATURE_VOLTAGE_THRESHOLD:
+	case SENSOR_ATTR_MAX40109_UNDER_TEMPERATURE_VOLTAGE_THRESHOLD:
 		if (chan != SENSOR_CHAN_AMBIENT_TEMP) {
 			return -ENOTSUP;
 		}
@@ -831,7 +914,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		break;
 
-	case MAX40109_OVER_VOLTAGE_DRIVE_THRESHOLD:
+	case SENSOR_ATTR_MAX40109_OVER_VOLTAGE_DRIVE_THRESHOLD:
 		if (val->val1 < 0 || val->val1 > 0xFF) {
 			return -EINVAL; // Invalid threshold value
 		}
@@ -844,7 +927,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_UNDER_VOLTAGE_DRIVE_THRESHOLD:
+	case SENSOR_ATTR_MAX40109_UNDER_VOLTAGE_DRIVE_THRESHOLD:
 		if (val->val1 < 0 || val->val1 > 0xFF) {
 			return -EINVAL; // Invalid threshold value
 		}
@@ -857,7 +940,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 
 		break;
 
-	case MAX40109_PRIMARY_THRESHOLD_PRESSURE_VALUE:
+	case SENSOR_ATTR_MAX40109_PRIMARY_THRESHOLD_PRESSURE_VALUE:
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
 		}
@@ -872,7 +955,7 @@ static int max40109_attr_set(const struct device *dev, enum sensor_channel chan,
 		}
 		break;
 
-	case MAX40109_HYSTERESIS_THRESHOLD_PRESSURE_VALUE:
+	case SENSOR_ATTR_MAX40109_HYSTERESIS_THRESHOLD_PRESSURE_VALUE:
 		if (chan != SENSOR_CHAN_PRESS) {
 			return -ENOTSUP;
 		}
@@ -903,10 +986,10 @@ static int max40109_sample_fetch(const struct device *dev, enum sensor_channel c
 	struct max40109_data *data = dev->data;
 	int ret;
 
-	if (chan != SENSOR_CHAN_PRESS || chan != SENSOR_CHAN_AMBIENT_TEMP ||
-	    chan != SENSOR_CHAN_ALL) {
-		return -ENOTSUP; // Unsupported channel
-	}
+	// if (chan != SENSOR_CHAN_PRESS || chan != SENSOR_CHAN_AMBIENT_TEMP ||
+	//     chan != SENSOR_CHAN_ALL) {
+	// 	return -ENOTSUP; // Unsupported channel
+	// }
 
 	uint8_t uncalibrated_data[2];
 	uint8_t calibrated_data[2];
@@ -926,7 +1009,7 @@ static int max40109_sample_fetch(const struct device *dev, enum sensor_channel c
 		data->calibrated_pressure = (calibrated_data[0] << 8) | calibrated_data[1];
 	}
 
-	else if (chan == SENSOR_CHAN_AMBIENT_TEMP || chan == SENSOR_CHAN_ALL) {
+	if (chan == SENSOR_CHAN_AMBIENT_TEMP || chan == SENSOR_CHAN_ALL) {
 		ret = max40109_reg_read(dev, MAX40109_UNCALBIRATED_TEMPERATURE_MSB,
 					uncalibrated_data, 2);
 		if (ret < 0) {
@@ -945,6 +1028,44 @@ static int max40109_sample_fetch(const struct device *dev, enum sensor_channel c
 	return 0;
 }
 
+static int max40109_channel_get(const struct device *dev, enum sensor_channel chan,
+				struct sensor_value *val)
+{
+	const struct max40109_config *config = dev->config;
+	struct max40109_data *data = dev->data;
+
+	switch (chan) {
+	case SENSOR_CHAN_PRESS:
+		/* Convert raw pressure to sensor_value format */
+		val->val1 = data->calibrated_pressure; // Integer part
+		val->val2 = 0;				// Fractional part (in micro-units)
+		break;
+
+	case SENSOR_CHAN_AMBIENT_TEMP:
+		/* Convert raw temperature to sensor_value format */
+		val->val1 = data->calibrated_temperature; // Integer part
+		val->val2 = 0;			     // Fractional part (in micro-units)
+		break;
+
+	case SENSOR_CHAN_AMBIENT_TEMP_RAW:
+		/* Convert raw temperature to sensor_value format */
+		val->val1 = data->uncalibrated_temperature; // Integer part
+		val->val2 = 0;			       // Fractional part (in micro-units)
+		break;
+
+	case SENSOR_CHAN_PRESS_RAW:
+		/* Convert raw pressure to sensor_value format */
+		val->val1 = data->uncalibrated_pressure; // Integer part
+		val->val2 = 0;			     // Fractional part (in micro-units)
+		break;
+
+	default:
+		return -ENOTSUP; // Unsupported channel
+	}
+
+	return 0;
+}
+
 static int max40109_init(const struct device *dev)
 {
 	const struct max40109_config *config = dev->config;
@@ -957,6 +1078,13 @@ static int max40109_init(const struct device *dev)
 	int ret = 0;
 	uint8_t status_reg[2];
 
+	
+	ret = max40109_probe(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to initialize the sensor");
+		return ret;
+	}
+
 	ret = max40109_reg_read(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
 	if (ret < 0) {
 		return ret;
@@ -967,6 +1095,16 @@ static int max40109_init(const struct device *dev)
 		return ret;
 	}
 
+	ret = max40109_reg_read(dev, MAX40109_REG_STATUS_MSB, status_reg, 2);
+	if (ret < 0) {
+		return ret;
+	}
+	// if (status_reg[1] != 0x00) {
+	// 	LOG_ERR("Failed to reset STATUS register");
+	// 	return -EIO;
+	// }
+	printf("STATUS REG: 0x%02X 0x%02X\n", status_reg[0], status_reg[1]);
+
 #ifdef CONFIG_MAX40109_TRIGGER
 	if (config->interrupt_gpio.port) {
 		if (max40109_init_interrupt(dev) < 0) {
@@ -976,11 +1114,6 @@ static int max40109_init(const struct device *dev)
 	}
 #endif
 
-	ret = max40109_probe(dev);
-	if (ret < 0) {
-		LOG_ERR("Failed to initialize the sensor");
-		return ret;
-	}
 	LOG_INF("MAX40109 sensor initialized successfully");
 	return 0;
 }
@@ -989,11 +1122,14 @@ static DEVICE_API(sensor, max40109_driver_api) = {
 	.attr_set = max40109_attr_set,
 	// 	.attr_get = max40109_attr_get,
 	.sample_fetch = max40109_sample_fetch,
-// 	.channel_get = max40109_channel_get,
+	.channel_get = max40109_channel_get,
 #ifdef CONFIG_MAX40109_TRIGGER
 	.trigger_set = max40109_trigger_set,
 #endif
 };
+
+#define DT_PROP_ELEM_TO_FLOAT(node_id, prop, idx) \
+	((float)DT_PROP_BY_IDX(node_id, prop, idx) / 1000.0f),
 
 #define MAX40109_CONFIG(inst)                                                                      \
 	.digital_filter_setup = DT_INST_PROP(inst, digital_filter),                                \
@@ -1007,26 +1143,9 @@ static DEVICE_API(sensor, max40109_driver_api) = {
 	.temp_mode = DT_INST_PROP(inst, temp_mode), .drv_scale = DT_INST_PROP(inst, drv_scale),    \
 	.analog_filter_bw_setup = DT_INST_PROP(inst, analog_filter_bw),                            \
 	.analog_output_stage = DT_INST_PROP(inst, analog_output_stage),                            \
-	.k0 = (float)DT_INST_PROP(inst, k0) / 1000.0f,                                             \
-	.k1 = (float)DT_INST_PROP(inst, k1) / 1000.0f,                                             \
-	.k2 = (float)DT_INST_PROP(inst, k2) / 1000.0f,                                             \
-	.k3 = (float)DT_INST_PROP(inst, k3) / 1000.0f,                                             \
-	.h0 = (float)DT_INST_PROP(inst, h0) / 1000.0f,                                             \
-	.h1 = (float)DT_INST_PROP(inst, h1) / 1000.0f,                                             \
-	.h2 = (float)DT_INST_PROP(inst, h2) / 1000.0f,                                             \
-	.h3 = (float)DT_INST_PROP(inst, h3) / 1000.0f,                                             \
-	.g0 = (float)DT_INST_PROP(inst, g0) / 1000.0f,                                             \
-	.g1 = (float)DT_INST_PROP(inst, g1) / 1000.0f,                                             \
-	.g2 = (float)DT_INST_PROP(inst, g2) / 1000.0f,                                             \
-	.g3 = (float)DT_INST_PROP(inst, g3) / 1000.0f,                                             \
-	.n0 = (float)DT_INST_PROP(inst, n0) / 1000.0f,                                             \
-	.n1 = (float)DT_INST_PROP(inst, n1) / 1000.0f,                                             \
-	.n2 = (float)DT_INST_PROP(inst, n2) / 1000.0f,                                             \
-	.n3 = (float)DT_INST_PROP(inst, n3) / 1000.0f,                                             \
-	.m0 = (float)DT_INST_PROP(inst, m0) / 1000.0f,                                             \
-	.m1 = (float)DT_INST_PROP(inst, m1) / 1000.0f,                                             \
-	.m2 = (float)DT_INST_PROP(inst, m2) / 1000.0f,                                             \
-	.m3 = (float)DT_INST_PROP(inst, m3) / 1000.0f,                                             \
+	.calib_coeff = {                                                                 \
+		DT_INST_FOREACH_PROP_ELEM(inst, calib_coeff, DT_PROP_ELEM_TO_FLOAT)     \
+	},                                                                            \
 	.overpressure_threshold_positive = DT_INST_PROP(inst, overpressure_threshold_pos),         \
 	.underpressure_threshold_positive = DT_INST_PROP(inst, underpressure_threshold_pos),       \
 	.overpressure_threshold_negative = DT_INST_PROP(inst, overpressure_threshold_neg),         \
@@ -1045,7 +1164,7 @@ static DEVICE_API(sensor, max40109_driver_api) = {
 		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
 		MAX40109_CONFIG(inst),                                                             \
 		IF_ENABLED(CONFIG_MAX40109_TRIGGER, (.interrupt_gpio = GPIO_DT_SPEC_INST_GET_OR(        \
-			inst, interrupt_gpios, {0}),)) };        \
+			inst, interrupt_gpios, {0}))) };        \
 	SENSOR_DEVICE_DT_INST_DEFINE(inst, &max40109_init, NULL, &max40109_prv_data_##inst,        \
 				     &max40109_config_##inst, POST_KERNEL,                         \
 				     CONFIG_SENSOR_INIT_PRIORITY, &max40109_driver_api);

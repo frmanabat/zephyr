@@ -15,7 +15,7 @@ config MAX40109_CALIBRATION
 	  Enable MTP Calibration
 
 config MAX40109_TRIGGER
-	bool
+	bool "Enable trigger support"
 
 choice MAX40109_TRIGGER_MODE
 	prompt "Sets trigger mode"

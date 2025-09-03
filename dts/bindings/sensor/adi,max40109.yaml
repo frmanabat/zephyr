@@ -15,7 +15,7 @@ properties:
   
   interrupt-gpios:
     required: false
-    type: phandle
+    type: phandle-array
     description: "GPIO connected to the INT pin of the MAX40109 device."
   
   digital-filter:
@@ -316,6 +316,15 @@ properties:
     type: int
     description: Calibration coefficient M3 for Pressure calculation in thousandths. Default value is 0 (0.0).
     default: 0
+  
+  calib-coeff:
+    required: false
+    type: array
+    default: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    description: |
+      Array of 24 calibration coefficients in the order:
+      K0, K1, K2, K3, H0, H1, H2, H3, G0, G1, G2, G3, N0, N1, N2, N3, M0, M1, M2, M3.
+      Each coefficient is an integer representing the value in thousandths.
 
   overpressure-threshold-pos:
     required: false
