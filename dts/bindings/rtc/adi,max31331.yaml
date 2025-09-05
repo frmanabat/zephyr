@@ -13,3 +13,7 @@ properties:
   reg:
     required: true
     
+  interrupt-gpios:
+    description: "GPIO connected to the INT pin of the MAX31331."
+    type: phandle-array
+    required: false
