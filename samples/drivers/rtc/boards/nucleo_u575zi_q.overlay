@@ -14,5 +14,6 @@
         status = "okay";
         compatible = "adi,max31331";
         reg = <0x68>;
+        interrupt-gpios = <&gpioe 13 GPIO_ACTIVE_LOW>;
     };
  };

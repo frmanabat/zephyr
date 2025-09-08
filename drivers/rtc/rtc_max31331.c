@@ -6,6 +6,7 @@
 
 #include <errno.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/device.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/logging/log.h>
@@ -323,6 +324,178 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 	return 0;
 }
 
+static int rtc_max31331_alarm_set_callback(const struct device *dev, uint16_t id,
+					    rtc_alarm_callback callback, void *user_data)
+{
+	struct rtc_max31331_data *data = dev->data;
+
+	if (id <= 0 || id > 2) {
+		LOG_ERR("invalid ID %d", id);
+		return -EINVAL;
+	}
+	printk("Registering callback for alarm ID %d\n", id);
+	data->alarms[id - 1].callback = callback;
+	data->alarms[id - 1].user_data = user_data;
+	printk("Setting callback for alarm ID %d\n", id);
+	return 0;
+}
+
+static int rtc_max31331_alarm_get_supported_fields(const struct device *dev, uint16_t id,
+						 uint16_t *mask)
+{
+	*mask = RTC_ALARM_TIME_MASK_MONTHDAY | RTC_ALARM_TIME_MASK_WEEKDAY |
+		RTC_ALARM_TIME_MASK_HOUR | RTC_ALARM_TIME_MASK_MINUTE;
+
+	switch (id) {
+	case 1:
+		*mask |= RTC_ALARM_TIME_MASK_SECOND | RTC_ALARM_TIME_MASK_MONTH | RTC_ALARM_TIME_MASK_YEAR;
+		break;
+	case 2:
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int rtc_max31331_alarm_is_pending(const struct device *dev, uint16_t id)
+{
+	const struct rtc_max31331_config *config = dev->config;
+	int ret;
+	uint8_t int_status;
+
+	if (id <= 0 || id > 2) {
+		LOG_ERR("invalid ID %d", id);
+		return -EINVAL;
+	}
+
+	ret = max31331_reg_read(dev, MAX31331_STATUS_REG, &int_status, 1);
+	if (ret) {
+		LOG_ERR("Failed to read interrupt status");
+		return ret;
+	}
+
+	if (id == 1) {
+		return (int_status & ALARM_1_FLAG_MASK) ? 1 : 0;
+	} else if (id == 2) {
+		return (int_status & ALARM_2_FLAG_MASK) ? 1 : 0;
+	}
+
+	return 0;
+}
+
+static int rtc_max31331_init_alarms(struct device *dev)
+{
+	 struct rtc_max31331_data *data = dev->data;
+
+    for (int i = 0; i < ALARM_COUNT; i++) {
+        data->alarms[i].callback = NULL;
+        data->alarms[i].user_data = NULL;
+    }
+	return 0;
+}
+
+static void rtc_max31331_work_cb(struct k_work *work)
+{
+	struct rtc_max31331_data *data =
+        CONTAINER_OF(work, struct rtc_max31331_data, work);
+	const struct device *dev = data->dev;
+	const struct rtc_max31331_config *config = dev->config;
+
+	printk("Work callback triggered\n");
+	int ret = 0;
+	uint8_t int_status;
+
+	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_DISABLE);
+	if (ret) {
+		LOG_ERR("Failed to disable INT GPIO interrupt");
+		return;
+	}
+
+	ret = max31331_reg_read(dev, MAX31331_STATUS_REG, &int_status, 1);
+	if (ret) {
+		LOG_ERR("Failed to read interrupt status");
+		return;
+	}
+
+	if (int_status & ALARM_1_FLAG_MASK) {
+		if (data->alarms[0].callback) {
+			data->alarms[0].callback(dev, 1, data->alarms[0].user_data);
+		}
+
+	}
+		// Clear the alarm flag
+	if (int_status & ALARM_2_FLAG_MASK) {
+		if (data->alarms[1].callback) {
+			data->alarms[1].callback(dev, 2, data->alarms[1].user_data);
+		}
+	}
+
+	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_EDGE_FALLING);
+	if (ret) {
+		LOG_ERR("Failed to enable INT GPIO interrupt");
+		return;
+	}
+
+	__ASSERT(ret == 0, "Interrupt Configuration Failed");
+
+}
+
+static void rtc_max31331_gpio_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+{
+	printk("GPIO callback triggered\n");
+	struct rtc_max31331_data *data =
+		CONTAINER_OF(cb, struct rtc_max31331_data, int_callback);
+	k_work_submit(&data->work);
+	printk("GPIO callback triggered, work submitted\n");
+}
+
+static int rtc_max31331_alarm_init(const struct device *dev)
+{
+	const struct rtc_max31331_config *config = dev->config;
+	struct rtc_max31331_data *data = dev->data;
+
+	int ret = 0;
+	if (!gpio_is_ready_dt(&config->inta_gpios)) {
+		LOG_ERR("INT GPIO not ready");
+		return -ENODEV;
+	}
+	
+	ret = rtc_max31331_init_alarms(dev);
+	if (ret) {
+		LOG_ERR("Failed to initialize alarms");
+		return ret;
+	}
+
+	k_work_init(&data->work, rtc_max31331_work_cb);
+
+	ret = gpio_pin_configure_dt(&config->inta_gpios, GPIO_INPUT);
+	if (ret) {
+		LOG_ERR("Failed to configure INT GPIO");
+		return ret;
+	}
+
+	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_EDGE_FALLING);
+	if (ret) {
+		LOG_ERR("Failed to configure INT GPIO interrupt");
+		return ret;
+	}
+
+	gpio_init_callback(&data->int_callback, rtc_max31331_gpio_callback, BIT(config->inta_gpios.pin));
+	ret = gpio_add_callback(config->inta_gpios.port, &data->int_callback);
+	if (ret) {
+		LOG_ERR("Failed to add INT GPIO callback");
+		return ret;
+	}
+
+	printk("Alarm interrupt configured on %s pin %d\n",
+	       config->inta_gpios.port->name, config->inta_gpios.pin);
+	data->dev = dev;
+}
+
+
+
 #endif
 
 static int rtc_max31331_init(const struct device *dev)
@@ -349,6 +522,11 @@ static int rtc_max31331_init(const struct device *dev)
 		return ret;
 	}
 
+#ifdef CONFIG_RTC_ALARM
+	if (config->inta_gpios.port) {
+		ret = rtc_max31331_alarm_init(dev);
+	}
+#endif
 
 	/** Enable Oscillator */
 	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG1, ENABLE_OSCILLATOR_MASK , 1);
@@ -367,9 +545,9 @@ static DEVICE_API(rtc, rtc_max31331) =
 #ifdef CONFIG_RTC_ALARM
 	.alarm_set_time = rtc_max31331_alarm_set_time,
 	.alarm_get_time = rtc_max31331_alarm_get_time,
-	// .alarm_is_pending = rtc_max31331_alarm_is_pending,
-	// .alarm_set_callback = rtc_max31331_alarm_set_callback,
-	// .alarm_get_supported_fields = rtc_max31331_alarm_get_supported_fields,
+	.alarm_is_pending = rtc_max31331_alarm_is_pending,
+	.alarm_set_callback = rtc_max31331_alarm_set_callback,
+	.alarm_get_supported_fields = rtc_max31331_alarm_get_supported_fields,
 #endif
 #ifdef CONFIG_RTC_UPDATE
 	// .update_set_callback = rtc_max31331_update_set_callback,
@@ -381,11 +559,13 @@ static DEVICE_API(rtc, rtc_max31331) =
 };
 
 #define RTC_MAX31331_DEFINE(inst)                                                                  \
+	static struct rtc_max31331_data rtc_max31331_prv_data_##inst;                           \
 	static const struct rtc_max31331_config rtc_max31331_config##inst = {                      \
-		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
+		.i2c = I2C_DT_SPEC_INST_GET(inst),       \
+		IF_ENABLED(CONFIG_RTC_ALARM, (.inta_gpios = GPIO_DT_SPEC_INST_GET_OR(inst, interrupt_gpios, {0})))                                         \
 	};                                                                                         \
                                                                                                    \
-	DEVICE_DT_INST_DEFINE(inst, rtc_max31331_init, NULL, NULL, &rtc_max31331_config##inst,     \
+	DEVICE_DT_INST_DEFINE(inst, rtc_max31331_init, NULL, &rtc_max31331_prv_data_##inst, &rtc_max31331_config##inst,     \
 			      POST_KERNEL, CONFIG_RTC_INIT_PRIORITY, &rtc_max31331);
 
 DT_INST_FOREACH_STATUS_OKAY(RTC_MAX31331_DEFINE)

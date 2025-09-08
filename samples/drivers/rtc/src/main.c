@@ -12,6 +12,11 @@
 #define RTC_DEVICE_NODE DT_NODELABEL(rtc_max31331)
 static const struct device *rtc_max31331 = DEVICE_DT_GET(RTC_DEVICE_NODE);
 
+static void alarm_callback(const struct device *dev, int alarm_id, void *user_data)
+{
+	printk("Alarm %d triggered!\n", alarm_id);
+}
+
 int main(void)
 {
 	/* Check if the RTC is ready */
@@ -59,6 +64,12 @@ int main(void)
 	       time.tm_year + 2000, time.tm_mon + 1, time.tm_mday,
 	       time.tm_hour, time.tm_min, time.tm_sec);
 
+	ret = rtc_alarm_set_callback(rtc_max31331, 1, alarm_callback, NULL);
+	if (ret) {
+		printk("Error setting alarm callback: %d\n", ret);
+		return ret;
+	}
+
 	struct rtc_time alarm_time;
 	alarm_time.tm_year = 2024 - 2000; // Year since 1900
 	alarm_time.tm_mon = 6 - 1;        // Month [0-11]
@@ -89,7 +100,7 @@ int main(void)
 		return ret;
 	}
 	printk("Seconds alarm1 reg: 0x%02X\n", val);
-	uint16_t mask;
+	uint16_t mask = RTC_ALARM_TIME_MASK_SECOND;
 
 	ret = rtc_alarm_get_time(rtc_max31331, 1, &mask, &alarm_time);
 	if (ret) {
@@ -101,11 +112,7 @@ int main(void)
 	       alarm_time.tm_year + 2000, alarm_time.tm_mon + 1, alarm_time.tm_mday,
 	       alarm_time.tm_hour, alarm_time.tm_min, alarm_time.tm_sec);
 
-	// ret = rtc_alarm_get_time(rtc_max31331, 1, RTC_ALARM_TIME_MASK_SECOND, &alarm_time);
-	// if (ret) {
-	// 	printk("Error getting alarm time: %d\n", ret);
-	// 	return ret;
-	// }
+	ret = rtc_alarm_set_callback(rtc_max31331, 1, alarm_callback, NULL);
 	// printk("Alarm time retrieved: %04d-%02d-%02d %02d:%02d:%02d\n",
 	//        alarm_time.tm_year + 2000, alarm_time.tm_mon + 1, alarm_time.tm_mday,
 	//        alarm_time.tm_hour, alarm_time.tm_min, alarm_time.tm_sec);

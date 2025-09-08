@@ -9,6 +9,7 @@
 #include <zephyr/sys/util.h>
 #include <zephyr/logging/log.h>
 #include <errno.h>
+#include <zephyr/drivers/rtc.h>
 
 #define MAX31331_STATUS_REG       0x00u
 #define MAX31331_INTERRUPT_ENABLE 0x01u
@@ -434,12 +435,39 @@
      RTC_ALARM_TIME_MASK_MONTH | RTC_ALARM_TIME_MASK_MONTHDAY | RTC_ALARM_TIME_MASK_YEAR |\
      RTC_ALARM_TIME_MASK_WEEKDAY)
 
+#define ALARM_COUNT 2
+
+#ifdef CONFIG_RTC_ALARM
+struct rtc_max31331_alarm{
+    rtc_alarm_callback callback;
+	void *user_data;
+};
+#endif
+
+#ifdef CONFIG_RTC_UPDATE
+struct rtc_ma31331_update{
+    rtc_update_callback cb;
+    void *user_data;
+};
+#endif
 
 struct rtc_max31331_data {
-	int dummy;
+#ifdef CONFIG_RTC_ALARM
+    struct rtc_max31331_alarm alarms[ALARM_COUNT];
+#endif
+#ifdef CONFIG_RTC_UPDATE
+    struct rtc_max31331_update update;
+#endif
+    struct k_sem lock;
+    struct gpio_callback int_callback;
+    struct k_work work;
+    const struct device *dev;
 };
+
 struct rtc_max31331_config {
 	struct i2c_dt_spec i2c;
+    struct gpio_dt_spec inta_gpios;
+    struct gpio_dt_spec intb_sqw_gpios;
 };
 
 int max31331_reg_read(const struct device *dev, uint8_t reg_addr, uint8_t *val, uint8_t length);
