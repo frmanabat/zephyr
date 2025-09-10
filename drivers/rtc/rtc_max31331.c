@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2025 Analog Devices Inc.
- *
+ * @author Francis Roi Manabat <francisroi.manabat@analog.com>
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -70,7 +70,7 @@ int max31331_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask
 	return max31331_reg_write(dev, reg_addr, reg_val);
 }
 
-static int rtc_max31331_get_time (const struct device *dev, struct rtc_time *timeptr)
+static int rtc_max31331_get_time(const struct device *dev, struct rtc_time *timeptr)
 {
 	const struct rtc_max31331_config *config = dev->config;
 	int ret;
@@ -82,12 +82,14 @@ static int rtc_max31331_get_time (const struct device *dev, struct rtc_time *tim
 		return ret;
 	}
 
-	timeptr->tm_sec  = bcd2bin(raw_time[0] & SECONDS_FIELD_MASK);
-	timeptr->tm_min  = bcd2bin(raw_time[1] & MINUTES_FIELD_MASK);
-	timeptr->tm_hour = bcd2bin(raw_time[2] & HOURS_FIELD_MASK); /* Support 24 hour format to make it compatible with BCD MACRO*/
+	timeptr->tm_sec = bcd2bin(raw_time[0] & SECONDS_FIELD_MASK);
+	timeptr->tm_min = bcd2bin(raw_time[1] & MINUTES_FIELD_MASK);
+	timeptr->tm_hour = bcd2bin(
+		raw_time[2] &
+		HOURS_FIELD_MASK); /* Support 24 hour format to make it compatible with BCD MACRO*/
 	timeptr->tm_wday = bcd2bin(raw_time[3] & DAY_FIELD_MASK) + MAX31331_DAY_OFFSET;
 	timeptr->tm_mday = bcd2bin(raw_time[4] & DATE_FIELD_MASK);
-	timeptr->tm_mon  = bcd2bin(raw_time[5] & MONTH_FIELD_MASK);
+	timeptr->tm_mon = bcd2bin(raw_time[5] & MONTH_FIELD_MASK);
 	if (raw_time[5] & BIT(7)) {
 		/* Century bit is set, so we are in 21st century */
 		timeptr->tm_year = bcd2bin(raw_time[6] & YEAR_FIELD_MASK) + MAX31331_YEAR_2100;
@@ -96,36 +98,37 @@ static int rtc_max31331_get_time (const struct device *dev, struct rtc_time *tim
 	}
 
 	LOG_DBG("Get time: year: %d, month: %d, month day: %d, week day: %d, hour: %d, "
-			"minute: %d, second: %d",
-			timeptr->tm_year, timeptr->tm_mon, timeptr->tm_mday, timeptr->tm_wday,
-			timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
+		"minute: %d, second: %d",
+		timeptr->tm_year, timeptr->tm_mon, timeptr->tm_mday, timeptr->tm_wday,
+		timeptr->tm_hour, timeptr->tm_min, timeptr->tm_sec);
 
 	return 0;
 }
 
-static int rtc_max31331_set_time (const struct device *dev, const struct rtc_time *timeptr)
+static int rtc_max31331_set_time(const struct device *dev, const struct rtc_time *timeptr)
 {
 	const struct rtc_max31331_config *config = dev->config;
 	int ret;
 	uint8_t raw_time[7];
 
-	if((timeptr == NULL) || !rtc_utils_validate_rtc_time(timeptr, MAX31331_RTC_TIME_MASK)) {
+	if ((timeptr == NULL) || !rtc_utils_validate_rtc_time(timeptr, MAX31331_RTC_TIME_MASK)) {
 		LOG_ERR("invalid time");
 		return -EINVAL;
 	}
 
 	raw_time[0] = bin2bcd(timeptr->tm_sec) & SECONDS_FIELD_MASK;
 	raw_time[1] = bin2bcd(timeptr->tm_min) & MINUTES_FIELD_MASK;
-	raw_time[2] = bin2bcd(timeptr->tm_hour) & HOURS_FIELD_MASK; /* Support 24 hour format to make it compatible with BCD MACRO*/
+	raw_time[2] =
+		bin2bcd(timeptr->tm_hour) &
+		HOURS_FIELD_MASK; /* Support 24 hour format to make it compatible with BCD MACRO*/
 	raw_time[3] = bin2bcd(timeptr->tm_wday - MAX31331_DAY_OFFSET) & DAY_FIELD_MASK;
 	raw_time[4] = bin2bcd(timeptr->tm_mday) & DATE_FIELD_MASK;
 	raw_time[5] = bin2bcd(timeptr->tm_mon) & MONTH_FIELD_MASK;
 
-	if(timeptr->tm_year >= MAX31331_YEAR_2100){
+	if (timeptr->tm_year >= MAX31331_YEAR_2100) {
 		raw_time[5] |= BIT(7); // Set century bit for 21st century
 		raw_time[6] = bin2bcd(timeptr->tm_year - MAX31331_YEAR_2100) & YEAR_FIELD_MASK;
-	} 
-	else{
+	} else {
 		raw_time[6] = bin2bcd(timeptr->tm_year) & YEAR_FIELD_MASK;
 	}
 
@@ -139,11 +142,11 @@ static int rtc_max31331_set_time (const struct device *dev, const struct rtc_tim
 
 #ifdef CONFIG_RTC_ALARM
 static int rtc_max31331_alarm_set_time(const struct device *dev, uint16_t id, uint16_t mask,
-				  const struct rtc_time *timeptr)
+				       const struct rtc_time *timeptr)
 {
 	const struct rtc_max31331_config *config = dev->config;
 	int ret = 0;
-	uint8_t raw_time [6];
+	uint8_t raw_time[6];
 	if (id <= 0) {
 		LOG_ERR("invalid ID %d", id);
 		return -EINVAL;
@@ -154,7 +157,7 @@ static int rtc_max31331_alarm_set_time(const struct device *dev, uint16_t id, ui
 		return -EINVAL;
 	}
 
-	if((timeptr == NULL) || !rtc_utils_validate_rtc_time(timeptr, mask)){
+	if ((timeptr == NULL) || !rtc_utils_validate_rtc_time(timeptr, mask)) {
 		LOG_ERR("invalid alarm time");
 		return -EINVAL;
 	}
@@ -164,63 +167,112 @@ static int rtc_max31331_alarm_set_time(const struct device *dev, uint16_t id, ui
 	// 	return -EINVAL;
 	// }
 
-	if (id == 1){
+	if (id == 1) {
 
-	raw_time[0] = (mask & RTC_ALARM_TIME_MASK_SECOND) ? (bin2bcd(timeptr->tm_sec) & ALARM_1_SECONDS_FIELD_MASK) & ~ALARM_1_SECONDS_ENABLE_MASK : (bin2bcd(timeptr->tm_sec) & ALARM_1_SECONDS_FIELD_MASK) | ALARM_1_SECONDS_ENABLE_MASK;
-	raw_time[1] = (mask & RTC_ALARM_TIME_MASK_MINUTE) ? (bin2bcd(timeptr->tm_min) & ALARM_1_MINUTES_FIELD_MASK) & ~ALARM_1_MINUTES_ENABLE_MASK : (bin2bcd(timeptr->tm_min) & ALARM_1_MINUTES_FIELD_MASK) | ALARM_1_MINUTES_ENABLE_MASK;
-	raw_time[2] = (mask & RTC_ALARM_TIME_MASK_HOUR)   ? (bin2bcd(timeptr->tm_hour) & ALARM_1_HOURS_FIELD_MASK) & ~ALARM_1_HOURS_ENABLE_MASK     : (bin2bcd(timeptr->tm_hour) & ALARM_1_HOURS_FIELD_MASK) | ALARM_1_HOURS_ENABLE_MASK;
-	
-	if(timeptr->tm_wday != NULL){
-		raw_time[3] = (mask & RTC_ALARM_TIME_MASK_WEEKDAY) ? ((bin2bcd(timeptr->tm_wday) & ALARM_1_DAY_DATE_MASK) | ALARM_1_DAY_DATE_OP_MASK) & ~ALARM_1_DAY_DATE_ENABLE_MASK : (bin2bcd(timeptr->tm_wday) & ALARM_1_DAY_DATE_MASK) | ALARM_1_DAY_DATE_OP_MASK | ALARM_1_DAY_DATE_ENABLE_MASK;
-	}
-	else if(timeptr->tm_mday != NULL){
-		raw_time[3] = (mask & RTC_ALARM_TIME_MASK_MONTHDAY) ? (bin2bcd(timeptr->tm_mday) & ALARM_1_DAY_DATE_FIELD_MASK &~ ALARM_1_DAY_DATE_OP_MASK) & ~ALARM_1_DAY_DATE_ENABLE_MASK : (bin2bcd(timeptr->tm_mday) & ALARM_1_DAY_DATE_FIELD_MASK &~ ALARM_1_DAY_DATE_OP_MASK) | ALARM_1_DAY_DATE_ENABLE_MASK;
-	}
-	else{
-		raw_time[3] = 0x80; // Disable day/date alarm if neither is set
-	}
+		raw_time[0] = (mask & RTC_ALARM_TIME_MASK_SECOND)
+				      ? (bin2bcd(timeptr->tm_sec) & ALARM_1_SECONDS_FIELD_MASK) &
+						~ALARM_1_SECONDS_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_sec) & ALARM_1_SECONDS_FIELD_MASK) |
+						ALARM_1_SECONDS_ENABLE_MASK;
+		raw_time[1] = (mask & RTC_ALARM_TIME_MASK_MINUTE)
+				      ? (bin2bcd(timeptr->tm_min) & ALARM_1_MINUTES_FIELD_MASK) &
+						~ALARM_1_MINUTES_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_min) & ALARM_1_MINUTES_FIELD_MASK) |
+						ALARM_1_MINUTES_ENABLE_MASK;
+		raw_time[2] = (mask & RTC_ALARM_TIME_MASK_HOUR)
+				      ? (bin2bcd(timeptr->tm_hour) & ALARM_1_HOURS_FIELD_MASK) &
+						~ALARM_1_HOURS_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_hour) & ALARM_1_HOURS_FIELD_MASK) |
+						ALARM_1_HOURS_ENABLE_MASK;
 
-	raw_time[4] = (mask & RTC_ALARM_TIME_MASK_MONTH) ? (bin2bcd(timeptr->tm_mon) & ALARM_1_MONTH_FIELD_MASK) & ~ALARM_1_MONTH_ENABLE_MASK : (bin2bcd(timeptr->tm_mon) & ALARM_1_MONTH_FIELD_MASK | ALARM_1_MONTH_ENABLE_MASK);
-	
-	if (mask & RTC_ALARM_TIME_MASK_YEAR) {
+		if (timeptr->tm_wday != NULL) {
+			raw_time[3] =
+				(mask & RTC_ALARM_TIME_MASK_WEEKDAY)
+					? ((bin2bcd(timeptr->tm_wday) & ALARM_1_DAY_DATE_MASK) |
+					   ALARM_1_DAY_DATE_OP_MASK) &
+						  ~ALARM_1_DAY_DATE_ENABLE_MASK
+					: (bin2bcd(timeptr->tm_wday) & ALARM_1_DAY_DATE_MASK) |
+						  ALARM_1_DAY_DATE_OP_MASK |
+						  ALARM_1_DAY_DATE_ENABLE_MASK;
+		} else if (timeptr->tm_mday != NULL) {
+			raw_time[3] =
+				(mask & RTC_ALARM_TIME_MASK_MONTHDAY)
+					? (bin2bcd(timeptr->tm_mday) & ALARM_1_DAY_DATE_FIELD_MASK &
+					   ~ALARM_1_DAY_DATE_OP_MASK) &
+						  ~ALARM_1_DAY_DATE_ENABLE_MASK
+					: (bin2bcd(timeptr->tm_mday) & ALARM_1_DAY_DATE_FIELD_MASK &
+					   ~ALARM_1_DAY_DATE_OP_MASK) |
+						  ALARM_1_DAY_DATE_ENABLE_MASK;
+		} else {
+			raw_time[3] = 0x80; // Disable day/date alarm if neither is set
+		}
+
+		raw_time[4] = (mask & RTC_ALARM_TIME_MASK_MONTH)
+				      ? (bin2bcd(timeptr->tm_mon) & ALARM_1_MONTH_FIELD_MASK) &
+						~ALARM_1_MONTH_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_mon) & ALARM_1_MONTH_FIELD_MASK |
+					 ALARM_1_MONTH_ENABLE_MASK);
+
+		if (mask & RTC_ALARM_TIME_MASK_YEAR) {
 			raw_time[5] = (bin2bcd(timeptr->tm_year) & ALARM_1_YEAR_FIELD_MASK);
-		} 
-	else{
-		raw_time[4] |= ALARM_1_YEAR_ENABLE_MASK; // Set year bit for 21st century
-		raw_time[5] = (bin2bcd(timeptr->tm_year) & ALARM_1_YEAR_FIELD_MASK);
-	}
-	ret = max31331_reg_write_multiple(dev, MAX31331_ALARM_1_SECONDS, raw_time, sizeof(raw_time));
-	if (ret) {
-		LOG_ERR("Error when setting alarm: %i", ret);
-		return ret;
-	}
-	if (mask != 0) {
-		// Enable the alarm interrupt
-		ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE, ALARM_1_INTERRUPT_ENABLE_MASK, 1);
+		} else {
+			raw_time[4] |= ALARM_1_YEAR_ENABLE_MASK; // Set year bit for 21st century
+			raw_time[5] = (bin2bcd(timeptr->tm_year) & ALARM_1_YEAR_FIELD_MASK);
+		}
+		ret = max31331_reg_write_multiple(dev, MAX31331_ALARM_1_SECONDS, raw_time,
+						  sizeof(raw_time));
 		if (ret) {
-			LOG_ERR("Error enabling alarm interrupt: %i", ret);
+			LOG_ERR("Error when setting alarm: %i", ret);
 			return ret;
 		}
-	} else {
-		// Disable the alarm interrupt if no mask is set
-		ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE, ALARM_1_INTERRUPT_ENABLE_MASK, 0);
-		if (ret) {
-			LOG_ERR("Error disabling alarm interrupt: %i", ret);
-			return ret;
+		if (mask != 0) {
+			// Enable the alarm interrupt
+			ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE,
+						  ALARM_1_INTERRUPT_ENABLE_MASK, 1);
+			if (ret) {
+				LOG_ERR("Error enabling alarm interrupt: %i", ret);
+				return ret;
+			}
+		} else {
+			// Disable the alarm interrupt if no mask is set
+			ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE,
+						  ALARM_1_INTERRUPT_ENABLE_MASK, 0);
+			if (ret) {
+				LOG_ERR("Error disabling alarm interrupt: %i", ret);
+				return ret;
+			}
 		}
-	}
-	}
-	else if (id == 2){
-		raw_time[0] = (mask & RTC_ALARM_TIME_MASK_MINUTE) ? (bin2bcd(timeptr->tm_min) & ALARM_2_MINUTES_FIELD_MASK) & ~ALARM_2_MINUTES_ENABLE_MASK : (bin2bcd(timeptr->tm_min) & ALARM_2_MINUTES_FIELD_MASK) | ALARM_2_MINUTES_ENABLE_MASK;
-		raw_time[1] = (mask & RTC_ALARM_TIME_MASK_HOUR)   ? (bin2bcd(timeptr->tm_hour) & ALARM_2_HOURS_FIELD_MASK) & ~ALARM_2_HOURS_ENABLE_MASK     : (bin2bcd(timeptr->tm_hour) & ALARM_2_HOURS_FIELD_MASK) | ALARM_2_HOURS_ENABLE_MASK;
-		
-		if(timeptr->tm_wday != NULL){
-			raw_time[2] = (mask & RTC_ALARM_TIME_MASK_WEEKDAY) ? ((bin2bcd(timeptr->tm_wday) & ALARM_2_DAY_DATE_MASK) | ALARM_2_DAY_DATE_OP_MASK) & ~ALARM_2_DAY_DATE_ENABLE_MASK : (bin2bcd(timeptr->tm_wday) & ALARM_2_DAY_DATE_MASK) | ALARM_2_DAY_DATE_OP_MASK | ALARM_2_DAY_DATE_ENABLE_MASK;
-		}
-		else if(timeptr->tm_mday != NULL){
-			raw_time[2] = (mask & RTC_ALARM_TIME_MASK_MONTHDAY) ? (bin2bcd(timeptr->tm_mday) & ALARM_2_DAY_DATE_FIELD_MASK &~ ALARM_2_DAY_DATE_OP_MASK) & ~ALARM_2_DAY_DATE_ENABLE_MASK : (bin2bcd(timeptr->tm_mday) & ALARM_2_DAY_DATE_FIELD_MASK &~ ALARM_2_DAY_DATE_OP_MASK) | ALARM_2_DAY_DATE_ENABLE_MASK;
-		}
-		else{
+	} else if (id == 2) {
+		raw_time[0] = (mask & RTC_ALARM_TIME_MASK_MINUTE)
+				      ? (bin2bcd(timeptr->tm_min) & ALARM_2_MINUTES_FIELD_MASK) &
+						~ALARM_2_MINUTES_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_min) & ALARM_2_MINUTES_FIELD_MASK) |
+						ALARM_2_MINUTES_ENABLE_MASK;
+		raw_time[1] = (mask & RTC_ALARM_TIME_MASK_HOUR)
+				      ? (bin2bcd(timeptr->tm_hour) & ALARM_2_HOURS_FIELD_MASK) &
+						~ALARM_2_HOURS_ENABLE_MASK
+				      : (bin2bcd(timeptr->tm_hour) & ALARM_2_HOURS_FIELD_MASK) |
+						ALARM_2_HOURS_ENABLE_MASK;
+
+		if (timeptr->tm_wday != NULL) {
+			raw_time[2] =
+				(mask & RTC_ALARM_TIME_MASK_WEEKDAY)
+					? ((bin2bcd(timeptr->tm_wday) & ALARM_2_DAY_DATE_MASK) |
+					   ALARM_2_DAY_DATE_OP_MASK) &
+						  ~ALARM_2_DAY_DATE_ENABLE_MASK
+					: (bin2bcd(timeptr->tm_wday) & ALARM_2_DAY_DATE_MASK) |
+						  ALARM_2_DAY_DATE_OP_MASK |
+						  ALARM_2_DAY_DATE_ENABLE_MASK;
+		} else if (timeptr->tm_mday != NULL) {
+			raw_time[2] =
+				(mask & RTC_ALARM_TIME_MASK_MONTHDAY)
+					? (bin2bcd(timeptr->tm_mday) & ALARM_2_DAY_DATE_FIELD_MASK &
+					   ~ALARM_2_DAY_DATE_OP_MASK) &
+						  ~ALARM_2_DAY_DATE_ENABLE_MASK
+					: (bin2bcd(timeptr->tm_mday) & ALARM_2_DAY_DATE_FIELD_MASK &
+					   ~ALARM_2_DAY_DATE_OP_MASK) |
+						  ALARM_2_DAY_DATE_ENABLE_MASK;
+		} else {
 			raw_time[2] = 0x80; // Disable day/date alarm if neither is set
 		}
 
@@ -229,20 +281,21 @@ static int rtc_max31331_alarm_set_time(const struct device *dev, uint16_t id, ui
 			LOG_ERR("Error when setting alarm: %i", ret);
 			return ret;
 		}
-		ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE, ALARM_2_INTERRUPT_ENABLE_MASK, 1);
+		ret = max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE,
+					  ALARM_2_INTERRUPT_ENABLE_MASK, 1);
 		if (ret) {
 			LOG_ERR("Error enabling alarm interrupt: %i", ret);
 			return ret;
 		}
-	}
-	else{
+	} else {
 		LOG_ERR("Invalid Alarm ID: %d", id);
 		return -EINVAL;
 	}
 	return 0;
 }
 
-static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, uint16_t *mask, struct rtc_time *timeptr)
+static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, uint16_t *mask,
+				       struct rtc_time *timeptr)
 {
 	const struct rtc_max31331_config *config = dev->config;
 	int ret;
@@ -253,7 +306,7 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 		return -EINVAL;
 	}
 
-	if (id == 1){
+	if (id == 1) {
 		ret = max31331_reg_read(dev, MAX31331_ALARM_1_SECONDS, raw_time, sizeof(raw_time));
 		if (ret) {
 			LOG_ERR("Error when getting alarm time: %i", ret);
@@ -275,7 +328,8 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 		}
 		if (!(raw_time[3] & ALARM_1_DAY_DATE_ENABLE_MASK)) {
 			if (raw_time[3] & ALARM_1_DAY_DATE_OP_MASK) {
-				timeptr->tm_wday = bcd2bin(raw_time[3] & ALARM_1_DAY_DATE_MASK) + MAX31331_DAY_OFFSET;
+				timeptr->tm_wday = bcd2bin(raw_time[3] & ALARM_1_DAY_DATE_MASK) +
+						   MAX31331_DAY_OFFSET;
 				*mask |= RTC_ALARM_TIME_MASK_WEEKDAY;
 			} else {
 				timeptr->tm_mday = bcd2bin(raw_time[3] & ALARM_1_DAY_DATE_MASK);
@@ -290,8 +344,7 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 			timeptr->tm_year = bcd2bin(raw_time[5] & ALARM_1_YEAR_FIELD_MASK);
 			*mask |= RTC_ALARM_TIME_MASK_YEAR;
 		}
-	}
-	else if (id == 2){
+	} else if (id == 2) {
 		ret = max31331_reg_read(dev, MAX31331_ALARM_2_MINUTES, raw_time, 3);
 		if (ret) {
 			LOG_ERR("Error when getting alarm time: %i", ret);
@@ -309,15 +362,15 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 		}
 		if (!(raw_time[2] & ALARM_2_DAY_DATE_ENABLE_MASK)) {
 			if (raw_time[2] & ALARM_2_DAY_DATE_OP_MASK) {
-				timeptr->tm_wday = bcd2bin(raw_time[2] & ALARM_2_DAY_DATE_MASK) + MAX31331_DAY_OFFSET;
+				timeptr->tm_wday = bcd2bin(raw_time[2] & ALARM_2_DAY_DATE_MASK) +
+						   MAX31331_DAY_OFFSET;
 				*mask |= RTC_ALARM_TIME_MASK_WEEKDAY;
 			} else {
 				timeptr->tm_mday = bcd2bin(raw_time[2] & ALARM_2_DAY_DATE_MASK);
 				*mask |= RTC_ALARM_TIME_MASK_MONTHDAY;
 			}
 		}
-	}
-	else{
+	} else {
 		LOG_ERR("Invalid Alarm ID: %d", id);
 		return -EINVAL;
 	}
@@ -325,7 +378,7 @@ static int rtc_max31331_alarm_get_time(const struct device *dev, uint16_t id, ui
 }
 
 static int rtc_max31331_alarm_set_callback(const struct device *dev, uint16_t id,
-					    rtc_alarm_callback callback, void *user_data)
+					   rtc_alarm_callback callback, void *user_data)
 {
 	struct rtc_max31331_data *data = dev->data;
 
@@ -333,22 +386,21 @@ static int rtc_max31331_alarm_set_callback(const struct device *dev, uint16_t id
 		LOG_ERR("invalid ID %d", id);
 		return -EINVAL;
 	}
-	printk("Registering callback for alarm ID %d\n", id);
 	data->alarms[id - 1].callback = callback;
 	data->alarms[id - 1].user_data = user_data;
-	printk("Setting callback for alarm ID %d\n", id);
 	return 0;
 }
 
 static int rtc_max31331_alarm_get_supported_fields(const struct device *dev, uint16_t id,
-						 uint16_t *mask)
+						   uint16_t *mask)
 {
 	*mask = RTC_ALARM_TIME_MASK_MONTHDAY | RTC_ALARM_TIME_MASK_WEEKDAY |
 		RTC_ALARM_TIME_MASK_HOUR | RTC_ALARM_TIME_MASK_MINUTE;
 
 	switch (id) {
 	case 1:
-		*mask |= RTC_ALARM_TIME_MASK_SECOND | RTC_ALARM_TIME_MASK_MONTH | RTC_ALARM_TIME_MASK_YEAR;
+		*mask |= RTC_ALARM_TIME_MASK_SECOND | RTC_ALARM_TIME_MASK_MONTH |
+			 RTC_ALARM_TIME_MASK_YEAR;
 		break;
 	case 2:
 		break;
@@ -387,31 +439,22 @@ static int rtc_max31331_alarm_is_pending(const struct device *dev, uint16_t id)
 
 static int rtc_max31331_init_alarms(struct device *dev)
 {
-	 struct rtc_max31331_data *data = dev->data;
+	struct rtc_max31331_data *data = dev->data;
 
-    for (int i = 0; i < ALARM_COUNT; i++) {
-        data->alarms[i].callback = NULL;
-        data->alarms[i].user_data = NULL;
-    }
+	for (int i = 0; i < ALARM_COUNT; i++) {
+		data->alarms[i].callback = NULL;
+		data->alarms[i].user_data = NULL;
+	}
 	return 0;
 }
 
-static void rtc_max31331_work_cb(struct k_work *work)
+static void rtc_max31331_main_cb(const struct device *dev)
 {
-	struct rtc_max31331_data *data =
-        CONTAINER_OF(work, struct rtc_max31331_data, work);
-	const struct device *dev = data->dev;
 	const struct rtc_max31331_config *config = dev->config;
+	struct rtc_max31331_data *data = dev->data;
 
-	printk("Work callback triggered\n");
 	int ret = 0;
 	uint8_t int_status;
-
-	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_DISABLE);
-	if (ret) {
-		LOG_ERR("Failed to disable INT GPIO interrupt");
-		return;
-	}
 
 	ret = max31331_reg_read(dev, MAX31331_STATUS_REG, &int_status, 1);
 	if (ret) {
@@ -423,33 +466,72 @@ static void rtc_max31331_work_cb(struct k_work *work)
 		if (data->alarms[0].callback) {
 			data->alarms[0].callback(dev, 1, data->alarms[0].user_data);
 		}
-
 	}
-		// Clear the alarm flag
+	// Clear the alarm flag
 	if (int_status & ALARM_2_FLAG_MASK) {
 		if (data->alarms[1].callback) {
 			data->alarms[1].callback(dev, 2, data->alarms[1].user_data);
 		}
 	}
 
+#if defined(CONFIG_RTC_MAX31331_TIMESTAMPING)
+	if (int_status & (DIGITAL_INTERRUPT_MASK | VBATLOW_MASK)) {
+		if (data->ts_callback) {
+			data->ts_callback(dev, data->ts_user_data);
+		}
+	}
+#endif
+
 	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_EDGE_FALLING);
 	if (ret) {
 		LOG_ERR("Failed to enable INT GPIO interrupt");
 		return;
 	}
-
 	__ASSERT(ret == 0, "Interrupt Configuration Failed");
-
 }
 
-static void rtc_max31331_gpio_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
+static void rtc_max31331_gpio_callback(const struct device *dev, struct gpio_callback *cb,
+				       uint32_t pins)
 {
-	printk("GPIO callback triggered\n");
-	struct rtc_max31331_data *data =
-		CONTAINER_OF(cb, struct rtc_max31331_data, int_callback);
+	struct rtc_max31331_data *data = CONTAINER_OF(cb, struct rtc_max31331_data, int_callback);
+	const struct rtc_max31331_config *config = data->dev->config;
+	int ret = 0;
+
+	ret = gpio_pin_interrupt_configure_dt(&config->inta_gpios, GPIO_INT_DISABLE);
+	if (ret) {
+		LOG_ERR("Failed to disable INT GPIO interrupt");
+		return;
+	}
+#if defined(CONFIG_RTC_MAX31331_INTERRUPT_GLOBAL_THREAD)
 	k_work_submit(&data->work);
-	printk("GPIO callback triggered, work submitted\n");
+#elif defined(CONFIG_RTC_MAX31331_INTERRUPT_OWN_THREAD)
+	k_sem_give(&data->sem);
+#endif
 }
+
+#if defined(CONFIG_RTC_MAX31331_INTERRUPT_OWN_THREAD)
+static void max31331_thread(void *p1, void *p2, void *p3)
+{
+	ARG_UNUSED(p2);
+	ARG_UNUSED(p3);
+	struct rtc_max31331_data *data = p1;
+	const struct device *dev = data->dev;
+
+	while (1) {
+		k_sem_take(&data->sem, K_FOREVER);
+		rtc_max31331_main_cb(dev);
+	}
+}
+
+#elif defined(CONFIG_RTC_MAX31331_INTERRUPT_GLOBAL_THREAD)
+static void max31331_work_cb(struct k_work *work)
+{
+	struct rtc_max31331_data *data = CONTAINER_OF(work, struct rtc_max31331_data, work);
+	const struct device *dev = data->dev;
+
+	rtc_max31331_main_cb(dev);
+}
+#endif
 
 static int rtc_max31331_alarm_init(const struct device *dev)
 {
@@ -461,14 +543,12 @@ static int rtc_max31331_alarm_init(const struct device *dev)
 		LOG_ERR("INT GPIO not ready");
 		return -ENODEV;
 	}
-	
+
 	ret = rtc_max31331_init_alarms(dev);
 	if (ret) {
 		LOG_ERR("Failed to initialize alarms");
 		return ret;
 	}
-
-	k_work_init(&data->work, rtc_max31331_work_cb);
 
 	ret = gpio_pin_configure_dt(&config->inta_gpios, GPIO_INPUT);
 	if (ret) {
@@ -482,19 +562,144 @@ static int rtc_max31331_alarm_init(const struct device *dev)
 		return ret;
 	}
 
-	gpio_init_callback(&data->int_callback, rtc_max31331_gpio_callback, BIT(config->inta_gpios.pin));
+	gpio_init_callback(&data->int_callback, rtc_max31331_gpio_callback,
+			   BIT(config->inta_gpios.pin));
 	ret = gpio_add_callback(config->inta_gpios.port, &data->int_callback);
 	if (ret) {
 		LOG_ERR("Failed to add INT GPIO callback");
 		return ret;
 	}
 
-	printk("Alarm interrupt configured on %s pin %d\n",
-	       config->inta_gpios.port->name, config->inta_gpios.pin);
 	data->dev = dev;
+#if defined(CONFIG_RTC_MAX31331_INTERRUPT_GLOBAL_THREAD)
+	k_work_init(&data->work, max31331_work_cb);
+#elif defined(CONFIG_RTC_MAX31331_INTERRUPT_OWN_THREAD)
+	k_sem_init(&data->sem, 0, K_SEM_MAX_LIMIT);
+
+	k_thread_create(&data->thread, data->thread_stack, CONFIG_RTC_MAX31331_THREAD_STACK_SIZE,
+			(k_thread_entry_t)max31331_thread, data, NULL, NULL,
+			K_PRIO_COOP(CONFIG_RTC_MAX31331_THREAD_PRIORITY), 0, K_NO_WAIT);
+	k_thread_name_set(&data->thread, dev->name);
+#endif
 }
 
+#endif
 
+#ifdef CONFIG_RTC_MAX31331_TIMESTAMPING
+
+static int rtc_max31331_timestamp_callback_init(const struct device *dev)
+{
+	struct rtc_max31331_data *data = dev->data;
+
+	data->ts_callback = NULL;
+	data->ts_user_data = NULL;
+	return 0;
+}
+
+static int rtc_max31331_timestamping_init(const struct device *dev)
+{
+	const struct rtc_max31331_config *config = dev->config;
+	struct rtc_max31331_data *data = dev->data;
+	int ret = 0;
+
+	memset(data->timestamp_buffer, 0, sizeof(data->timestamp_buffer));
+
+	ret = max31331_reg_write(
+		dev, MAX31331_TIMESTAMP_CONFIG,
+		(config->ts_enable ? TS_ENABLE_MASK : 0) |
+			(config->ts_vbat_enable ? TS_VBAT_LOW_EN_MASK : 0) |
+			(config->ts_din ? TS_DIN_MASK : 0) |
+			(config->ts_overwrite ? TS_OVERWRITE_MASK : 0) |
+			(config->ts_power_supply_switch ? TS_POWER_SUPPLY_SWITCH_MASK : 0));
+
+	if (ret) {
+		LOG_ERR("Failed to configure timestamping");
+		return ret;
+	}
+
+	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG1, EN_IOUTPUT_MASK, config->din_en_io);
+	if (ret) {
+		LOG_ERR("Failed to configure timestamping I/O");
+		return ret;
+	}
+
+	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG1, DIGITAL_INPUT_POLARITY_MASK,
+				  config->din_polarity);
+	if (ret) {
+		LOG_ERR("Failed to configure timestamping DIN polarity");
+		return ret;
+	}
+
+	ret = rtc_max31331_timestamp_callback_init(dev);
+	if (ret) {
+		LOG_ERR("Failed to initialize timestamp callback");
+		return ret;
+	}
+
+	return 0;
+}
+
+int rtc_max31331_set_timestamp_callback(const struct device *dev,
+					rtc_max31331_timestamp_callback cb, void *user_data)
+{
+	struct rtc_max31331_data *data = dev->data;
+
+	data->ts_callback = cb;
+	data->ts_user_data = user_data;
+
+	max31331_reg_update(dev, MAX31331_INTERRUPT_ENABLE, DIGITAL_INTERRUPT_ENABLE_MASK,
+			    (cb != NULL) ? 1 : 0);
+	return 0;
+}
+int rtc_max31331_get_timestamps(const struct device *dev, struct rtc_time *timeptr, uint8_t index,
+				uint8_t *flags)
+{
+	struct rtc_max31331_data *data = dev->data;
+	int ret = 0;
+	uint8_t start_addr = 0;
+	uint8_t reg_buf[7];
+
+	switch (index) {
+	case 0:
+		start_addr = MAX31331_TS0_SEC;
+		break;
+	case 1:
+		start_addr = MAX31331_TS1_SEC;
+		break;
+	case 2:
+		start_addr = MAX31331_TS2_SEC;
+		break;
+	case 3:
+		start_addr = MAX31331_TS3_SEC;
+		break;
+	default:
+		LOG_ERR("Invalid timestamp index");
+		return -EINVAL;
+		break;
+	}
+
+	ret = max31331_reg_read(dev, start_addr, &reg_buf, ARRAY_SIZE(reg_buf));
+	if (ret) {
+		LOG_ERR("Failed to read timestamp count");
+		return ret;
+	}
+
+	timeptr->tm_sec = bcd2bin(reg_buf[0] & SECONDS_FIELD_MASK);
+	timeptr->tm_min = bcd2bin(reg_buf[1] & MINUTES_FIELD_MASK);
+	timeptr->tm_hour = bcd2bin(reg_buf[2] & HOURS_FIELD_MASK);
+	timeptr->tm_mday = bcd2bin(reg_buf[3] & DATE_FIELD_MASK);
+	timeptr->tm_mon = bcd2bin(reg_buf[4] & MONTH_FIELD_MASK);
+	if (reg_buf[4] & CENTURY_MASK) {
+		/* Century bit is set, so we are in 21st century */
+		timeptr->tm_year = bcd2bin(reg_buf[5] & YEAR_FIELD_MASK) + MAX31331_YEAR_2100;
+	} else {
+		timeptr->tm_year = bcd2bin(reg_buf[5] & YEAR_FIELD_MASK);
+	}
+
+	*flags = reg_buf[6];
+
+	return 0;
+}
 
 #endif
 
@@ -505,7 +710,6 @@ static int rtc_max31331_init(const struct device *dev)
 	int ret;
 
 	if (!i2c_is_ready_dt(&config->i2c)) {
-		printk("I2C bus not ready");
 		return -ENODEV;
 	}
 
@@ -522,6 +726,27 @@ static int rtc_max31331_init(const struct device *dev)
 		return ret;
 	}
 
+	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG2, CLKOUT_ENABLE_MASK, 1);
+
+	if (ret) {
+		LOG_ERR("Failed to enable CLKOUT");
+		return ret;
+	}
+
+	ret = max31331_reg_update(dev, MAX31331_TIMESTAMP_CONFIG, TS_REG_RESET_MASK, 1);
+	if (ret) {
+		LOG_ERR("Failed to reset timestamp registers");
+		return ret;
+	}
+
+#if defined(CONFIG_RTC_MAX31331_TIMESTAMPING)
+	ret = rtc_max31331_timestamping_init(dev);
+	if (ret) {
+		LOG_ERR("Failed to initialize timestamping");
+		return ret;
+	}
+#endif
+
 #ifdef CONFIG_RTC_ALARM
 	if (config->inta_gpios.port) {
 		ret = rtc_max31331_alarm_init(dev);
@@ -529,7 +754,7 @@ static int rtc_max31331_init(const struct device *dev)
 #endif
 
 	/** Enable Oscillator */
-	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG1, ENABLE_OSCILLATOR_MASK , 1);
+	ret = max31331_reg_update(dev, MAX31331_RTC_CONFIG1, ENABLE_OSCILLATOR_MASK, 1);
 	if (ret) {
 		LOG_ERR("Failed to enable oscillator");
 		return ret;
@@ -538,8 +763,7 @@ static int rtc_max31331_init(const struct device *dev)
 	return 0;
 }
 
-static DEVICE_API(rtc, rtc_max31331) =
-{
+static DEVICE_API(rtc, rtc_max31331) = {
 	.set_time = rtc_max31331_set_time,
 	.get_time = rtc_max31331_get_time,
 #ifdef CONFIG_RTC_ALARM
@@ -549,23 +773,26 @@ static DEVICE_API(rtc, rtc_max31331) =
 	.alarm_set_callback = rtc_max31331_alarm_set_callback,
 	.alarm_get_supported_fields = rtc_max31331_alarm_get_supported_fields,
 #endif
-#ifdef CONFIG_RTC_UPDATE
-	// .update_set_callback = rtc_max31331_update_set_callback,
-#endif
-#ifdef CONFIG_RTC_CALIBRATION
-	// .set_calibration = rtc_max31331_set_calibration,
-	// .get_calibration = rtc_max31331_get_calibration,
-#endif
 };
 
+#define RTC_MAX31331_CONFIG(inst)                                                                  \
+	.ts_enable = DT_INST_PROP_OR(inst, ts_enable, 0),                                          \
+	.ts_vbat_enable = DT_INST_PROP_OR(inst, ts_vbat_enable, 0),                                \
+	.ts_din = DT_INST_PROP_OR(inst, ts_din, 0),                                                \
+	.ts_overwrite = DT_INST_PROP_OR(inst, ts_overwrite, 0),                                    \
+	.ts_power_supply_switch = DT_INST_PROP_OR(inst, ts_power_supply_switch, 0),                \
+	.din_en_io = DT_INST_PROP_OR(inst, din_en_io, 0),                                          \
+	.din_polarity = DT_INST_PROP_OR(inst, din_polarity, 0)
+
 #define RTC_MAX31331_DEFINE(inst)                                                                  \
-	static struct rtc_max31331_data rtc_max31331_prv_data_##inst;                           \
+	static struct rtc_max31331_data rtc_max31331_prv_data_##inst;                              \
 	static const struct rtc_max31331_config rtc_max31331_config##inst = {                      \
-		.i2c = I2C_DT_SPEC_INST_GET(inst),       \
-		IF_ENABLED(CONFIG_RTC_ALARM, (.inta_gpios = GPIO_DT_SPEC_INST_GET_OR(inst, interrupt_gpios, {0})))                                         \
-	};                                                                                         \
+		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
+		RTC_MAX31331_CONFIG(inst),                                                         \
+		IF_ENABLED(CONFIG_RTC_ALARM, (.inta_gpios = GPIO_DT_SPEC_INST_GET_OR(inst, interrupt_gpios, {0}))) };    \
                                                                                                    \
-	DEVICE_DT_INST_DEFINE(inst, rtc_max31331_init, NULL, &rtc_max31331_prv_data_##inst, &rtc_max31331_config##inst,     \
-			      POST_KERNEL, CONFIG_RTC_INIT_PRIORITY, &rtc_max31331);
+	DEVICE_DT_INST_DEFINE(inst, rtc_max31331_init, NULL, &rtc_max31331_prv_data_##inst,        \
+			      &rtc_max31331_config##inst, POST_KERNEL, CONFIG_RTC_INIT_PRIORITY,   \
+			      &rtc_max31331);
 
 DT_INST_FOREACH_STATUS_OKAY(RTC_MAX31331_DEFINE)

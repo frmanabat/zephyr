@@ -1,8 +1,9 @@
 /*
  * Copyright (c) 2025 Analog Devices Inc.
- *
+ * @author Francis Roi Manabat <francisroi.manabat@analog.com>
  * SPDX-License-Identifier: Apache-2.0
  */
+
 
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/device.h>
@@ -10,6 +11,7 @@
 #include <zephyr/logging/log.h>
 #include <errno.h>
 #include <zephyr/drivers/rtc.h>
+#include <zephyr/drivers/gpio.h>
 
 #define MAX31331_STATUS_REG       0x00u
 #define MAX31331_INTERRUPT_ENABLE 0x01u
@@ -108,8 +110,8 @@
 #define ENABLE_OSCILLATOR_MASK      BIT(0)
 
 /** RTC CONFIG2 MASKS */
-#define CLKOUT_ENABLE_MASK BIT(7)
-#define CLKO_HZ_MASK       GENMASK(6, 4)
+#define CLKOUT_ENABLE_MASK BIT(2)
+#define CLKO_HZ_MASK       GENMASK(1, 0)
 
 /** RTC TIMESTAMP CONFIG MASKS */
 #define TS_VBAT_LOW_EN_MASK         BIT(5)
@@ -135,13 +137,13 @@
 #define SECONDS_1_128_MASK BIT(0)
 
 /** RTC SECONDS MASKS */
-#define SECONDS_10_MASK GENMASK(6, 4)
-#define SECONDS_MASK    GENMASK(3, 0)
+#define SECONDS_10_MASK    GENMASK(6, 4)
+#define SECONDS_MASK       GENMASK(3, 0)
 #define SECONDS_FIELD_MASK (SECONDS_10_MASK | SECONDS_MASK)
 
 /** RTC MINUTES MASKS */
-#define MINUTES_10_MASK GENMASK(6, 4)
-#define MINUTES_MASK    GENMASK(3, 0)
+#define MINUTES_10_MASK    GENMASK(6, 4)
+#define MINUTES_MASK       GENMASK(3, 0)
 #define MINUTES_FIELD_MASK (MINUTES_10_MASK | MINUTES_MASK)
 
 /** RTC HOURS MASKS */
@@ -149,27 +151,26 @@
 #define HOUR_20_AM_PM_MASK BIT(5)
 #define HOURS_10_MASK      BIT(4)
 #define HOURS_MASK         GENMASK(3, 0)
-#define HOURS_FIELD_MASK   (HOUR_20_AM_PM_MASK|HOURS_10_MASK | HOURS_MASK)
+#define HOURS_FIELD_MASK   (HOUR_20_AM_PM_MASK | HOURS_10_MASK | HOURS_MASK)
 
 /** RTC DAY MASKS */
-#define DAY_FIELD_MASK GENMASK(2, 0)
+#define DAY_FIELD_MASK      GENMASK(2, 0)
 #define MAX31331_DAY_OFFSET -1
 
 /** RTC DATE MASKS */
-#define DATE_10_MASK GENMASK(5, 4)
-#define DATE_MASK    GENMASK(3, 0)
-#define DATE_FIELD_MASK (DATE_10_MASK|DATE_MASK)
-
+#define DATE_10_MASK    GENMASK(5, 4)
+#define DATE_MASK       GENMASK(3, 0)
+#define DATE_FIELD_MASK (DATE_10_MASK | DATE_MASK)
 
 /** RTC MONTH MASKS */
-#define MONTH_10_MASK BIT(4)
-#define MONTH_MASK    GENMASK(3, 0)
-#define MONTH_FIELD_MASK (MONTH_10_MASK|MONTH_MASK)
+#define MONTH_10_MASK    BIT(4)
+#define MONTH_MASK       GENMASK(3, 0)
+#define MONTH_FIELD_MASK (MONTH_10_MASK | MONTH_MASK)
 
 /** RTC YEAR MASKS */
-#define YEAR_10_MASK GENMASK(7, 4)
-#define YEAR_MASK    GENMASK(3, 0)
-#define YEAR_FIELD_MASK (YEAR_10_MASK|YEAR_MASK)
+#define YEAR_10_MASK    GENMASK(7, 4)
+#define YEAR_MASK       GENMASK(3, 0)
+#define YEAR_FIELD_MASK (YEAR_10_MASK | YEAR_MASK)
 
 /** CENTURY DETERMINANT*/
 #define MAX31331_YEAR_2100 (2100 - 2000)
@@ -180,39 +181,39 @@
 #define ALARM_1_SECONDS_ENABLE_MASK BIT(7)
 #define ALARM_1_SECONDS_10_MASK     GENMASK(6, 4)
 #define ALARM_1_SECONDS_MASK        GENMASK(3, 0)
-#define ALARM_1_SECONDS_FIELD_MASK (ALARM_1_SECONDS_10_MASK | ALARM_1_SECONDS_MASK)
+#define ALARM_1_SECONDS_FIELD_MASK  (ALARM_1_SECONDS_10_MASK | ALARM_1_SECONDS_MASK)
 
 /** ALARM 1 MINUTES MASKS */
 #define ALARM_1_MINUTES_ENABLE_MASK BIT(7)
 #define ALARM_1_MINUTES_10_MASK     GENMASK(6, 4)
 #define ALARM_1_MINUTES_MASK        GENMASK(3, 0)
-#define ALARM_1_MINUTES_FIELD_MASK (ALARM_1_MINUTES_10_MASK | ALARM_1_MINUTES_MASK)
+#define ALARM_1_MINUTES_FIELD_MASK  (ALARM_1_MINUTES_10_MASK | ALARM_1_MINUTES_MASK)
 
 /** ALARM 1 HOURS MASKS */
 #define ALARM_1_HOURS_ENABLE_MASK BIT(7)
 #define ALARM_1_HR_20_AM_PM_MASK  BIT(5)
 #define ALARM_1_HOURS_10_MASK     BIT(4)
 #define ALARM_1_HOURS_MASK        GENMASK(3, 0)
-#define ALARM_1_HOURS_FIELD_MASK (ALARM_1_HOURS_10_MASK | ALARM_1_HOURS_MASK | ALARM_1_HR_20_AM_PM_MASK)
+#define ALARM_1_HOURS_FIELD_MASK                                                                   \
+	(ALARM_1_HOURS_10_MASK | ALARM_1_HOURS_MASK | ALARM_1_HR_20_AM_PM_MASK)
 
 /** ALARM 1 DAY/DATE MASKS */
 #define ALARM_1_DAY_DATE_ENABLE_MASK BIT(7)
-#define ALARM_1_DAY_DATE_OP_MASK        BIT(6)
+#define ALARM_1_DAY_DATE_OP_MASK     BIT(6)
 #define ALARM_1_DATE_10_MASK         GENMASK(5, 4)
 #define ALARM_1_DAY_DATE_MASK        GENMASK(3, 0)
-#define ALARM_1_DAY_DATE_FIELD_MASK (ALARM_1_DATE_10_MASK | ALARM_1_DAY_DATE_MASK)
+#define ALARM_1_DAY_DATE_FIELD_MASK  (ALARM_1_DATE_10_MASK | ALARM_1_DAY_DATE_MASK)
 
 /** ALARM 1 MONTH MASKS */
 #define ALARM_1_MONTH_ENABLE_MASK BIT(7)
 #define ALARM_1_YEAR_ENABLE_MASK  BIT(6)
 #define ALARM_1_MONTH_10_MASK     BIT(4)
 #define ALARM_1_MONTH_MASK        GENMASK(3, 0)
-#define ALARM_1_MONTH_FIELD_MASK (ALARM_1_MONTH_10_MASK | ALARM_1_MONTH_MASK)
-
+#define ALARM_1_MONTH_FIELD_MASK  (ALARM_1_MONTH_10_MASK | ALARM_1_MONTH_MASK)
 
 /** ALARM 1 YEAR MASKS */
-#define ALARM_1_YEAR_10_MASK GENMASK(7, 4)
-#define ALARM_1_YEAR_MASK    GENMASK(3, 0)
+#define ALARM_1_YEAR_10_MASK    GENMASK(7, 4)
+#define ALARM_1_YEAR_MASK       GENMASK(3, 0)
 #define ALARM_1_YEAR_FIELD_MASK (ALARM_1_YEAR_10_MASK | ALARM_1_YEAR_MASK)
 /** ALARM 2 MASKS */
 
@@ -220,21 +221,22 @@
 #define ALARM_2_MINUTES_ENABLE_MASK BIT(7)
 #define ALARM_2_MINUTES_10_MASK     GENMASK(6, 4)
 #define ALARM_2_MINUTES_MASK        GENMASK(3, 0)
-#define ALARM_2_MINUTES_FIELD_MASK (ALARM_2_MINUTES_10_MASK | ALARM_2_MINUTES_MASK)
+#define ALARM_2_MINUTES_FIELD_MASK  (ALARM_2_MINUTES_10_MASK | ALARM_2_MINUTES_MASK)
 
 /** ALARM 2 HOURS MASKS */
 #define ALARM_2_HOURS_ENABLE_MASK BIT(7)
 #define ALARM_2_HR_20_AM_PM_MASK  BIT(5)
 #define ALARM_2_HOURS_10_MASK     BIT(4)
 #define ALARM_2_HOURS_MASK        GENMASK(3, 0)
-#define ALARM_2_HOURS_FIELD_MASK (ALARM_2_HOURS_10_MASK | ALARM_2_HOURS_MASK | ALARM_2_HR_20_AM_PM_MASK)
+#define ALARM_2_HOURS_FIELD_MASK                                                                   \
+	(ALARM_2_HOURS_10_MASK | ALARM_2_HOURS_MASK | ALARM_2_HR_20_AM_PM_MASK)
 
 /** ALARM 2 DAY/DATE MASKS */
 #define ALARM_2_DAY_DATE_ENABLE_MASK BIT(7)
-#define ALARM_2_DAY_DATE_OP_MASK        BIT(6)
+#define ALARM_2_DAY_DATE_OP_MASK     BIT(6)
 #define ALARM_2_DATE_10_MASK         GENMASK(5, 4)
 #define ALARM_2_DAY_DATE_MASK        GENMASK(3, 0)
-#define ALARM_2_DAY_DATE_FIELD_MASK (ALARM_2_DATE_10_MASK | ALARM_2_DAY_DATE_MASK)
+#define ALARM_2_DAY_DATE_FIELD_MASK  (ALARM_2_DATE_10_MASK | ALARM_2_DAY_DATE_MASK)
 
 /** TIMER COUNT MASKS */
 #define TIMER_COUNT_MASK GENMASK(7, 0)
@@ -430,44 +432,57 @@
 #define TS3_VCC_TO_V_BAT_SWITCH_MASK BIT(1)
 #define TS3_DIN_MASK                 BIT(0)
 
-#define MAX31331_RTC_TIME_MASK                                                      \
-    (RTC_ALARM_TIME_MASK_SECOND | RTC_ALARM_TIME_MASK_MINUTE | RTC_ALARM_TIME_MASK_HOUR | \
-     RTC_ALARM_TIME_MASK_MONTH | RTC_ALARM_TIME_MASK_MONTHDAY | RTC_ALARM_TIME_MASK_YEAR |\
-     RTC_ALARM_TIME_MASK_WEEKDAY)
+#define MAX31331_RTC_TIME_MASK                                                                     \
+	(RTC_ALARM_TIME_MASK_SECOND | RTC_ALARM_TIME_MASK_MINUTE | RTC_ALARM_TIME_MASK_HOUR |      \
+	 RTC_ALARM_TIME_MASK_MONTH | RTC_ALARM_TIME_MASK_MONTHDAY | RTC_ALARM_TIME_MASK_YEAR |     \
+	 RTC_ALARM_TIME_MASK_WEEKDAY)
 
 #define ALARM_COUNT 2
 
 #ifdef CONFIG_RTC_ALARM
-struct rtc_max31331_alarm{
-    rtc_alarm_callback callback;
+struct rtc_max31331_alarm {
+	rtc_alarm_callback callback;
 	void *user_data;
 };
 #endif
-
-#ifdef CONFIG_RTC_UPDATE
-struct rtc_ma31331_update{
-    rtc_update_callback cb;
-    void *user_data;
-};
-#endif
-
+typedef void (*rtc_max31331_timestamp_callback)(const struct device *dev, void *user_data);
 struct rtc_max31331_data {
 #ifdef CONFIG_RTC_ALARM
-    struct rtc_max31331_alarm alarms[ALARM_COUNT];
+	struct rtc_max31331_alarm alarms[ALARM_COUNT];
 #endif
 #ifdef CONFIG_RTC_UPDATE
-    struct rtc_max31331_update update;
+	struct rtc_max31331_update update;
 #endif
-    struct k_sem lock;
-    struct gpio_callback int_callback;
-    struct k_work work;
-    const struct device *dev;
+
+#ifdef CONFIG_RTC_MAX31331_TIMESTAMPING
+	struct rtc_time timestamp_buffer[4];
+	rtc_max31331_timestamp_callback ts_callback;
+	void *ts_user_data;
+#endif
+	struct gpio_callback int_callback;
+#if defined(CONFIG_RTC_MAX31331_INTERRUPT_GLOBAL_THREAD)
+	struct k_work work;
+#elif defined(CONFIG_RTC_MAX31331_INTERRUPT_OWN_THREAD)
+	struct k_thread thread;
+	K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_RTC_MAX31331_THREAD_STACK_SIZE);
+	struct k_sem sem;
+#endif
+	const struct device *dev;
 };
 
 struct rtc_max31331_config {
 	struct i2c_dt_spec i2c;
-    struct gpio_dt_spec inta_gpios;
-    struct gpio_dt_spec intb_sqw_gpios;
+	struct gpio_dt_spec inta_gpios;
+
+#ifdef CONFIG_RTC_MAX31331_TIMESTAMPING
+	bool ts_enable;
+	bool ts_vbat_enable;
+	bool ts_din;
+	bool ts_overwrite;
+	bool ts_power_supply_switch;
+	bool din_polarity;
+	bool din_en_io;
+#endif
 };
 
 int max31331_reg_read(const struct device *dev, uint8_t reg_addr, uint8_t *val, uint8_t length);
@@ -475,3 +490,10 @@ int max31331_reg_write(const struct device *dev, uint8_t reg_addr, uint8_t val);
 int max31331_reg_write_multiple(const struct device *dev, uint8_t reg_addr, const uint8_t *val,
 				uint8_t length);
 int max31331_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask, uint8_t val);
+
+#ifdef CONFIG_RTC_MAX31331_TIMESTAMPING
+int rtc_max31331_get_timestamps(const struct device *dev, struct rtc_time *timeptr, uint8_t index,
+				uint8_t *flags);
+int rtc_max31331_set_timestamp_callback(const struct device *dev,
+					rtc_max31331_timestamp_callback cb, void *user_data);
+#endif

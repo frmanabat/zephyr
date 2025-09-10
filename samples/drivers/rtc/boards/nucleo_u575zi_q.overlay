@@ -4,6 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
+/ {
+
+    aliases {
+        outgpio = &test_out1;
+    };
+
+    test_out: test_out{
+        compatible = "gpio-leds";
+
+        test_out1:out1{
+            gpios = <&gpiob 11 GPIO_ACTIVE_HIGH>;
+            label = "Test Output";
+        };
+    };
+};
+
+
 &i2c1 {
 	pinctrl-0 = <&i2c1_scl_pb8 &i2c1_sda_pb9>;
 	pinctrl-names = "default";
@@ -14,6 +32,14 @@
         status = "okay";
         compatible = "adi,max31331";
         reg = <0x68>;
-        interrupt-gpios = <&gpioe 13 GPIO_ACTIVE_LOW>;
+        interrupt-gpios = <&gpiof 15 GPIO_ACTIVE_LOW>;
+
+        /*Timestamping Options*/
+        ts-enable;
+        ts-vbat-enable;
+        ts-overwrite;
+        ts-din;
+        ts-power-supply-switch;
+        din-en-io;
     };
  };

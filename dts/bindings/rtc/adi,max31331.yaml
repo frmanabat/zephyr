@@ -17,3 +17,38 @@ properties:
     description: "GPIO connected to the INT pin of the MAX31331."
     type: phandle-array
     required: false
+  
+  ts-enable:
+    description: "Enable the timestamping feature of the MAX31331."
+    type: boolean
+    required: false
+
+  ts-vbat-enable:
+    description: "Enable timestamping in VBAT mode."
+    type: boolean
+    required: false
+
+  ts-din:
+    description: "Data input for timestamping."
+    type: boolean
+    required: false
+
+  ts-overwrite:
+    description: "Enable overwriting of the timestamp register."
+    type: boolean
+    required: false
+
+  ts-power-supply-switch:
+    description: "Enable power supply switch for timestamping."
+    type: boolean
+    required: false
+
+  din-polarity:
+    description: "Polarity of the data input for timestamping."
+    type: boolean
+    required: false
+
+  din-en-io:
+    description: "Enable data input as IO."
+    type: boolean
+    required: false
