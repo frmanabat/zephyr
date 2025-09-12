@@ -194,7 +194,15 @@ struct max30210_config {
 #if defined(CONFIG_MAX30210_TRIGGER)
 	struct gpio_dt_spec interrupt_gpio; /* GPIO for interrupt */
 #endif
-	bool auto_mode; /* Auto mode for temperature conversion */
+	int32_t alarm_high_setup;
+	int32_t alarm_low_setup;
+	uint8_t inc_fast_thresh;
+	uint8_t dec_fast_thresh;
+	uint8_t sampling_rate;
+	uint8_t hi_trip_count;
+	uint8_t lo_trip_count;
+	bool hi_trip_non_consecutive;
+	bool lo_trip_non_consecutive;
 };
 
 struct max30210_data {
@@ -215,8 +223,7 @@ struct max30210_data {
 #ifdef CONFIG_MAX30210_TRIGGER
 	const struct device *dev;
 	struct gpio_callback gpio_cb;
-	struct k_sem gpio_sem;
-
+	
 	sensor_trigger_handler_t a_fifo_full_handler;
 	sensor_trigger_handler_t temp_hi_handler;
 	sensor_trigger_handler_t temp_lo_handler;
@@ -270,12 +277,6 @@ BUILD_ASSERT(sizeof(struct max30210_fifo_data) % 4 == 0,
 	     "max30210_fifo_data struct should be word aligned");
 
 #endif
-
-// int max30210_reg_read(const struct device *dev, uint8_t reg_addr, uint8_t *val, uint8_t length);
-
-// int max30210_reg_write(const struct device *dev, uint8_t reg_addr, uint8_t val, uint8_t length);
-
-// int max30210_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask, uint8_t val);
 
 int max30210_trigger_set(const struct device *dev, const struct sensor_trigger *trig,
 			 sensor_trigger_handler_t handler);

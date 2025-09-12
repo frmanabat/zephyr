@@ -22,6 +22,8 @@
     	compatible = "adi,max30210";
     	reg = <0x40>;
 		interrupt-gpios = <&gpio0 20 0>;
-		
+		sampling-rate = <0x8>;
+		alarm-high-setup = <25000>;
+		alarm-low-setup = <20000>;
   };
 };

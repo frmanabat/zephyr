@@ -12,6 +12,9 @@
 #include <zephyr/drivers/sensor.h>
 #include "max30210.h"
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(MAX30210, CONFIG_SENSOR_LOG_LEVEL);
 
 static int max30210_reg_access(const struct device *dev, uint8_t addr_reg, uint8_t *data, bool read,
 			       uint8_t length)
@@ -65,6 +68,17 @@ int max30210_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask
 
 	return max30210_reg_write(dev, reg_addr, reg_val, 1);
 }
+
+static inline void max30210_temp_to_bytes(int32_t temp_mc, uint8_t *msb, uint8_t *lsb)
+{
+    /* Convert milli-degrees Celsius to register value */
+    int16_t reg_val = (int16_t)(temp_mc / 5);  // resolution = 0.005 °C = 5 m°C
+
+    /* Split into two bytes (big-endian: MSB first, LSB second) */
+    *msb = (uint8_t)((reg_val >> 8) & 0xFF);
+    *lsb = (uint8_t)(reg_val & 0xFF);
+}
+
 
 static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 			     enum sensor_attribute attr, const struct sensor_value *val)
@@ -282,7 +296,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_HIGH_SETUP, TEMP_HI_ALARM_TRIP_MASK,
 					  val->val1);
 		if (ret < 0) {
-			printf("Failed to set high consecutive mode: %d\n", ret);
+			LOG_ERR("Failed to set high consecutive mode: %d\n", ret);
 			return ret;
 		}
 		break;
@@ -295,7 +309,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_LOW_SETUP, TEMP_LO_ALARM_TRIP_MASK,
 					  val->val1);
 		if (ret < 0) {
-			printf("Failed to set low consecutive mode: %d\n", ret);
+			LOG_ERR("Failed to set low consecutive mode: %d\n", ret);
 			return ret;
 		}
 		break;
@@ -307,7 +321,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_HIGH_SETUP, TEMP_HI_TRIP_COUNTER_MASK,
 					  (val->val1) - 1);
 		if (ret < 0) {
-			printf("Failed to set high trip count: %d\n", ret);
+			LOG_ERR("Failed to set high trip count: %d\n", ret);
 			return ret;
 		}
 
@@ -320,7 +334,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_LOW_SETUP, TEMP_LO_TRIP_COUNTER_MASK,
 					  (val->val1) - 1);
 		if (ret < 0) {
-			printf("Failed to set low trip count: %d\n", ret);
+			LOG_ERR("Failed to set low trip count: %d\n", ret);
 			return ret;
 		}
 		break;
@@ -332,7 +346,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_HIGH_SETUP, TEMP_RST_HI_COUNTER,
 					  val->val1);
 		if (ret < 0) {
-			printf("Failed to set high trip count reset: %d\n", ret);
+			LOG_ERR("Failed to set high trip count reset: %d\n", ret);
 			return ret;
 		}
 		break;
@@ -344,7 +358,7 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 		ret = max30210_reg_update(dev, TEMP_ALARM_LOW_SETUP, TEMP_RST_LO_COUNTER,
 					  val->val1);
 		if (ret < 0) {
-			printf("Failed to set low trip count reset: %d\n", ret);
+			LOG_ERR("Failed to set low trip count reset: %d\n", ret);
 			return ret;
 		}
 		break;
@@ -364,71 +378,6 @@ static int max30210_attr_set(const struct device *dev, enum sensor_channel chan,
 	}
 
 	return ret < 0 ? ret : 0;
-}
-
-static int max30210_init(const struct device *dev)
-{
-	const struct max30210_config *config = dev->config;
-
-	if (!i2c_is_ready_dt(&config->i2c)) {
-		return -ENODEV;
-	}
-#ifdef CONFIG_MAX30210_TRIGGER
-	if (config->interrupt_gpio.port) {
-		if (max30210_init_interrupt(dev)) {
-			return -EIO;
-		}
-	}
-#endif
-	// /* Check PART_ID */
-	uint8_t part_id;
-	int ret = max30210_reg_read(dev, PART_ID, &part_id, 1);
-
-	if (part_id != MAX30210_PART_ID) {
-		return -ENODEV;
-	}
-	ret = max30210_reg_write(dev, SYS_CONFIG, RESET_MASK, 1);
-	if (ret < 0) {
-		return ret; // Failed to write SYS_CONFIG register
-	}
-
-	uint8_t status;
-	ret = max30210_reg_read(dev, STATUS, &status, 1);
-	if (ret < 0) {
-		return ret; // Failed to read status register
-	}
-
-	printf("MAX30210 device initialized successfully with Part ID: 0x%02X\n", part_id);
-	return 0;
-}
-
-static int max30210_attr_get(const struct device *dev, enum sensor_channel chan,
-			     enum sensor_attribute attr, struct sensor_value *val)
-{
-	uint8_t reg_val;
-	int ret;
-
-	// switch (attr) {
-	// case SENSOR_ATTR_TEMP_DATA_MSB:
-	//     ret = max30210_reg_read(dev, TEMP_DATA_MSB, &reg_val);
-	//     if (ret < 0) {
-	//         return ret;
-	//     }
-	//     val->val1 = reg_val;
-	//     break;
-	// case SENSOR_ATTR_TEMP_DATA_LSB:
-	//     ret = max30210_reg_read(dev, TEMP_DATA_LSB, &reg_val);
-	//     if (ret < 0) {
-	//         return ret;
-	//     }
-	//     val->val2 = reg_val;
-	//     break;
-	// default:
-	//     LOG_ERR("Unsupported attribute: %d", attr);
-	//     return -ENOTSUP;
-	// }
-
-	return 0;
 }
 
 static int max30210_sample_fetch(const struct device *dev, enum sensor_channel chan)
@@ -526,9 +475,149 @@ static int max30210_channel_get(const struct device *dev, enum sensor_channel ch
 	return 0;
 }
 
+
+static int max30210_probe(const struct device *dev)
+{
+	const struct max30210_config *config = dev->config;
+	int ret = 0;
+	/* Set Alarm High Setup */
+
+	uint8_t alarm_setup [2];
+
+	max30210_temp_to_bytes(config->alarm_high_setup, &alarm_setup[0], &alarm_setup[1]);
+	
+	ret = max30210_reg_write_multiple(dev, TEMP_ALARM_HIGH_MSB, alarm_setup, 2);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set Alarm Low Setup */
+	
+	max30210_temp_to_bytes(config->alarm_low_setup, &alarm_setup[0], &alarm_setup[1]);
+	ret = max30210_reg_write_multiple(dev, TEMP_ALARM_LOW_MSB, alarm_setup, 2);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set Increment Fast Threshold */
+	ret = max30210_reg_write(dev, TEMP_INC_FAST_THRESH, config->inc_fast_thresh, 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set Decrement Fast Threshold */
+	ret = max30210_reg_write(dev, TEMP_DEC_FAST_THRESH, config->dec_fast_thresh, 1);
+	if (ret < 0) {
+		return ret;
+	}
+	
+	/* Set Sampling Rate */
+	ret = max30210_reg_update(dev, TEMP_CONFIG_2, TEMP_PERIOD_MASK, config->sampling_rate);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set High Trip Count */
+	ret = max30210_reg_update(dev, TEMP_ALARM_HIGH_SETUP, TEMP_HI_TRIP_COUNTER_MASK,
+				  (config->hi_trip_count) - 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set High Non-Consecutive Mode */
+	ret = max30210_reg_update(dev, TEMP_ALARM_HIGH_SETUP, TEMP_HI_ALARM_TRIP_MASK,
+				  config->hi_trip_non_consecutive);
+
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set Low Trip Count */
+	ret = max30210_reg_update(dev, TEMP_ALARM_LOW_SETUP, TEMP_LO_TRIP_COUNTER_MASK,
+				  (config->lo_trip_count) - 1);
+
+	if (ret < 0) {
+		return ret;
+	}
+
+	/* Set Low Non-Consecutive Mode */
+	ret = max30210_reg_update(dev, TEMP_ALARM_LOW_SETUP, TEMP_LO_ALARM_TRIP_MASK,
+				  config->lo_trip_non_consecutive);
+	if (ret < 0) {
+		return ret;
+	}				
+
+	ret = max30210_reg_update(dev, TEMP_CONFIG_1, CHG_DET_EN_MASK, 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	ret = max30210_reg_write(dev, TEMP_CONVERT, 0X03, 1);
+	if (ret < 0) {
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max30210_init(const struct device *dev)
+{
+	const struct max30210_config *config = dev->config;
+
+	if (!i2c_is_ready_dt(&config->i2c)) {
+		return -ENODEV;
+	}
+	// /* Check PART_ID */
+	uint8_t part_id;
+	int ret = max30210_reg_read(dev, PART_ID, &part_id, 1);
+
+	if (part_id != MAX30210_PART_ID) {
+		return -ENODEV;
+	}
+	ret = max30210_reg_write(dev, SYS_CONFIG, RESET_MASK, 1);
+	if (ret < 0) {
+		return ret; // Failed to write SYS_CONFIG register
+	}
+
+	uint8_t status;
+	ret = max30210_reg_read(dev, STATUS, &status, 1);
+	if (ret < 0) {
+		return ret; // Failed to read status register
+	}
+
+	ret = max30210_probe(dev);
+	if (ret < 0) {
+		return ret; // Failed to configure the device
+	}
+
+#ifdef CONFIG_MAX30210_TRIGGER
+	if (config->interrupt_gpio.port) {
+		if (max30210_init_interrupt(dev)) {
+			return -EIO;
+		}
+	}
+#endif
+
+	LOG_INF("MAX30210 device initialized successfully with Part ID: 0x%02X\n", part_id);
+	return 0;
+}
+
+
+#define MAX30210_CONFIG(inst) \
+	.sampling_rate = DT_INST_PROP_OR(inst, sampling_rate, 0), \
+	.hi_trip_count = DT_INST_PROP(inst, hi_trip_count), \
+	.lo_trip_count = DT_INST_PROP(inst, lo_trip_count), \
+	.hi_trip_non_consecutive = DT_INST_PROP_OR(inst, hi_trip_non_consecutive, false), \
+	.lo_trip_non_consecutive = DT_INST_PROP_OR(inst, lo_trip_non_consecutive, false), \
+	.alarm_high_setup = DT_INST_PROP_OR(inst, alarm_high_setup, 0x7FFF), \
+	.alarm_low_setup = DT_INST_PROP_OR(inst, alarm_low_setup, 0x8000), \
+	.inc_fast_thresh = DT_INST_PROP_OR(inst, inc_fast_thresh, 0), \
+	.dec_fast_thresh = DT_INST_PROP_OR(inst, dec_fast_thresh, 0) 
+
+
+
 static DEVICE_API(sensor, max30210_driver_api) = {
 	.attr_set = max30210_attr_set,
-	.attr_get = max30210_attr_get,
 	.sample_fetch = max30210_sample_fetch,
 	.channel_get = max30210_channel_get,
 #ifdef CONFIG_MAX30210_TRIGGER
@@ -540,6 +629,7 @@ static DEVICE_API(sensor, max30210_driver_api) = {
 	static struct max30210_data max30210_prv_data_##inst;                                      \
 	static const struct max30210_config max30210_config_##inst = {                             \
 		.i2c = I2C_DT_SPEC_INST_GET(inst),                                                 \
+		MAX30210_CONFIG(inst),                                                            \
 		IF_ENABLED(CONFIG_MAX30210_TRIGGER,						   \
 			    (.interrupt_gpio = GPIO_DT_SPEC_INST_GET_OR(inst, interrupt_gpios, {0}),)) };        \
 	SENSOR_DEVICE_DT_INST_DEFINE(inst, &max30210_init, NULL, &max30210_prv_data_##inst,        \

@@ -18,3 +18,105 @@ properties:
     description: |
       The INT1 pin defaults to active low when produced by the sensor. The property value should
       ensure the flags properly describe the signal that is presented to the driver.
+
+  sampling-rate:
+    type: int
+    description: |
+      The sampling rate of the sensor in Hz. This value is used to configure the sensor's internal
+      sampling rate. If not specified, the driver will use a default value of 1 Hz.
+    required: false
+    default: 0x00
+    enum:
+      - 0x0  # 0.015625 Hz
+      - 0x1  # 0.03125 Hz
+      - 0x2  # 0.0625 Hz
+      - 0x3  # 0.125 Hz
+      - 0x4  # 0.25 Hz
+      - 0x5  # 0.5 Hz
+      - 0x6  # 1 Hz
+      - 0x7  # 2 Hz
+      - 0x8  # 4 Hz
+      - 0x9  # 8 Hz
+      - 0xA  # 8 Hz
+      - 0xB  # 8 Hz
+      - 0xC  # 8 Hz
+      - 0xD  # 8 Hz
+      - 0xE  # 8 Hz
+      - 0xF  # 8 Hz
+
+  alarm-high-setup:
+    type: int
+    description: |
+      The high temperature threshold for the sensor in degrees Celsius. When the temperature
+      exceeds this threshold, the INT1 pin will be asserted. The value is represented as a
+      signed 16-bit integer in two's complement format, with a resolution of 0.005 degrees Celsius.
+      Usage: input a temperature in milli-degrees Celsius (e.g., 25000 for 25.000°C), and the driver
+      will convert it to the appropriate register value.
+    required: false
+    default: 163835 # 163.835°C
+
+  alarm-low-setup:
+    type: int
+    description: |
+      The low temperature threshold for the sensor in degrees Celsius. When the temperature
+      falls below this threshold, the INT1 pin will be asserted. The value is represented as a
+      signed 16-bit integer in two's complement format, with a resolution of 0.005 degrees Celsius.
+      Usage: input a temperature in milli-degrees Celsius (e.g., 25000 for 25.000°C), and the driver
+      will convert it to the appropriate register value.
+    required: false
+    default: -163840 # -163.840°C
+
+  inc-fast-thresh:
+    type: int
+    description: |
+      The increment threshold between samples. If the temperature changes by more than this
+      threshold between samples, the INT1 pin will be asserted.
+    required: false
+    default: 0
+
+  dec-fast-thresh:
+    type: int
+    description: |
+      The decrement threshold between samples. If the temperature changes by more than this
+      threshold between samples, the INT1 pin will be asserted.
+    required: false
+    default: 0
+    
+  hi-trip-count:
+    type: int
+    description: |
+      The number of consecutive samples that must exceed the high temperature threshold
+      before the INT1 pin is asserted.
+    required: false
+    default: 1
+    enum:
+      - 1
+      - 2
+      - 3
+      - 4
+
+  lo-trip-count:
+    type: int
+    description: |
+      The number of consecutive samples that must fall below the low temperature threshold
+      before the INT1 pin is asserted.
+    required: false
+    default: 1
+    enum:
+      - 1
+      - 2
+      - 3
+      - 4
+
+  hi-trip-non-consecutive:
+    type: boolean
+    description: |
+      If true, the high temperature threshold trip count is non-consecutive.
+    required: false
+
+  lo-trip-non-consecutive:
+    type: boolean
+    description: |
+      If true, the low temperature threshold trip count is non-consecutive.
+    required: false
+
