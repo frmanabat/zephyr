@@ -501,3 +501,10 @@ test_spi_ade7978: ade7978@3c {
 	reg = <0x3c>;
 	spi-max-frequency = <0>;
 };
+
+test_spi_adxl355: adxl355@3d {
+	compatible = "adi,adxl355";
+	reg = <0x3d>;
+	spi-max-frequency = <0>;
+	int1-gpios = <&test_gpio 0 0>;
+};
