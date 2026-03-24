@@ -1,0 +1,10 @@
+# Copyright (c) 2026 Analog Devices Inc.
+# SPDX-License-Identifier: Apache-2.0
+
+description: |
+
+  The MAX86178 is a highly integrated, multiple vital-sign monitoring device
+  with a complete photoplethysmogram (PPG), electrocardiogram (ECG) and
+  biopotential (BioZ) analog front end (AFE) for wearable applications.
+
+include: sensor-device.yaml
