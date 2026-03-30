@@ -901,6 +901,199 @@ enum max86178_bioz_vdrv_mag {
 	MAX86178_BIOZ_VDRV_MAG_500mV,
 };
 
+enum max86178_bioz_idrv_rge {
+	MAX86178_BIOZ_IDRV_RGE_552_5K = 0,
+	MAX86178_BIOZ_IDRV_RGE_110_5K,
+	MAX86178_BIOZ_IDRV_RGE_5_525K,
+	MAX86178_BIOZ_IDRV_RGE_276_25,
+};
+
+enum max86178_bioz_drv_mode {
+	MAX86178_BIOZ_DRV_MODE_CURRENT = 0,   /* Current Drive - sine-wave current */
+	MAX86178_BIOZ_DRV_MODE_VOLTAGE,       /* Voltage Drive - sine-wave voltage */
+	MAX86178_BIOZ_DRV_MODE_H_BRIDGE,      /* H-Bridge Drive - alternating switching */
+	MAX86178_BIOZ_DRV_MODE_STANDBY,       /* Standby - low-power state */
+};
+
+enum max86178_bioz_dc_code_sel {
+	MAX86178_BIOZ_DC_CODE_SEL_DDS = 0,    /* DDS DAC code (sine-wave sample) */
+	MAX86178_BIOZ_DC_CODE_SEL_DC_CODE,    /* BIOZ_DC_DAC_CODE[6:0] for upper 7 bits */
+};
+
+enum max86178_bioz_ahpf {
+	MAX86178_BIOZ_AHPF_100Hz = 0,
+	MAX86178_BIOZ_AHPF_200Hz,
+	MAX86178_BIOZ_AHPF_500Hz,
+	MAX86178_BIOZ_AHPF_1000Hz,
+	MAX86178_BIOZ_AHPF_2000Hz,
+	MAX86178_BIOZ_AHPF_5000Hz,
+	MAX86178_BIOZ_AHPF_10000Hz,
+	MAX86178_BIOZ_AHPF_BYPASS,            /* Resistor opened, capacitors shorted */
+	MAX86178_BIOZ_AHPF_42_4M,             /* 42.4MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_21_2M,             /* 21.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_8_4M,              /* 8.4MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_4_2M,              /* 4.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_2_2M,              /* 2.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_848K,              /* 848kΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_848K_2,            /* 848kΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_BYPASS_2,          /* Resistor opened, capacitor shorted */
+};
+
+enum max86178_bioz_ina_mode {
+	MAX86178_BIOZ_INA_MODE_HIGH_POWER = 0,  /* High-power mode (low noise) */
+	MAX86178_BIOZ_INA_MODE_LOW_POWER,       /* Low-power mode */
+};
+
+enum max86178_bioz_dm_dis {
+	MAX86178_BIOZ_DM_ENABLED = 0,
+	MAX86178_BIOZ_DM_DISABLED,
+};
+
+enum max86178_bioz_gain {
+	MAX86178_BIOZ_GAIN_1 = 0,
+	MAX86178_BIOZ_GAIN_2,
+	MAX86178_BIOZ_GAIN_5,
+	MAX86178_BIOZ_GAIN_10,
+};
+
+enum max86178_bioz_ext_cap {
+	MAX86178_BIOZ_EXT_CAP_INTERNAL = 0,   /* No ext cap - internal switch shorts pins (~35Ω) */
+	MAX86178_BIOZ_EXT_CAP_EXTERNAL,       /* External cap - internal switch open */
+};
+
+enum max86178_bioz_dc_restore {
+	MAX86178_BIOZ_DC_RESTORE_SWITCH_OPEN = 0,
+	MAX86178_BIOZ_DC_RESTORE_SWITCH_CLOSED,
+};
+
+enum max86178_bioz_drv_reset {
+	MAX86178_BIOZ_DRV_RESET_SWITCH_OPEN = 0,
+	MAX86178_BIOZ_DRV_RESET_SWITCH_CLOSED,
+};
+
+enum max86178_bioz_amp_rge {
+	MAX86178_BIOZ_AMP_RGE_LOW = 0,
+	MAX86178_BIOZ_AMP_RGE_MEDIUM_LOW,
+	MAX86178_BIOZ_AMP_RGE_MEDIUM_HIGH,
+	MAX86178_BIOZ_AMP_RGE_HIGH,
+};
+
+enum max86178_bioz_amp_bw {
+	MAX86178_BIOZ_AMP_BW_LOW = 0,
+	MAX86178_BIOZ_AMP_BW_MEDIUM_LOW,
+	MAX86178_BIOZ_AMP_BW_MEDIUM_HIGH,
+	MAX86178_BIOZ_AMP_BW_HIGH,
+};
+
+enum max86178_bioz_rld_drv {
+	MAX86178_BIOZ_RLD_DRV_VMID_TX = 0,
+	MAX86178_BIOZ_RLD_DRV_VRLD,
+};
+
+enum max86178_bioz_cmres_dis {
+	MAX86178_BIOZ_CMRES_DIS_100M = 0,
+	MAX86178_BIOZ_CMRES_DIS_0,
+};
+
+enum max86178_bioz_stbyon {
+	MAX86178_BIOZ_STBYON_DISABLED = 0,
+	MAX86178_BIOZ_STBYON_ENABLED,
+};
+
+enum max86178_bioz_ipol {
+	MAX86178_BIOZ_IPOL_NON_INVERTED = 0,
+	MAX86178_BIOZ_IPOL_INVERTED,
+};
+
+enum max86178_bioz_fast {
+	MAX86178_BIOZ_FAST_NORMAL = 0,
+	MAX86178_BIOZ_FAST_START_ENABLED,
+};
+
+enum max86178_bioz_ina_chop_en {
+	MAX86178_BIOZ_INA_CHOP_DISABLED = 0,
+	MAX86178_BIOZ_INA_CHOP_ENABLED,
+};
+
+enum max86178_bioz_ch_fsel {
+	MAX86178_BIOZ_CH_FSEL_50KHZ = 0,
+	MAX86178_BIOZ_CH_FSEL_25KHZ,
+};
+
+enum max86178_bmux_rsel {
+	MAX86178_BMUX_RSEL_5000_OHM = 0,
+	MAX86178_BMUX_RSEL_800_OHM,
+	MAX86178_BMUX_RSEL_500_OHM,
+	MAX86178_BMUX_RSEL_200_OHM,
+};
+
+enum max86178_bmux_bist_en {
+	MAX86178_BMUX_BIST_DISABLED = 0,
+	MAX86178_BMUX_BIST_ENABLED,
+};
+
+enum max86178_bmux_gsr_rsel {
+	MAX86178_BMUX_GSR_RSEL_25K = 0,
+	MAX86178_BMUX_GSR_RSEL_100K,
+	MAX86178_BMUX_GSR_RSEL_500K,
+	MAX86178_BMUX_GSR_RSEL_1000K,
+};
+
+enum max86178_gsr_load_en {
+	MAX86178_GSR_LOAD_DISABLED = 0,
+	MAX86178_GSR_LOAD_ENABLED,
+};
+
+enum max86178_en_ext_inload {
+	MAX86178_EN_EXT_INLOAD_DISABLED = 0,
+	MAX86178_EN_EXT_INLOAD_ENABLED,
+};
+
+enum max86178_en_int_inload {
+	MAX86178_EN_INT_INLOAD_DISABLED = 0,
+	MAX86178_EN_INT_INLOAD_ENABLED,
+};
+
+enum max86178_bioz_bip_assign {
+	MAX86178_BIOZ_BIP_ASSIGN_EL1 = 0,
+	MAX86178_BIOZ_BIP_ASSIGN_EL2A,
+	MAX86178_BIOZ_BIP_ASSIGN_EL2B,
+	MAX86178_BIOZ_BIP_ASSIGN_UTILITY_ADC,
+};
+
+enum max86178_bioz_bin_assign {
+	MAX86178_BIOZ_BIN_ASSIGN_EL4 = 0,
+	MAX86178_BIOZ_BIN_ASSIGN_EL3A,
+	MAX86178_BIOZ_BIN_ASSIGN_EL3B,
+	MAX86178_BIOZ_BIN_ASSIGN_UTILITY_ADC,
+};
+
+enum max86178_en_bioz_lon {
+	MAX86178_EN_BIOZ_LON_DISABLED = 0,
+	MAX86178_EN_BIOZ_LON_ENABLED,
+};
+
+enum max86178_en_bioz_loff {
+	MAX86178_EN_BIOZ_LOFF_DISABLED = 0,
+	MAX86178_EN_BIOZ_LOFF_ENABLED,
+};
+
+enum max86178_en_ext_bioz_loff {
+	MAX86178_EN_EXT_BIOZ_LOFF_INTERNAL = 0,
+	MAX86178_EN_EXT_BIOZ_LOFF_EXTERNAL,
+};
+
+enum max86178_en_bioz_drv_oor {
+	MAX86178_EN_BIOZ_DRV_OOR_DISABLED = 0,
+	MAX86178_EN_BIOZ_DRV_OOR_ENABLED,
+};
+
+enum max86178_bioz_rbias_value {
+	MAX86178_BIOZ_RBIAS_50M = 0,
+	MAX86178_BIOZ_RBIAS_100M,
+	MAX86178_BIOZ_RBIAS_200M,
+};
+
 /**
  * 
  * @brief MAX86178 bus configuration
@@ -1089,54 +1282,55 @@ struct max86178_bioz_setup {
 	enum max86178_bioz_dlpf bioz_dlpf;
 	enum max86178_en_bioz_thresh en_bioz_thresh;
 	enum max86178_bioz_ext_res bioz_ext_res;
-	uint8_t bioz_vdrv_mag : 2;
-	uint8_t bioz_idrv_rge : 2;
-	uint8_t bioz_drv_mode : 2;
+	enum max86178_bioz_vdrv_mag bioz_vdrv_mag;
+	enum max86178_bioz_idrv_rge bioz_idrv_rge;
+	enum max86178_bioz_drv_mode bioz_drv_mode;
 	bool en_util_mode;
-	bool bioz_dc_code_sel;
+	enum max86178_bioz_dc_code_sel bioz_dc_code_sel;
 	uint8_t bioz_dc_dac_code : 7;
-	uint8_t bioz_ahpf : 4;
-	bool bioz_ina_mode;
-	bool bioz_dm_dis;
-	bool bioz_gain : 2;
-	bool bioz_ext_cap;
-	bool bioz_dc_restore;
-	bool bioz_drv_reset;
+	enum max86178_bioz_ahpf bioz_ahpf;
+	enum max86178_bioz_ina_mode bioz_ina_mode;
+	enum max86178_bioz_dm_dis bioz_dm_dis;
+	enum max86178_bioz_gain bioz_gain;
+	enum max86178_bioz_ext_cap bioz_ext_cap;
+	enum max86178_bioz_dc_restore bioz_dc_restore;
+	enum max86178_bioz_drv_reset bioz_drv_reset;
 	bool bioz_dac_reset;
-	uint8_t bioz_amp_rge : 2;
-	uint8_t bioz_amp_bw : 2;
+	enum max86178_bioz_amp_rge bioz_amp_rge;
+	enum max86178_bioz_amp_bw bioz_amp_bw;
 	bool rld_sel_bioz;
-	bool rld_drv;
-	bool bioz_cmres_dis;
-	bool bioz_stbyon;
-	bool bioz_ipol;
-	bool bioz_fast;
-	bool bioz_ina_chop_en;
-	bool bioz_ch_fsel;
+	enum max86178_bioz_rld_drv rld_drv;
+	enum max86178_bioz_cmres_dis bioz_cmres_dis;
+	enum max86178_bioz_stbyon bioz_stbyon;
+	enum max86178_bioz_ipol bioz_ipol;
+	enum max86178_bioz_fast bioz_fast;
+	enum max86178_bioz_ina_chop_en bioz_ina_chop_en;
+	enum max86178_bioz_ch_fsel bioz_ch_fsel;
 	uint8_t bioz_lo_thresh;
 	uint8_t bioz_hi_thresh;
 };
 
 struct max86178_bioz_calibration {
-	uint8_t bmux_rsel : 2;
-	bool bmux_bist_en;
+	enum max86178_bmux_rsel bmux_rsel : 2;
+	enum max86178_bmux_bist_en bmux_bist_en;
 	bool connect_cal_only;
 	bool bioz_mux_en;
 	bool bioz_cal_en;
-	uint8_t bmux_gsr_rsel : 2;
-	bool gsr_load_en;
-	bool en_ext_inload;
-	bool en_int_inload;
-	uint8_t bip_assign : 2;
-	uint8_t bin_assign : 2;
+	enum max86178_gsr_rsel bmux_gsr_rsel : 2;
+	enum max86178_gsr_load_en gsr_load_en;
+	enum max86178_en_ext_inload en_ext_inload;
+	enum max86178_en_int_inload en_int_inload;
+	enum max86178_bioz_bip_assign bip_assign;
+	enum max86178_bioz_bin_assign bin_assign;
 	uint8_t drvp_assign : 2;
 	uint8_t drvn_assign : 2;
 };
 
 struct max86178_bioz_lead_detect {
-	bool en_bioz_lon;
-	bool en_bioz_loff;
-	bool en_ext_bioz_loff;
+	enum max86178_en_bioz_lon en_bioz_lon;
+	enum max86178_en_bioz_loff en_bioz_loff;
+	enum max86178_en_ext_bioz_loff en_ext_bioz_loff;
+	enum max86178_en_bioz_drv_oor en_bioz_drv_oor;
 	bool bioz_loff_ipol;
 	uint8_t bioz_loff_current_mag : 3;
 	bool resp_cg_mag4x;
@@ -1147,7 +1341,7 @@ struct max86178_bioz_lead_detect {
 struct max86178_lead_bias {
 	bool en_bioz_rbias_p;
 	bool en_bioz_rbias_n;
-	uint8_t bioz_rbias_value : 2;
+	enum max86178_bioz_rbias_value bioz_rbias_value;
 };
 
 struct max86178_bioz_cfg {
@@ -1181,7 +1375,11 @@ struct max86178_dev_config {
 	const union max86178_bus bus;
 	max86178_bus_is_ready_fn bus_is_ready;
 	max86178_reg_access_fn reg_access;
-	/* Add device configuration parameters here */
+	struct max86178_clk_cfg clk_cfg;
+	struct max86178_ppg_cfg ppg_cfg;
+	struct max86178_ecg_cfg ecg_cfg;
+	struct max86178_bioz_cfg bioz_cfg;
+	struct max86178_resp_setup resp_cfg;
 };
 
 /**
