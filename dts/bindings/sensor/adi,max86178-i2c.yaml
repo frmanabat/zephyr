@@ -4,6 +4,6 @@
 description: |
   MAX86178 a multiple vital-sign monitoring device with a complete photoplethysmogram (PPG), electrocardiogram (ECG) and biopotential (BioZ) analog front end (AFE) for wearable applications.
 
-compatible: "adi,max86178"
+# compatible: "adi,max86178"
 
 include: ["i2c-device.yaml", "adi,max86178-common.yaml"]

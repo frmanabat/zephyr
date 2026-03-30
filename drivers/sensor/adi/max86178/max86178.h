@@ -459,7 +459,7 @@ enum max86178_clk_fine_tune {
 	MAX86178_CLK_FINE_TUNE_SHIFT_NEG_0_4,
 	MAX86178_CLK_FINE_TUNE_SHIFT_NEG_0_2,
 	MAX86178_CLK_FINE_TUNE_SHIFT_COUNT,
-}
+};
 
 enum max86178_bioz_ndiv {
 	MAX86178_BIOZ_NDIV_256 = 0,
@@ -467,7 +467,7 @@ enum max86178_bioz_ndiv {
 	MAX86178_BIOZ_NDIV_1024,
 	MAX86178_BIOZ_NDIV_1024_2,
 	MAX86178_BIOZ_NDIV_COUNT,
-}
+};
 
 enum max86178_bioz_kdiv {
 	MAX86178_BIOZ_KDIV_1 = 0,
@@ -838,24 +838,6 @@ enum max86178_ecg_rld_gain {
 enum max86178_rld_ext_res {
 	MAX86178_RLD_EXT_RES_INTERNAL = 0,
 	MAX86178_RLD_EXT_RES_EXTERNAL,
-};
-
-enum max86178_bioz_dac_osr {
-	MAX86178_BIOZ_DAC_OSR_32 = 0,
-	MAX86178_BIOZ_DAC_OSR_64,
-	MAX86178_BIOZ_DAC_OSR_128,
-	MAX86178_BIOZ_DAC_OSR_256,
-};
-
-enum max86178_bioz_adc_osr {
-	MAX86178_BIOZ_ADC_OSR_8 = 0,
-	MAX86178_BIOZ_ADC_OSR_16,
-	MAX86178_BIOZ_ADC_OSR_32,
-	MAX86178_BIOZ_ADC_OSR_64,
-	MAX86178_BIOZ_ADC_OSR_128,
-	MAX86178_BIOZ_ADC_OSR_256,
-	MAX86178_BIOZ_ADC_OSR_512,
-	MAX86178_BIOZ_ADC_OSR_1024,
 };
 
 enum max86178_ecg_bioz_bg_en {
@@ -1244,7 +1226,7 @@ struct max86178_ecg_lead_detect {
 	uint8_t ecg_loff_thresh : 4;
 };
 
-struct max86178_lead_bias {
+struct max86178_ecg_lead_bias {
 	enum max86178_ecg_rbias_value ecg_rbias_value;
 	enum max86178_en_ecg_rbias en_ecg_rbias_p;
 	enum max86178_en_ecg_rbias en_ecg_rbias_n;
@@ -1268,14 +1250,12 @@ struct max86178_ecg_cfg {
 	struct max86178_ecg_setup setup;
 	struct max86178_ecg_calibration calibration;
 	struct max86178_ecg_lead_detect lead_detect;
-	struct max86178_lead_bias lead_bias;
+	struct max86178_ecg_lead_bias lead_bias;
 	struct max86178_rld_cfg rld_cfg;
 };
 
 
 struct max86178_bioz_setup {
-	enum max86178_bioz_dac_osr bioz_dac_osr;
-	enum max86178_bioz_adc_osr bioz_adc_osr;
 	enum max86178_ecg_bioz_bg_en ecg_bioz_bg_en;
 	enum max86178_bioz_en bioz_en;
 	enum max86178_bioz_dhpf bioz_dhpf;
@@ -1311,12 +1291,12 @@ struct max86178_bioz_setup {
 };
 
 struct max86178_bioz_calibration {
-	enum max86178_bmux_rsel bmux_rsel : 2;
+	enum max86178_bmux_rsel bmux_rsel;
 	enum max86178_bmux_bist_en bmux_bist_en;
 	bool connect_cal_only;
 	bool bioz_mux_en;
 	bool bioz_cal_en;
-	enum max86178_gsr_rsel bmux_gsr_rsel : 2;
+	enum max86178_bmux_gsr_rsel bmux_gsr_rsel;
 	enum max86178_gsr_load_en gsr_load_en;
 	enum max86178_en_ext_inload en_ext_inload;
 	enum max86178_en_int_inload en_int_inload;
@@ -1338,7 +1318,7 @@ struct max86178_bioz_lead_detect {
 	uint8_t bioz_loff_thresh : 4;
 };
 
-struct max86178_lead_bias {
+struct max86178_bioz_lead_bias {
 	bool en_bioz_rbias_p;
 	bool en_bioz_rbias_n;
 	enum max86178_bioz_rbias_value bioz_rbias_value;
@@ -1348,7 +1328,7 @@ struct max86178_bioz_cfg {
 	struct max86178_bioz_setup setup;
 	struct max86178_bioz_calibration calibration;
 	struct max86178_bioz_lead_detect lead_detect;
-	struct max86178_lead_bias lead_bias;
+	struct max86178_bioz_lead_bias lead_bias;
 };
 
 struct max86178_resp_setup {

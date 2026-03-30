@@ -3,6 +3,6 @@
 
 description: MAX86178 Optical AFE with SPI interface
 
-compatible: "adi,max86178"
+# compatible: "adi,max86178"
 
 include: ["spi-device.yaml", "adi,max86178-common.yaml"]
