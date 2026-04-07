@@ -21,7 +21,7 @@ include: [sensor-device.yaml, spi-device.yaml]
 ################################################################################
 
 child-binding:
-  description: MAX86178 functional blocks (clk, ppg, ecg, bioz, resp)
+  description: MAX86178 functional blocks (clk, fifo, ppg, ecg, bioz, resp)
 
   properties:
     # =========================================================================
@@ -87,6 +87,42 @@ child-binding:
     collect-raw-data:
       type: boolean
       description: Collect raw ADC data instead of processed
+    
+    pd1-bias:
+      type: int
+      description: Photodiode 1 bias setting
+      enum:
+        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
+    
+    pd2-bias:
+      type: int
+      description: Photodiode 2 bias setting
+      enum:
+        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
+    
+    pd3-bias:
+      type: int
+      description: Photodiode 3 bias setting
+      enum:
+        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
+    
+    pd4-bias:
+      type: int
+      description: Photodiode 4 bias setting
+      enum:
+        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
 
     meas1-config-sel:
       type: boolean
@@ -120,6 +156,21 @@ child-binding:
     cg-lpf-duty:
       type: int
       description: Carrier generation LPF duty cycle (3-bit value)
+
+    # =========================================================================
+    # FIFO DIRECT PROPERTIES (properties of the fifo node itself)
+    # =========================================================================
+    fifo-rollover-en:
+      type: boolean
+      description: Enable FIFO rollover
+    
+    fifo-a-full-type:
+      type: boolean
+      description: FIFO almost full interrupt type
+    
+    fifo-watermark:
+      type: int
+      description: FIFO watermark level (number of samples in FIFO to trigger interrupt)
 
   # =============================================================================
   # NESTED CHILD NODES - Configuration for second-level children

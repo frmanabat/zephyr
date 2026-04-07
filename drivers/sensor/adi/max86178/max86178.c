@@ -161,9 +161,1043 @@ static const struct sensor_driver_api max86178_api = {
 	.attr_get = max86178_attr_get,
 };
 
+static int max86178_osc_enable(const struct device *dev, bool enable)
+{
+	return max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_PLL_EN_MSK, enable ? 1 : 0);
+}
+
+static int max86178_set_pll_cfg6(const struct device *dev, enum ref_clk_sel ref_clk, enum clk_ref_sel clk_freq_sel, enum max86178_clk_fine_tune clk_fine_tune)
+{
+	uint8_t reg_val;
+	int ret;
+
+	reg_val = FIELD_PREP(MAX86178_PLL_CFG6_REF_CLK_SEL_MSK, ref_clk) |
+		  FIELD_PREP(MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK, clk_freq_sel) |
+		  FIELD_PREP(MAX86178_PLL_CFG6_CLK_FINE_TUNE_MSK, clk_fine_tune);
+
+	ret = max86178_reg_write(dev, MAX86178_PLL_CFG6, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PLL CFG6: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int get_clk_freq_sel(const struct device *dev, uint8_t *freq_sel)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	uint8_t ref_clk_sel;
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG6, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG6: %d", ret);
+		return ret;
+	}
+
+	ref_clk_sel = FIELD_GET(MAX86178_PLL_CFG6_REF_CLK_SEL_MSK, reg_val);
+	*freq_sel = ref_clk_sel;
+
+	return 0;
+}
+
+static int validate_mdiv(const struct device *dev, uint16_t mdiv)
+{
+	int ret = 0;
+	uint8_t freq_sel;
+	
+	ret = get_clk_freq_sel(dev, &freq_sel);
+	if (ret < 0) {
+		LOG_ERR("Failed to get clock frequency selection: %d", ret);
+		return ret;
+	}
+
+	mdiv = mdiv + 1;
+	switch (freq_sel) {
+	case MAX86178_REF_CLK_32000:
+		if (mdiv < 125 || mdiv > 875) {
+			LOG_ERR("Invalid mdiv value: %d for 32kHz reference clock", mdiv);
+			return -EINVAL;
+		}
+		break;
+	case MAX86178_REF_CLK_32768:
+		if (mdiv < 123 || mdiv > 854) {
+			LOG_ERR("Invalid mdiv value: %d for 32.768kHz reference clock", mdiv);
+			return -EINVAL;
+		}
+		break;
+	default:
+		LOG_ERR("Unknown reference clock selection: %d", freq_sel);
+		return -EINVAL;
+	}
+	return 0;
+}
+
+static int max86178_get_mdiv(const struct device *dev, uint32_t *mdiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG1: %d", ret);
+		return ret;
+	}
+
+	*mdiv = FIELD_GET(MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val) << 8;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG2: %d", ret);
+		return ret;
+	}
+	*mdiv |= reg_val;
+
+	*mdiv = *mdiv + 1; /* MDIV value is register value + 1 */
+	return 0;
+}
+
+static int max86178_get_ecg_fdiv(const struct device *dev, uint32_t *ecg_fdiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG3: %d", ret);
+		return ret;
+	}
+
+	*ecg_fdiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_FDIV_MSK, reg_val);
+	switch (*ecg_fdiv) {
+	case 0:
+		LOG_INF("ECG FDIV: ECG_ADC_CLK Disabled");
+		break;
+	case 1:
+		*ecg_fdiv = 1;
+		break;
+	case 2:
+		*ecg_fdiv = 2;
+		break;
+	case 3:
+		*ecg_fdiv = 3;
+		break;
+	case 4:
+		*ecg_fdiv = 8;
+		break;
+	case 5:
+	case 6:
+	case 7:
+		*ecg_fdiv = 16;
+		break;
+	default:
+		LOG_ERR("Unknown ECG FDIV register value: %d", *ecg_fdiv);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int max86178_get_ecg_ndiv(const struct device *dev, uint32_t *ecg_ndiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG4: %d", ret);
+		return ret;
+	}
+
+	*ecg_ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val) << 8;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG5, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG5: %d", ret);
+		return ret;
+	}
+	*ecg_ndiv |= reg_val;
+
+	if (*ecg_ndiv < 16){
+		LOG_WRN("ECG NDIV value %d is less than minimum of 16. Using 16 instead.", *ecg_ndiv);
+		*ecg_ndiv = 16; /* Minimum ndiv value is 16 */
+	}
+	return 0;
+}
+
+static int max86178_get_bioz_ndiv(const struct device *dev, uint32_t *bioz_ndiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG3: %d", ret);
+		return ret;
+	}
+
+	*bioz_ndiv = FIELD_GET(MAX86178_PLL_CFG3_BIOZ_NDIV_MSK, reg_val);
+	switch (*bioz_ndiv) {
+	case 0:
+		*bioz_ndiv = 256;
+		break;
+	case 1:
+		*bioz_ndiv = 512;
+		break;
+	case 2:
+		*bioz_ndiv = 1024;
+		break;
+	case 3:
+		*bioz_ndiv = 1024;
+		break;
+	default:
+		LOG_ERR("Unknown BIOZ NDIV register value: %d", *bioz_ndiv);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int max86178_get_bioz_kdiv(const struct device *dev, uint32_t *bioz_kdiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG3: %d", ret);
+		return ret;
+	}
+
+	*bioz_kdiv = FIELD_GET(MAX86178_PLL_CFG3_BIOZ_KDIV_MSK, reg_val);
+	switch (*bioz_kdiv) {
+	case 0:
+		*bioz_kdiv = 1;
+		break;
+	case 1:
+		*bioz_kdiv = 2;
+		break;
+	case 2:
+		*bioz_kdiv = 4;
+		break;
+	case 3:
+		*bioz_kdiv = 8;
+		break;
+	case 4:
+		*bioz_kdiv = 16;
+		break;
+	case 5:
+		*bioz_kdiv = 32;
+		break;
+	case 6:
+		*bioz_kdiv = 64;
+		break;
+	case 7:
+		*bioz_kdiv = 128;
+		break;
+	case 8:
+		*bioz_kdiv = 256;
+		break;
+	case 9:
+		*bioz_kdiv = 512;
+		break;
+	case 10:
+		*bioz_kdiv = 1024;
+		break;
+	case 11:
+		*bioz_kdiv = 2048;
+		break;
+	case 12:
+		*bioz_kdiv = 4096;
+		break;
+	case 13:
+	case 14:
+	case 15:
+		*bioz_kdiv = 8192;
+		break;
+	default:
+		LOG_ERR("Unknown BIOZ KDIV register value: %d", *bioz_kdiv);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int max86178_get_pll_clk(const struct device *dev, uint32_t *pll_clk)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	uint8_t clk_freq_sel;
+	uint32_t mdiv;
+
+	/* Read MDIV */
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read MDIV LSB: %d", ret);
+		return ret;
+	}
+	mdiv = reg_val;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read MDIV MSB: %d", ret);
+		return ret;
+	}
+	mdiv |= FIELD_GET(MAX86178_MDIV_MSB_MSK, reg_val) << 8;
+	mdiv = mdiv + 1; /* M = MDIV + 1 */
+
+	/* Read clock frequency selection */
+	ret = get_clk_freq_sel(dev, &clk_freq_sel);
+	if (ret < 0) {
+		LOG_ERR("Failed to get clock frequency selection: %d", ret);
+		return ret;
+	}
+
+	switch (clk_freq_sel) {
+	case MAX86178_REF_CLK_32000:
+		*pll_clk = 32000 * mdiv;
+		break;
+	case MAX86178_REF_CLK_32768:
+		*pll_clk = 32768 * mdiv;
+		break;
+	default:
+		LOG_ERR("Unknown reference clock selection: %d", clk_freq_sel);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int max86178_get_ecg_pll_clk(const struct device *dev, uint32_t *ecg_pll_clk)
+{
+	int ret = 0;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+	uint8_t fdiv_reg_val;
+	uint8_t fdiv;
+
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read ECG FDIV: %d", ret);
+		return ret;
+	}
+	fdiv_reg_val = FIELD_GET(MAX86178_PLL_CFG4_ECG_FDIV_MSK, reg_val);
+
+	switch (fdiv_reg_val) {
+	case 0:
+		fdiv = 0;
+		break;
+	case 1:
+		fdiv = 1;
+		break;
+	case 2:
+		fdiv = 2;
+		break;
+	case 3:
+		fdiv = 4;
+		break;
+	case 4:
+		fdiv = 8;
+		break;
+	case 5:
+	case 6:
+	case 7:
+		fdiv = 16;
+		break;
+	default:
+		LOG_ERR("Unknown ECG FDIV register value: %d", fdiv_reg_val);
+		return -EINVAL;
+	}
+	*ecg_pll_clk = pll_clk / fdiv;
+
+	return 0;
+}
+
+static int max86178_get_ecg_adc_clk(const struct device *dev, uint32_t *ecg_adc_clk)
+{
+	int ret = 0;
+	uint32_t ecg_pll_clk;
+	uint8_t reg_val;
+	uint16_t ndiv;
+
+	ret = max86178_get_ecg_pll_clk(dev, &ecg_pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get ECG PLL clock: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read ECG NDIV and decimation rate: %d", ret);
+		return ret;
+	}
+	ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val) << 8;
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG5, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read ECG NDIV LSB: %d", ret);
+		return ret;
+	}
+	ndiv |= reg_val;
+
+	if (ndiv < 16){
+		ndiv = 16; /* Minimum ndiv value is 16 */
+	}
+	*ecg_adc_clk = ecg_pll_clk / ndiv;
+	return 0;
+}
+
+static int max86178_get_bioz_adc_clk(const struct device *dev, uint32_t *bioz_adc_clk)
+{
+	int ret = 0;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+	uint8_t ecg_f_div_reg_val;
+	uint8_t ecg_f_div;
+	uint8_t resp_en;
+	uint16_t bioz_ndiv;
+
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_RESP_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read RESP_CFG1: %d", ret);
+		return ret;
+	}
+	resp_en = FIELD_GET(MAX86178_RESP_CFG1_RESP_EN_MSK, reg_val);
+	if (resp_en == 0) {
+		*bioz_adc_clk = pll_clk / bioz_ndiv;
+		return 0;
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read ECG FDIV: %d", ret);
+		return ret;
+	}
+	ecg_f_div_reg_val = FIELD_GET(MAX86178_PLL_CFG4_ECG_FDIV_MSK, reg_val);
+	switch (ecg_f_div_reg_val) {
+	case 0:
+		LOG_ERR("ECG KDIV cannot be 0 when RESP_CFG1_RESP_EN is set");
+		return -EINVAL;
+	case 1:
+		ecg_f_div = 1;
+		break;
+	case 2:
+		ecg_f_div = 2;
+		break;
+	case 3:
+		ecg_f_div = 4;
+		break;
+	case 4:
+		ecg_f_div = 8;
+		break;
+	case 5:
+	case 6:
+	case 7:
+		ecg_f_div = 16;
+		break;
+	default:
+		LOG_ERR("Unknown ECG FDIV register value: %d", ecg_f_div_reg_val);
+		return -EINVAL;
+	}
+
+	*bioz_adc_clk = pll_clk / (ecg_f_div * bioz_ndiv);
+	return 0;
+}
+
+static int max86178_get_bioz_synth_clk(const struct device *dev, uint32_t *bioz_synth_clk)
+{
+	int ret = 0;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+	uint8_t ecg_f_div_reg_val;
+	uint8_t ecg_f_div;
+	uint8_t resp_en;
+	uint16_t bioz_kdiv;
+
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_RESP_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read RESP_CFG1: %d", ret);
+		return ret;
+	}
+
+	resp_en = FIELD_GET(MAX86178_RESP_CFG1_RESP_EN_MSK, reg_val);
+	if (resp_en == 0) {
+		*bioz_synth_clk = pll_clk / bioz_kdiv;
+		return 0;
+	}
+
+}
+
+static int max86178_set_mdiv(const struct device *dev, uint16_t mdiv)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	ret = validate_mdiv(dev, mdiv);
+	if (ret < 0) {
+		LOG_ERR("MDIV validation failed: %d", ret);
+		return ret;
+	}
+	/* Get MSB of mdiv */
+	reg_val = FIELD_GET(MAX86178_MDIV_MSB_MSK, mdiv);
+
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set MDIV MSB: %d", ret);
+		return ret;
+	}
+	/* Get LSB of mdiv */
+	reg_val = mdiv & 0xFF;
+	ret = max86178_reg_write(dev, MAX86178_PLL_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set MDIV LSB: %d", ret);
+		return ret;
+	}
+	return 0;
+
+}
+
+static int max86178_set_ecg_fdiv(const struct device *dev, uint8_t fdiv)
+{
+	int ret;
+
+	ret = max86178_reg_update(dev,MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_FDIV_MSK, fdiv);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG FDIV: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_ecg_ndiv(const struct device *dev, uint16_t ndiv)
+{
+	int ret;
+	uint8_t reg_val;
+
+	/* Get MSB of ndiv */
+	reg_val = FIELD_GET(MAX86178_NDIV_MSB_MSK, ndiv);
+
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG NDIV MSB: %d", ret);
+		return ret;
+	}
+	/* Get LSB of ndiv */
+	reg_val = ndiv & 0xFF;
+	ret = max86178_reg_write(dev, MAX86178_PLL_CFG5, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG NDIV LSB: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int validate_ecg_fdiv_ndiv(const struct device *dev, uint32_t pll_clk, uint8_t fdiv_reg_val, uint16_t ndiv_reg_val)
+{
+	int ret;
+	uint32_t ecg_adc_clk;
+
+	uint8_t fdiv;
+	switch (fdiv_reg_val) {
+	case 0:
+		fdiv = 0;
+		break;
+	case 1:
+		fdiv = 1;
+		break;
+	case 2:
+		fdiv = 2;
+		break;
+	case 3:
+		fdiv = 4;
+		break;
+	case 4:
+		fdiv = 8;
+		break;
+	case 5:
+	case 6:
+	case 7:
+		fdiv = 16;
+		break;
+	default:
+		LOG_ERR("Unknown ECG FDIV register value: %d", fdiv_reg_val);
+		return -EINVAL;
+	}
+
+	if (ndiv_reg_val < 16){
+		LOG_WRN("ECG NDIV value %d is less than minimum of 16. Using 16 instead.", ndiv_reg_val);
+		ndiv_reg_val = 16; /* Minimum ndiv value is 16 */
+	}
+	
+	ecg_adc_clk = pll_clk / (fdiv * ndiv_reg_val);
+	if (ecg_adc_clk < MAX86178_ECG_ADC_CLK_MIN || ecg_adc_clk > MAX86178_ECG_ADC_CLK_MAX) {
+		LOG_ERR("Invalid ECG ADC clock frequency: %d Hz. Must be between %d and %d Hz",
+			ecg_adc_clk, MAX86178_ECG_ADC_CLK_MIN, MAX86178_ECG_ADC_CLK_MAX);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+
+static int max86178_set_ecg_dec_rate(const struct device *dev, enum max86178_ecg_dec_rate dec_rate)
+{
+	int ret;
+	ret = max86178_reg_update(dev, MAX86178_ECG_CFG1, MAX86178_ECG_CFG1_ECG_DEC_RATE_MSK, dec_rate);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG Decimation Rate: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_clk_cfg(const struct device *dev, uint8_t fdiv_reg_val, uint16_t ndiv_reg_val, enum max86178_ecg_dec_rate dec_rate)
+{
+	int ret;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+
+	/* Validate ECG FDIV and NDIV */
+	ret = validate_ecg_fdiv_ndiv(dev, pll_clk, fdiv_reg_val, ndiv_reg_val);
+	if (ret < 0) {
+		LOG_ERR("ECG FDIV/NDIV validation failed: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG FDIV */
+	ret = max86178_set_ecg_fdiv(dev, fdiv_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG FDIV: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG NDIV */
+	ret = max86178_set_ecg_ndiv(dev, ndiv_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG NDIV: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG Decimation Rate */
+	ret = max86178_set_ecg_dec_rate(dev, dec_rate);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG Decimation Rate: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static bool validate_bioz_ndiv(const struct device *dev, uint32_t pll_clk, uint8_t resp_en, uint8_t ecg_fdiv_reg_val, uint8_t bioz_ndiv_reg_val)
+{
+	int ret;
+	uint32_t bioz_adc_clk;
+	uint16_t bioz_ndiv = 0;
+	switch (bioz_ndiv_reg_val) {
+	case 0:
+		bioz_ndiv = 256;
+		break;
+	case 1:
+		bioz_ndiv = 512;
+		break;
+	case 2:	
+		bioz_ndiv = 1024;
+		break;
+	case 3:
+		bioz_ndiv = 1024;
+		break;
+	default:
+		LOG_ERR("Unknown BIOZ NDIV register value: %d", bioz_ndiv_reg_val);
+		return false;
+	}
+
+	if (resp_en == 0) {
+		bioz_adc_clk = pll_clk / bioz_ndiv;
+	} else {
+		uint8_t ecg_f_div;
+
+		switch (ecg_fdiv_reg_val) {
+		case 0:
+			LOG_ERR("ECG FDIV cannot be 0 when RESP_CFG1_RESP_EN is set");
+			return false;
+		case 1:
+			ecg_f_div = 1;
+			break;
+		case 2:
+			ecg_f_div = 2;
+			break;
+		case 3:
+			ecg_f_div = 4;
+			break;
+		case 4:
+			ecg_f_div = 8;
+			break;
+		case 5:
+		case 6:
+		case 7:
+			ecg_f_div = 16;
+			break;
+		default:
+			LOG_ERR("Unknown ECG FDIV register value: %d", ecg_fdiv_reg_val);
+			return false;
+		}
+		bioz_adc_clk = pll_clk / (ecg_f_div * bioz_ndiv);
+	}
+	if (bioz_adc_clk < MAX86178_BIOZ_ADC_CLK_MIN || bioz_adc_clk > MAX86178_BIOZ_ADC_CLK_MAX) {
+		LOG_ERR("Invalid BIOZ ADC clock frequency: %d Hz. Must be between %d and %d Hz",
+			bioz_adc_clk, MAX86178_BIOZ_ADC_CLK_MIN, MAX86178_BIOZ_ADC_CLK_MAX);
+		return false;
+	}
+	return true;
+}
+
+static int max86178_set_resp_en(const struct device *dev, bool enable)
+{
+	return max86178_reg_update(dev, MAX86178_RESP_CFG1, MAX86178_RESP_CFG1_RESP_EN_MSK, enable ? 1 : 0);
+}
+
+static int max86178_set_bioz_ndiv(const struct device *dev, uint8_t bioz_ndiv_reg_val)
+{
+	return max86178_reg_update(dev, MAX86178_PLL_CFG3, MAX86178_PLL_CFG3_BIOZ_NDIV_MSK, bioz_ndiv_reg_val);
+}
+
+static int max86178_set_bioz_adc_osr(const struct device *dev, uint8_t bioz_adc_osr_reg_val)
+{
+	return max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_BIOZ_ADC_OSR_MSK, bioz_adc_osr_reg_val);
+}
+
+static int max86178_set_bioz_adc_clk_cfg(const struct device *dev, uint8_t ecg_fdiv_reg_val, uint8_t bioz_ndiv_reg_val, bool resp_en, uint8_t bioz_adc_osr_reg_val)
+{
+	int ret = 0;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+
+	/* Get PLL clock */
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+
+	/* Validate BIOZ NDIV */
+	if (!validate_bioz_ndiv(dev, pll_clk, resp_en, ecg_fdiv_reg_val, bioz_ndiv_reg_val)) {
+		LOG_ERR("BIOZ NDIV validation failed");
+		return -EINVAL;
+	}
+
+	ret = max86178_set_resp_en(dev, resp_en);
+	if (ret < 0) {
+		LOG_ERR("Failed to set RESP_EN: %d", ret);
+		return ret;
+	}
+
+	/* Set BIOZ NDIV */
+	ret = max86178_set_bioz_ndiv(dev, bioz_ndiv_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ NDIV: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_set_bioz_adc_osr(dev, bioz_adc_osr_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ ADC OSR: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static bool validate_bioz_kdiv(const struct device *dev, uint32_t pll_clk, bool resp_en, uint8_t ecg_fdiv_reg_val, uint8_t bioz_kdiv_reg_val)
+{
+	int ret;
+	uint32_t bioz_synth_clk;
+	uint8_t bioz_kdiv = 0;
+	switch (bioz_kdiv_reg_val) {
+	case 0:
+		bioz_kdiv = 1;
+		break;
+	case 1:
+		bioz_kdiv = 2;
+		break;
+	case 2:
+		bioz_kdiv = 4;
+		break;
+	case 3:
+		bioz_kdiv = 8;
+		break;
+	case 4:
+		bioz_kdiv = 16;
+		break;
+	case 5:
+		bioz_kdiv = 32;
+		break;
+	case 6:
+		bioz_kdiv = 64;
+		break;
+	case 7:
+		bioz_kdiv = 128;
+		break;
+	case 8:
+		bioz_kdiv = 256;
+		break;
+	case 9:
+		bioz_kdiv = 512;
+		break;
+	case 10:
+		bioz_kdiv = 1024;
+		break;
+	case 11:
+		bioz_kdiv = 2048;
+		break;
+	case 12:
+		bioz_kdiv = 4096;
+		break;
+	case 13:
+	case 14:
+	case 15:
+		bioz_kdiv = 8192;
+		break;
+	default:
+		LOG_ERR("Unknown BIOZ KDIV register value: %d", bioz_kdiv_reg_val);
+		return false;
+	}
+
+	if (resp_en == 0)
+	{
+		bioz_synth_clk = pll_clk / bioz_kdiv;
+	} else {
+		uint8_t ecg_f_div;
+
+		switch (ecg_fdiv_reg_val) {
+		case 0:
+			LOG_ERR("ECG FDIV cannot be 0 when RESP_CFG1_RESP_EN is set");
+			return false;
+		case 1:
+			ecg_f_div = 1;
+			break;
+		case 2:
+			ecg_f_div = 2;
+			break;
+		case 3:
+			ecg_f_div = 4;
+			break;
+		case 4:
+			ecg_f_div = 8;
+			break;
+		case 5:
+		case 6:
+		case 7:
+			ecg_f_div = 16;
+			break;
+		default:
+			LOG_ERR("Unknown ECG FDIV register value: %d", ecg_fdiv_reg_val);
+			return false;
+		}
+		bioz_synth_clk = pll_clk / (ecg_f_div * bioz_kdiv);
+	}
+
+	if (bioz_synth_clk < MAX86178_BIOZ_SYNTH_CLK_MIN || bioz_synth_clk > MAX86178_BIOZ_SYNTH_CLK_MAX) {
+		LOG_ERR("Invalid BIOZ Synth clock frequency: %d Hz. Must be between %d and %d Hz",
+			bioz_synth_clk, MAX86178_BIOZ_SYNTH_CLK_MIN, MAX86178_BIOZ_SYNTH_CLK_MAX);
+		return false;
+	}
+	return true;
+
+}
+
+static int max86178_set_bioz_kdiv(const struct device *dev, uint8_t bioz_kdiv_reg_val)
+{
+	return max86178_reg_update(dev, MAX86178_PLL_CFG3, MAX86178_PLL_CFG3_BIOZ_KDIV_MSK, bioz_kdiv_reg_val);
+}
+
+static int max86178_set_bioz_dac_osr(const struct device *dev, uint8_t bioz_dac_osr_reg_val)
+{
+	return max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_BIOZ_DAC_OSR_MSK, bioz_dac_osr_reg_val);
+}
+
+static int max86178_bioz_synth_clk_cfg(const struct device *dev, bool resp_en, uint8_t ecg_fdiv_reg_val, uint8_t bioz_kdiv_reg_val, uint8_t bioz_dac_osr_reg_val)
+{
+	int ret = 0;
+	uint32_t pll_clk;
+	uint8_t reg_val;
+
+	/* Get PLL clock */
+	ret = max86178_get_pll_clk(dev, &pll_clk);
+	if (ret < 0) {
+		LOG_ERR("Failed to get PLL clock: %d", ret);
+		return ret;
+	}
+	/* Validate BIOZ KDIV */
+	if (!validate_bioz_kdiv(dev, pll_clk, resp_en, ecg_fdiv_reg_val, bioz_kdiv_reg_val)) {
+		LOG_ERR("BIOZ KDIV validation failed");
+		return -EINVAL;
+	}
+
+	/* Set BIOZ KDIV */
+	ret = max86178_set_bioz_kdiv(dev, bioz_kdiv_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ KDIV: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_set_bioz_dac_osr(dev, bioz_dac_osr_reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ DAC OSR: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_clk_init(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	/* Set PLL Configuration 6 - Reference Clock, Clock Frequency Selection, and Clock Fine Tune */
+	ret = max86178_set_pll_cfg6(dev, config->clk_cfg.osc_cfg.ref_clk, config->clk_cfg.osc_cfg.clk_freq_sel,
+				 config->clk_cfg.osc_cfg.clk_fine_tune);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PLL CFG6: %d", ret);
+		return ret;
+	}
+
+	/* Validate MDIV */
+	ret = validate_mdiv(dev, config->clk_cfg.osc_cfg.mdiv);
+	if (ret < 0) {
+		LOG_ERR("MDIV validation failed: %d", ret);
+		return ret;
+	}
+
+	/* Set MDIV */
+	ret = max86178_set_mdiv(dev, config->clk_cfg.osc_cfg.mdiv);
+	if (ret < 0) {
+		LOG_ERR("Failed to set MDIV: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG Clock Configuration */
+	ret = max86178_set_ecg_clk_cfg(dev, config->clk_cfg.ecg_cfg.ecg_fdiv, config->clk_cfg.ecg_cfg.ecg_ndiv,
+					config->clk_cfg.ecg_cfg.ecg_dec_rate);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG clock configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set BIOZ ADC Clock Configuration */
+	ret = max86178_set_bioz_adc_clk_cfg(dev, config->clk_cfg.ecg_cfg.ecg_fdiv, config->clk_cfg.bioz_cfg.bioz_ndiv, config->resp_cfg.resp_en, config->clk_cfg.bioz_cfg.bioz_adc_osr);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ ADC clock configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set BIOZ Synth Clock Configuration */
+	ret = max86178_bioz_synth_clk_cfg(dev, config->resp_cfg.resp_en, config->clk_cfg.ecg_cfg.ecg_fdiv, config->clk_cfg.bioz_cfg.bioz_kdiv, config->clk_cfg.bioz_cfg.bioz_dac_osr);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BIOZ Synth clock configuration: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_fifo_init(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	if (config->fifo_cfg.fifo_watermark == 0 || config->fifo_cfg.fifo_watermark > 256) {
+		LOG_ERR("Invalid FIFO watermark level: %d. Must be between 1 and 256.", config->fifo_cfg.fifo_watermark);
+		return -EINVAL;
+	}
+	/* Set FIFO Watermark */
+	reg_val = 256 - config->fifo_cfg.fifo_watermark; /* FIFO counts down, so watermark is set as (256 - desired level) */
+	ret = max86178_reg_write(dev, MAX86178_FIFO_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FIFO watermark: %d", ret);
+		return ret;
+	}
+
+	/* Set Rollover Enable */
+	ret = max86178_reg_update(dev, MAX86178_FIFO_CFG2, MAX86178_FIFO_CFG2_FIFO_RO_MSK,
+				 config->fifo_cfg.fifo_rollover_en ? 1 : 0);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FIFO rollover enable: %d", ret);
+		return ret;
+	}
+
+	/* Set Almost Full Type*/
+	ret = max86178_reg_update(dev, MAX86178_FIFO_CFG2, MAX86178_FIFO_CFG2_A_FULL_TYPE_MSK,
+				 config->fifo_cfg.fifo_a_full_type ? 1 : 0);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FIFO almost full type: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_fr_clk_div_set(const struct device *dev, uint16_t fr_clk_div)
+{
+	int ret = 0;
+	uint8_t reg_val;
+
+	reg_val = FIELD_GET(MAX86178_FR_CLK_DIV_MSB_MSK, fr_clk_div);
+
+	ret = max86178_reg_update(dev, MAX86178_FR_CLK_DIV_MSB, MAX86178_FR_CLK_DIV_MSB_MSK, reg_val);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FR_CLK_DIV MSB: %d", ret);
+		return ret;
+	}
+
+	reg_val = fr_clk_div & 0xFF;
+	ret = max86178_reg_write(dev, MAX86178_FR_CLK_DIV_LSB, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FR_CLK_DIV LSB: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
 static int max86178_ppg_init(const struct device *dev)
 {
 	/* Implement PPG sensor initialization */
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+
+	/* Set FR_CLK_DIV value */
+	ret = max86178_fr_clk_div_set(dev, config->clk_cfg.ppg_cfg.ppg_fr_clk_div);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG FR_CLK_DIV: %d", ret);
+		return ret;
+	}
+
+
+	
+
 	return 0;
 }
 
@@ -225,6 +1259,33 @@ static int max86178_init(const struct device *dev)
 		LOG_ERR("Device soft reset failed");
 		return ret;
 	}
+
+	ret = max86178_osc_enable(dev, false);
+	if (ret < 0) {
+		LOG_ERR("Failed to disable internal oscillator: %d", ret);
+		return ret;
+	}
+	/* Initialize clocks */
+	ret = max86178_clk_init(dev);
+	if (ret < 0) {
+		LOG_ERR("Clock initialization failed");
+		return ret;
+	}
+
+	/* Initialize FIFO */
+	ret = max86178_fifo_init(dev);
+	if (ret < 0) {
+		LOG_ERR("FIFO initialization failed");
+		return ret;
+	}
+
+	/* Initialize PPG */
+	ret = max86178_ppg_init(dev);
+	if (ret < 0) {
+		LOG_ERR("PPG initialization failed");
+		return ret;
+	}
+
 	LOG_INF("MAX86178 initialized");
 	return 0;
 }
@@ -283,6 +1344,17 @@ static int max86178_init(const struct device *dev)
 		.ppg_cfg = MAX86178_CLK_PPG_CFG(inst),                                             \
 		.ecg_cfg = MAX86178_CLK_ECG_CFG(inst),                                             \
 		.bioz_cfg = MAX86178_CLK_BIOZ_CFG(inst),                                           \
+	}
+
+/*******************************************************************************
+ * FIFO CONFIGURATION PARSING MACROS
+ ******************************************************************************/
+
+ #define MAX86178_FIFO_CFG(inst)                                                                    \
+	{                                                                                          \
+		.fifo_watermark = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), fifo), fifo_watermark, 256), \
+		.fifo_rollover_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), fifo), fifo_rollover_en, 0), \
+		.fifo_a_full_type = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), fifo), fifo_a_full_type, 0), \
 	}
 
 /*******************************************************************************
@@ -395,6 +1467,10 @@ static int max86178_init(const struct device *dev)
 		.meas1_config_sel =                                                                \
 			DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), meas1_config_sel, false),    \
 		.smp_ave = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), smp_ave, 0),              \
+		.pd1_bias = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), pd1_bias, 1),            \
+		.pd2_bias = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), pd2_bias, 1),            \
+		.pd3_bias = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), pd3_bias, 1),            \
+		.pd4_bias = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), ppg), pd4_bias, 1),            \
 		.meas_cfg = {                                                                      \
 			MAX86178_PPG_MEAS_CFG_BY_IDX(inst, 1),                                     \
 			MAX86178_PPG_MEAS_CFG_BY_IDX(inst, 2),                                     \
@@ -783,6 +1859,7 @@ static int max86178_init(const struct device *dev)
 		.ppg_cfg = MAX86178_PPG_CFG(inst),                                                 \
 		.ecg_cfg = MAX86178_ECG_CFG(inst),                                                 \
 		.bioz_cfg = MAX86178_BIOZ_CFG(inst),                                               \
+		.fifo_cfg = MAX86178_FIFO_CFG(inst),                                               \
 		.resp_cfg = MAX86178_RESP_CFG(inst),                                               \
 	}
 
