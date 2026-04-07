@@ -1182,6 +1182,299 @@ static int max86178_fr_clk_div_set(const struct device *dev, uint16_t fr_clk_div
 	return 0;
 }
 
+static int max86178_set_ppg_meas_en(const struct device *dev)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+
+	reg_val = FIELD_PREP(MAX86178_PPG_CFG1_MEAS1_EN_MSK, config->ppg_cfg.meas_en[0] ? 1 : 0) |
+		  FIELD_PREP(MAX86178_PPG_CFG1_MEAS2_EN_MSK, config->ppg_cfg.meas_en[1] ? 1 : 0) |
+		  FIELD_PREP(MAX86178_PPG_CFG1_MEAS3_EN_MSK, config->ppg_cfg.meas_en[2] ? 1 : 0) |
+		  FIELD_PREP(MAX86178_PPG_CFG1_MEAS4_EN_MSK, config->ppg_cfg.meas_en[3] ? 1 : 0) |
+		  FIELD_PREP(MAX86178_PPG_CFG1_MEAS5_EN_MSK, config->ppg_cfg.meas_en[4] ? 1 : 0) |
+		  FIELD_PREP(MAX86178_PPG_CFG1_MEAS6_EN_MSK, config->ppg_cfg.meas_en[5] ? 1 : 0);
+	ret = max86178_reg_write(dev, MAX86178_PPG_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG measurement enable: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_pwrdn_sync_mode(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_PPG_CFG2_PPG1_PWRDN_MSK, config->ppg_cfg.ppg1_pwrdn) |
+		  FIELD_PREP(MAX86178_PPG_CFG2_PPG2_PWRDN_MSK, config->ppg_cfg.ppg2_pwrdn) |
+		  FIELD_PREP(MAX86178_PPG_CFG2_PPG_SYNC_MODE_MSK, config->ppg_cfg.ppg_sync_mode);
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG power down and sync mode: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_cfg3(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_PPG_CFG3_MEAS1_CONFIG_SEL_MSK, config->ppg_cfg.meas1_config_sel) |
+		FIELD_PREP(MAX86178_PPG_CFG3_COLLECT_RAW_DATA_MSK, config->ppg_cfg.collect_raw_data) |
+		FIELD_PREP(MAX86178_PPG_CFG3_ALC_DISABLE_MSK, config->ppg_cfg.alc_disable) |
+		FIELD_PREP(MAX86178_PPG_CFG3_SMP_AVE_MSK, config->ppg_cfg.smp_ave);
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG CFG3: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_cfg4(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_PPG_CFG4_PROX_AUTO_MSK, config->ppg_cfg.prox_auto_en) |
+		  FIELD_PREP(MAX86178_PPG_CFG4_PROX_DATA_EN_MSK, config->ppg_cfg.prox_data_en);
+	ret = max86178_reg_write(dev, MAX86178_PPG_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG CFG4: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_pdbias(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_PD_BIAS_PD1_MSK, config->ppg_cfg.pd1_bias) |
+		  FIELD_PREP(MAX86178_PD_BIAS_PD2_MSK, config->ppg_cfg.pd2_bias) |
+		  FIELD_PREP(MAX86178_PD_BIAS_PD3_MSK, config->ppg_cfg.pd3_bias) |
+		  FIELD_PREP(MAX86178_PD_BIAS_PD4_MSK, config->ppg_cfg.pd4_bias);
+	ret = max86178_reg_write(dev, MAX86178_PD_BIAS, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PD Bias: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_sel(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_SEL + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_SEL_DRVA_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].drva) |
+		  FIELD_PREP(MAX86178_MEAS_SEL_DRVB_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].drvb) |
+		  FIELD_PREP(MAX86178_MEAS_SEL_AMB_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].amb_mode);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement selection: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_cfg1(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG1 + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_CFG1_AVER_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].avg_num) |
+		  FIELD_PREP(MAX86178_MEAS_CFG1_TINT_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].tint) |
+		  FIELD_PREP(MAX86178_MEAS_CFG1_FILT_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].filt_sel) |
+		  FIELD_PREP(MAX86178_MEAS_CFG1_FILT2_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].filt2_sel) |
+		  FIELD_PREP(MAX86178_MEAS_CFG1_SINC3_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].sinc3_sel);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_cfg2(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG2 + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].ppg1_adc_rge) |
+		  FIELD_PREP(MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].ppg2_adc_rge);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_cfg3(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG3 + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_CFG3_PPG1_DACOFF_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].ppg1_dac_off) |
+		  FIELD_PREP(MAX86178_MEAS_CFG3_PPG2_DACOFF_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].ppg2_dac_off);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_cfg4(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG4 + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_CFG4_LED_RGE_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].led_rge) |
+		  FIELD_PREP(MAX86178_MEAS_CFG4_LED_SETLNG_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].led_setlng) |
+		  FIELD_PREP(MAX86178_MEAS_CFG4_PD_SETLNG_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].pd_setlng);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_meas_cfg5(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG5 + ((seq_num - 1) * 8);
+
+	reg_val = FIELD_PREP(MAX86178_MEAS_CFG5_PD1_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].pd1_sel) |
+		  FIELD_PREP(MAX86178_MEAS_CFG5_PD2_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].pd2_sel) |
+		  FIELD_PREP(MAX86178_MEAS_CFG5_PD3_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].pd3_sel) |
+		  FIELD_PREP(MAX86178_MEAS_CFG5_PD4_SEL_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].pd4_sel);
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_leda_current(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDA_PA + ((seq_num - 1) * 8);
+
+	reg_val = config->ppg_cfg.meas_cfg[seq_num - 1].drva_pa;
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_ledb_current(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDB_PA + ((seq_num - 1) * 8);
+
+	reg_val = config->ppg_cfg.meas_cfg[seq_num - 1].drvb_pa;
+	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Sequencer %d measurement configuration: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_sequencer_cfg(const struct device *dev, uint8_t seq_num)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	if (seq_num < 1 || seq_num > 6) {
+		LOG_ERR("Invalid sequencer number: %d. Must be between 1 and 6.", seq_num);
+		return -EINVAL;
+	}
+
+	/* Set measurement selection for the sequencer */
+	ret = max86178_set_sequencer_meas_sel(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement selection: %d", seq_num, ret);
+		return ret;
+	}
+	/* Set measurement configurations for the sequencer */
+	ret = max86178_set_sequencer_meas_cfg1(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement configuration 1: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_meas_cfg2(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement configuration 2: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_meas_cfg3(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement configuration 3: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_meas_cfg4(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement configuration 4: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_meas_cfg5(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d measurement configuration 5: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_leda_current(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d LEDA current: %d", seq_num, ret);
+		return ret;
+	}
+
+	ret = max86178_set_sequencer_ledb_current(dev, seq_num);
+	if (ret < 0) {
+		LOG_ERR("Failed to set sequencer %d LEDB current: %d", seq_num, ret);
+		return ret;
+	}
+	return 0;
+
+}
+
 static int max86178_ppg_init(const struct device *dev)
 {
 	/* Implement PPG sensor initialization */
@@ -1194,10 +1487,48 @@ static int max86178_ppg_init(const struct device *dev)
 		LOG_ERR("Failed to set PPG FR_CLK_DIV: %d", ret);
 		return ret;
 	}
+	/* Set PPG PWRDN and sync mode */
+	ret = max86178_set_ppg_pwrdn_sync_mode(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG power down and sync mode: %d", ret);
+		return ret;
+	}
 
+	/* Set PPG CFG3 settings */
+	ret = max86178_set_ppg_cfg3(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG CFG3: %d", ret);
+		return ret;
+	}
 
-	
+	/* Set PPG CFG4 settings */
+	ret = max86178_set_ppg_cfg4(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG CFG4: %d", ret);
+		return ret;
+	}
 
+	/* Set PD Bias */
+	ret = max86178_set_pdbias(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PD Bias: %d", ret);
+		return ret;
+	}
+
+	/* Set Sequencer Configs */
+	for (uint8_t seq_num = 1; seq_num <= 6; seq_num++) {
+		ret = max86178_set_sequencer_cfg(dev, seq_num);
+		if (ret < 0) {
+			LOG_ERR("Failed to set sequencer %d configuration: %d", seq_num, ret);
+			return ret;
+		}
+	}
+	/* Set PPG measurement enables */
+	ret = max86178_set_ppg_meas_en(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG measurement enable: %d", ret);
+		return ret;
+	}
 	return 0;
 }
 
@@ -1845,6 +2176,7 @@ static int max86178_init(const struct device *dev)
 		.ppg_cfg = MAX86178_PPG_CFG(inst),                                                 \
 		.ecg_cfg = MAX86178_ECG_CFG(inst),                                                 \
 		.bioz_cfg = MAX86178_BIOZ_CFG(inst),                                               \
+		.fifo_cfg = MAX86178_FIFO_CFG(inst),                                               \
 		.resp_cfg = MAX86178_RESP_CFG(inst),                                               \
 	}
 
