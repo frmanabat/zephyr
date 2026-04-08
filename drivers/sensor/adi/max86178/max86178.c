@@ -2349,6 +2349,98 @@ static int max86178_set_bioz_calibration(const struct device *dev)
 	return 0;
 }
 
+static int max86178_bioz_set_bioz_lead_detect_cfg1(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IMAG_MSK, config->bioz_cfg.lead_detect.bioz_loff_current_mag) |
+		  FIELD_PREP(MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IPOL_MSK, config->bioz_cfg.lead_detect.bioz_loff_ipol) |
+		  FIELD_PREP(MAX86178_BIOZ_LD_CFG1_EN_BIOZ_DRV_OOR_MSK, config->bioz_cfg.lead_detect.en_bioz_drv_oor) |
+		  FIELD_PREP(MAX86178_BIOZ_LD_CFG1_EN_EXT_BIOZ_LOFF_MSK, config->bioz_cfg.lead_detect.en_ext_bioz_loff) |
+		  FIELD_PREP(MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LOFF_MSK, config->bioz_cfg.lead_detect.en_bioz_loff) |
+		  FIELD_PREP(MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LON_MSK, config->bioz_cfg.lead_detect.en_bioz_lon);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_LD_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead detection configuration 1: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_bioz_set_bioz_lead_off_thresh(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_LOFF_THRESH_BIOZ_LOFF_THRESH_MSK, config->bioz_cfg.lead_detect.bioz_loff_thresh) |
+		  FIELD_PREP(MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_MSK, config->bioz_cfg.lead_detect.resp_cg_mag) |
+		  FIELD_PREP(MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_4X_MSK, config->bioz_cfg.lead_detect.resp_cg_mag4x);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_LOFF_THRESH, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead off threshold: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_lead_detect(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set BioZ lead detection configuration 1 */
+	ret = max86178_bioz_set_bioz_lead_detect_cfg1(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead detection configuration 1: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ lead off threshold */
+	ret = max86178_bioz_set_bioz_lead_off_thresh(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead off threshold: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_lead_bias(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_N_MSK, config->bioz_cfg.lead_bias.en_bioz_rbias_n) |
+		  FIELD_PREP(MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_P_MSK, config->bioz_cfg.lead_bias.en_bioz_rbias_p) |
+		  FIELD_PREP(MAX86178_BIOZ_LB_CFG1_BIOZ_RBIAS_VALUE_MSK, config->bioz_cfg.lead_bias.bioz_rbias_value);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_LB_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead bias configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_resp_cfg(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_RESP_CFG1_RESP_EN_MSK, config->resp_cfg.resp_en) |
+		  FIELD_PREP(MAX86178_RESP_CFG1_CG_MODE, config->resp_cfg.cg_mode) |
+		  FIELD_PREP(MAX86178_RESP_CFG1_CG_CHOP_CLK, config->resp_cfg.cg_chop_clk) |
+		  FIELD_PREP(MAX86178_RESP_CFG1_CG_LPF_DUTY, config->resp_cfg.cg_lpf_duty);
+	ret = max86178_reg_write(dev, MAX86178_RESP_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Respiration configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
 static int max86178_bioz_init(const struct device *dev)
 {
 	int ret = 0;
@@ -2360,9 +2452,31 @@ static int max86178_bioz_init(const struct device *dev)
 		return ret;
 	}
 
+	/* Set BioZ calibration settings */
 	ret = max86178_set_bioz_calibration(dev);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ calibration: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ lead detection settings */
+	ret = max86178_set_bioz_lead_detect(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead detection configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ lead bias settings */
+	ret = max86178_set_bioz_lead_bias(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ lead bias configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set Respiration settings */
+	ret = max86178_set_resp_cfg(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set Respiration configuration: %d", ret);
 		return ret;
 	}
 	return 0;
