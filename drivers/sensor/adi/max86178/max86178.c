@@ -625,6 +625,7 @@ static int max86178_get_bioz_synth_clk(const struct device *dev, uint32_t *bioz_
 	uint8_t ecg_f_div;
 	uint8_t resp_en;
 	uint16_t bioz_kdiv;
+	uint8_t bioz_kdiv_reg_val;
 
 	ret = max86178_get_pll_clk(dev, &pll_clk);
 	if (ret < 0) {
@@ -632,6 +633,45 @@ static int max86178_get_bioz_synth_clk(const struct device *dev, uint32_t *bioz_
 		return ret;
 	}
 
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read PLL CFG3: %d", ret);
+		return ret;
+	}
+	bioz_kdiv_reg_val = FIELD_GET(MAX86178_PLL_CFG3_BIOZ_KDIV_MSK, reg_val);
+	
+	if (bioz_kdiv_reg_val > 13 || bioz_kdiv_reg_val < 16) {
+		bioz_kdiv = 8192; /* For register values 13-15, BIOZ KDIV is 8192 */
+	}
+	else {
+		bioz_kdiv = 1 << bioz_kdiv_reg_val; /* BIOZ KDIV is 2^reg_value */
+	}
+
+	ret = max86178_reg_read(dev, MAX86178_PLL_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read ECG FDIV: %d", ret);
+		return ret;
+	}
+	ecg_f_div_reg_val = FIELD_GET(MAX86178_PLL_CFG4_ECG_FDIV_MSK, reg_val);
+	switch (ecg_f_div_reg_val) {
+	case 0:
+		LOG_ERR("ECG KDIV cannot be 0 when RESP_CFG1_RESP_EN is set");
+		return -EINVAL;
+	case 1:
+	case 2:
+	case 3:
+	case 4:
+		ecg_f_div = 1 << (ecg_f_div_reg_val - 1); /* ECG FDIV is 2^(reg_value-1) for values 1-4 */
+		break;
+	case 5:
+	case 6:
+	case 7:
+		ecg_f_div = 16; /* For register values 5-7, ECG FDIV is 16 */
+		break;
+	default:
+		LOG_ERR("Unknown ECG FDIV register value: %d", ecg_f_div_reg_val);
+		return -EINVAL;
+	}
 	ret = max86178_reg_read(dev, MAX86178_RESP_CFG1, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to read RESP_CFG1: %d", ret);
@@ -641,9 +681,11 @@ static int max86178_get_bioz_synth_clk(const struct device *dev, uint32_t *bioz_
 	resp_en = FIELD_GET(MAX86178_RESP_CFG1_RESP_EN_MSK, reg_val);
 	if (resp_en == 0) {
 		*bioz_synth_clk = pll_clk / bioz_kdiv;
-		return 0;
 	}
-
+	else {
+		*bioz_synth_clk = pll_clk / (ecg_f_div * bioz_kdiv);
+	}
+	return 0;
 }
 
 static int max86178_set_mdiv(const struct device *dev, uint16_t mdiv)
@@ -1132,6 +1174,14 @@ static int max86178_fifo_init(const struct device *dev)
 		LOG_ERR("Invalid FIFO watermark level: %d. Must be between 1 and 256.", config->fifo_cfg.fifo_watermark);
 		return -EINVAL;
 	}
+
+	/* Flush Fifo */
+	ret = max86178_reg_update(dev, MAX86178_FIFO_CFG2, MAX86178_FIFO_CFG2_FLUSH_FIFO_MSK, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to flush FIFO: %d", ret);
+		return ret;
+	}
+
 	/* Set FIFO Watermark */
 	reg_val = 256 - config->fifo_cfg.fifo_watermark; /* FIFO counts down, so watermark is set as (256 - desired level) */
 	ret = max86178_reg_write(dev, MAX86178_FIFO_CFG1, &reg_val, 1);
@@ -1475,6 +1525,102 @@ static int max86178_set_sequencer_cfg(const struct device *dev, uint8_t seq_num)
 
 }
 
+static int max86178_set_ppg_threshold_meas_sel(const struct device *dev)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+
+	reg_val = FIELD_PREP(MAX86178_THRESH_MEAS_SEL_THRESH1_MEAS_SEL_MSK, config->ppg_cfg.threshold_cfg.thresh1_meas_sel) |
+		  FIELD_PREP(MAX86178_THRESH_MEAS_SEL_THRESH2_MEAS_SEL_MSK, config->ppg_cfg.threshold_cfg.thresh2_meas_sel);
+	
+	ret = max86178_reg_write(dev, MAX86178_THRESH_MEAS_SEL, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG threshold measurement selection: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_threshold_hyst(const struct device *dev)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+
+	reg_val = FIELD_PREP(MAX86178_THRESH_HYST_LEVEL_HYST_MSK, config->ppg_cfg.threshold_cfg.level_hyst) |
+		  FIELD_PREP(MAX86178_THRESH_HYST_TIME_HYST_MSK, config->ppg_cfg.threshold_cfg.time_hyst) |
+		  FIELD_PREP(MAX86178_THRESH_HYST_THRESH1_PPG_SEL_MSK, config->ppg_cfg.threshold_cfg.thresh1_chan_sel) |
+		  FIELD_PREP(MAX86178_THRESH_HYST_THRESH2_PPG_SEL_MSK, config->ppg_cfg.threshold_cfg.thresh2_chan_sel);
+	
+	ret = max86178_reg_write(dev, MAX86178_THRESH_HYST, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG threshold hysteresis: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_threshold_level(const struct device *dev)
+{
+	int ret = 0;
+	uint8_t reg_val;
+	const struct max86178_dev_config *config = dev->config;
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH1, &config->ppg_cfg.threshold_cfg.thresh1_hi, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG HI threshold 1 level: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH1, &config->ppg_cfg.threshold_cfg.thresh1_lo, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG LOW threshold 1 level: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH2, &config->ppg_cfg.threshold_cfg.thresh2_hi, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG HI threshold 2 level: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH2, &config->ppg_cfg.threshold_cfg.thresh2_lo, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG LOW threshold 2 level: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ppg_threshold(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	/* Set threshold measurement selection */
+	ret = max86178_set_ppg_threshold_meas_sel(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG threshold measurement selection: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_set_ppg_threshold_hyst(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG threshold hysteresis: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_set_ppg_threshold_level(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG threshold levels: %d", ret);
+		return ret;
+	}
+	
+	return 0;
+}
+
 static int max86178_ppg_init(const struct device *dev)
 {
 	/* Implement PPG sensor initialization */
@@ -1523,10 +1669,700 @@ static int max86178_ppg_init(const struct device *dev)
 			return ret;
 		}
 	}
-	/* Set PPG measurement enables */
-	ret = max86178_set_ppg_meas_en(dev);
+
+	ret = max86178_set_ppg_threshold(dev);
 	if (ret < 0) {
-		LOG_ERR("Failed to set PPG measurement enable: %d", ret);
+		LOG_ERR("Failed to set PPG thresholds: %d", ret);
+		return ret;
+	}
+	
+	/* I think this should be done after the pll_en  */
+	// /* Set PPG measurement enables */
+	// ret = max86178_set_ppg_meas_en(dev);
+	// if (ret < 0) {
+	// 	LOG_ERR("Failed to set PPG measurement enable: %d", ret);
+	// 	return ret;
+	// }
+	return 0;
+}
+
+static int max86178_set_ecg_cfg2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_CFG2_ECG_INA_GAIN_MSK, config->ecg_cfg.setup.ecg_ina_gain) |
+		  FIELD_PREP(MAX86178_ECG_CFG2_ECG_INA_RGE_MSK, config->ecg_cfg.setup.ecg_ina_rge) |
+		  FIELD_PREP(MAX86178_ECG_CFG2_ECG_PGA_GAIN_MSK, config->ecg_cfg.setup.ecg_pga_gain) |
+		  FIELD_PREP(MAX86178_ECG_CFG2_ECG_IPOL_MASK, config->ecg_cfg.setup.ecg_input_pol);
+	ret = max86178_reg_write(dev, MAX86178_ECG_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG INA, PGA, and input polarity configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_cfg3(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_CFG3_ECG_MUX_SEL_MSK, config->ecg_cfg.setup.ecg_mux_sel) |
+		  FIELD_PREP(MAX86178_ECG_CFG3_ECG_AUTO_REC_MSK, config->ecg_cfg.setup.ecg_auto_rec) |
+		  FIELD_PREP(MAX86178_ECG_CFG3_ECG_IMP_HI_MSK, config->ecg_cfg.setup.ecg_imp_hi);
+	ret = max86178_reg_write(dev, MAX86178_ECG_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG MUX, auto recovery, and impedance configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_cfg4(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_CFG4_ECG_FAST_REC_THRESHOLD_MSK, config->ecg_cfg.setup.ecg_fast_rec_thres) |
+		  FIELD_PREP(MAX86178_ECG_CFG4_EN_ECG_FAST_REC_MSK, config->ecg_cfg.setup.en_ecg_fast_rec);
+	ret = max86178_reg_write(dev, MAX86178_ECG_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG fast recovery configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_setup(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set ECG CFG2 settings */
+	ret = max86178_set_ecg_cfg2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG CFG2: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG CFG3 settings */
+	ret = max86178_set_ecg_cfg3(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG CFG3: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG CFG4 settings */
+	ret = max86178_set_ecg_cfg4(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG CFG4: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_cal_cfg1(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_EN_MSK, config->ecg_cfg.calibration.ecg_cal_en) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_DUTY_MSK, config->ecg_cfg.calibration.ecg_cal_duty) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_FREQ_MSK, config->ecg_cfg.calibration.ecg_freq) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_HIGH_MSB_MSK, (config->ecg_cfg.calibration.ecg_cal_high >> 8) & 0x07);
+	ret = max86178_reg_write(dev, MAX86178_ECG_CAL_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_cal_cfg2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = config->ecg_cfg.calibration.ecg_cal_high & 0xFF;
+	ret = max86178_reg_write(dev, MAX86178_ECG_CAL_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration high byte: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_cal_cfg3(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_CAL_N_SEL_MSK, config->ecg_cfg.calibration.ecg_cal_n_sel) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_CAL_P_SEL_MSK, config->ecg_cfg.calibration.ecg_cal_p_sel) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_CAL_MAG_MASK, config->ecg_cfg.calibration.ecg_cal_mag) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_CAL_MODE_MSK, config->ecg_cfg.calibration.ecg_cal_mode) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_OPEN_P_MSK, config->ecg_cfg.calibration.ecg_open_p) |
+		  FIELD_PREP(MAX86178_ECG_CAL_CFG3_ECG_OPEN_N_MSK, config->ecg_cfg.calibration.ecg_open_n);
+	ret = max86178_reg_write(dev, MAX86178_ECG_CAL_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_calibration(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set ECG calibration CFG1 settings */
+	ret = max86178_set_ecg_cal_cfg1(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration CFG1: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG calibration CFG2 settings */
+	ret = max86178_set_ecg_cal_cfg2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration CFG2: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG calibration CFG3 settings */
+	ret = max86178_set_ecg_cal_cfg3(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration CFG3: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_lead_detect_cfg1(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_LEAD_CFG1_ECG_LOFF_FREQ_MSK, config->ecg_cfg.lead_detect.ecg_loff_freq) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_CFG1_ECG_LOFF_MODE_MSK, config->ecg_cfg.lead_detect.ecg_loff_mode) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_CFG1_EN_ECG_LOFF_MSK, config->ecg_cfg.lead_detect.en_ecg_loff) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_CFG1_EN_ECG_LON_MSK, config->ecg_cfg.lead_detect.en_ecg_lon);
+	ret = max86178_reg_write(dev, MAX86178_ECG_LD_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead detection configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_lead_detect_cfg2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_LEAD_CFG2_ECG_LOFF_THRESH_MSK, config->ecg_cfg.lead_detect.ecg_loff_thresh) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IMAG_MSK, config->ecg_cfg.lead_detect.ecg_loff_current_mag) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IPOL_MSK, config->ecg_cfg.lead_detect.ecg_loff_ipol);
+	ret = max86178_reg_write(dev, MAX86178_ECG_LD_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead detection configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_lead_detection(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set ECG lead detection CFG1 settings */
+	ret = max86178_set_ecg_lead_detect_cfg1(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead detection CFG1: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG lead detection CFG2 settings */
+	ret = max86178_set_ecg_lead_detect_cfg2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead detection CFG2: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_lead_bias(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_N_MSK, config->ecg_cfg.lead_bias.en_ecg_rbias_n) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_P_MSK, config->ecg_cfg.lead_bias.en_ecg_rbias_p) |
+		  FIELD_PREP(MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK, config->ecg_cfg.lead_bias.ecg_rbias_value);
+	ret = max86178_reg_write(dev, MAX86178_ECG_LB_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead bias configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_rld_cfg1(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_RLD_CFG1_RLD_GAIN_MSK, config->ecg_cfg.rld_cfg.rld_gain) |
+		FIELD_PREP(MAX86178_RLD_CFG1_ACTV_CM_N_MSK, config->ecg_cfg.rld_cfg.actv_cm_n) |
+		FIELD_PREP(MAX86178_RLD_CFG1_ACTV_CM_P_MSK, config->ecg_cfg.rld_cfg.actv_cm_p) |
+		FIELD_PREP(MAX86178_RLD_CFG1_EN_RLD_OOR_MSK, config->ecg_cfg.rld_cfg.en_rld_oor) |
+		FIELD_PREP(MAX86178_RLD_CFG1_RLD_BIAS_MSK, config->ecg_cfg.rld_cfg.rld_rbias) |
+		FIELD_PREP(MAX86178_RLD_CFG1_RLD_MODE_MSK, config->ecg_cfg.rld_cfg.rld_mode) |
+		FIELD_PREP(MAX86178_RLD_CFG1_RLD_EN_MSK, config->ecg_cfg.rld_cfg.rld_en);
+	ret = max86178_reg_write(dev, MAX86178_RLD_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG RLD configuration 1: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_rld_cfg2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_RLD_CFG2_BODY_BIAS_DAC_MSK, config->ecg_cfg.rld_cfg.body_bias_dac) |
+		  FIELD_PREP(MAX86178_RLD_CFG2_RLD_BW_MSK, config->ecg_cfg.rld_cfg.rld_bw) |
+		  FIELD_PREP(MAX86178_RLD_CFG2_RLD_SEL_ECG_MSK, config->ecg_cfg.rld_cfg.rld_sel_ecg) |
+		  FIELD_PREP(MAX86178_RLD_CFG2_RLD_EXT_RES_MSK, config->ecg_cfg.rld_cfg.rld_ext_res);
+	ret = max86178_reg_write(dev, MAX86178_RLD_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG RLD configuration 2: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_ecg_rld_cfg(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set ECG RLD configuration 1 */
+	ret = max86178_set_ecg_rld_cfg1(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG RLD configuration 1: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG RLD configuration 2 */
+	ret = max86178_set_ecg_rld_cfg2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG RLD configuration 2: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_ecg_init(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+
+	/* Set ECG Configs */
+	ret = max86178_set_ecg_setup(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG calibration settings */
+	ret = max86178_set_ecg_calibration(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG calibration: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG lead detection settings */
+	ret = max86178_set_ecg_lead_detection(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead detection configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG lead bias settings */
+	ret = max86178_set_ecg_lead_bias(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG lead bias configuration: %d", ret);
+		return ret;
+	}
+
+	/* Set ECG RLD settings */
+	ret = max86178_set_ecg_rld_cfg(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set ECG RLD configuration: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_cfg2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG2_EN_BIOZ_THRESH_MSK, config->bioz_cfg.setup.en_bioz_thresh) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG2_BIOZ_DLPF_MSK, config->bioz_cfg.setup.bioz_dlpf) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG2_BIOZ_DHPF_MSK, config->bioz_cfg.setup.bioz_dhpf);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 2: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg3(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG3_BIOZ_DRV_MODE_MSK, config->bioz_cfg.setup.bioz_drv_mode) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG3_BIOZ_IDRV_RGE_MSK, config->bioz_cfg.setup.bioz_idrv_rge) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG3_BIOZ_VDRV_MAG_MSK, config->bioz_cfg.setup.bioz_vdrv_mag) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG3_BIOZ_EXT_RES_MSK, config->bioz_cfg.setup.bioz_ext_res);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 3: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg4(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG4_EN_UTIL_MODE_MSK, config->bioz_cfg.setup.en_util_mode);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG4, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 4: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg5(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG5_BIOZ_DC_DAC_CODE_MSK, config->bioz_cfg.setup.bioz_dc_dac_code) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG5_BIOZ_DC_CODE_SEL_MSK, config->bioz_cfg.setup.bioz_dc_code_sel);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG5, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 5: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg6(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG6_BIOZ_GAIN_MSK, config->bioz_cfg.setup.bioz_gain) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG6_DM_DIS_MSK, config->bioz_cfg.setup.bioz_dm_dis) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG6_BIOZ_INA_MODE_MSK, config->bioz_cfg.setup.bioz_ina_mode) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG6_BIOZ_AHPF_MSK, config->bioz_cfg.setup.bioz_ahpf);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG6, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 6: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg7(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_AMP_BW_MSK, config->bioz_cfg.setup.bioz_amp_bw) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_AMP_RGE_MSK, config->bioz_cfg.setup.bioz_amp_rge) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_DAC_RESET_MSK, config->bioz_cfg.setup.bioz_dac_reset) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_DRV_RESET_MSK, config->bioz_cfg.setup.bioz_drv_reset) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_DC_RESTORE_MSK, config->bioz_cfg.setup.bioz_dc_restore) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG7_BIOZ_EXT_CAP_MSK, config->bioz_cfg.setup.bioz_ext_cap);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG7, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 7: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_cfg8(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_CH_FSEL_MSK, config->bioz_cfg.setup.bioz_ch_fsel) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_INA_CHOP_EN_MSK, config->bioz_cfg.setup.bioz_ina_chop_en) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_FAST_MSK, config->bioz_cfg.setup.bioz_fast) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_IPOL_MSK, config->bioz_cfg.setup.bioz_ipol) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_STBYON_MSK, config->bioz_cfg.setup.bioz_stbyon) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_CMRES_DIS_MSK, config->bioz_cfg.setup.bioz_cmres_dis) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_RLD_DRV_MSK, config->bioz_cfg.setup.rld_drv) |
+		  FIELD_PREP(MAX86178_BIOZ_CFG8_BIOZ_RLD_SEK_BIOZ_MSK, config->bioz_cfg.setup.rld_sel_bioz);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_CFG8, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 8: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_lo_thresh(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_LO_THRESH, &config->bioz_cfg.setup.bioz_lo_thresh, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ low threshold: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_hi_thresh(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_HI_THRESH, &config->bioz_cfg.setup.bioz_hi_thresh, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ high threshold: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_set_bioz_setup(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set BioZ configuration 2 */
+	ret = max86178_set_bioz_cfg2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 2: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 3 */
+	ret = max86178_set_bioz_cfg3(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 3: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 4 */
+	ret = max86178_set_bioz_cfg4(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 4: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 5 */
+	ret = max86178_set_bioz_cfg5(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 5: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 6 */
+	ret = max86178_set_bioz_cfg6(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 6: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 7 */
+	ret = max86178_set_bioz_cfg7(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 7: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ configuration 8 */
+	ret = max86178_set_bioz_cfg8(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ configuration 8: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ low threshold */
+	ret = max86178_set_bioz_lo_thresh(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ low threshold: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ high threshold */
+	ret = max86178_set_bioz_hi_thresh(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ high threshold: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_mux1(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_MUX_CFG1_BIOZ_CAL_EN_MSK, config->bioz_cfg.calibration.bioz_cal_en) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG1_BIOZ_MUX_EN_MSK, config->bioz_cfg.calibration.bioz_mux_en) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG1_BIOZ_CONNECT_CAL_ONLY_MSK, config->bioz_cfg.calibration.connect_cal_only) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG1_BMUX_BIST_EN_MSK, config->bioz_cfg.calibration.bmux_bist_en) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG1_BMUX_RSEL_MSK, config->bioz_cfg.calibration.bmux_rsel);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_mux2(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_MUX_CFG2_EN_INT_INLOAD_MSK, config->bioz_cfg.calibration.en_int_inload) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG2_EN_EXT_INLOAD_MSK, config->bioz_cfg.calibration.en_ext_inload) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG2_GSR_LOAD_EN_MSK, config->bioz_cfg.calibration.gsr_load_en) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG2_BMUX_GSR_RSEL_MSK, config->bioz_cfg.calibration.bmux_gsr_rsel);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG2, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 2: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_mux3(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_BIOZ_MUX_CFG3_DRVN_ASSIGN_MSK, config->bioz_cfg.calibration.drvn_assign) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG3_DRVP_ASSIGN_MSK, config->bioz_cfg.calibration.drvp_assign) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG3_BIN_ASSIGN_MSK, config->bioz_cfg.calibration.bin_assign) |
+		  FIELD_PREP(MAX86178_BIOZ_MUX_CFG3_BIP_ASSIGN_MSK, config->bioz_cfg.calibration.bip_assign);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG3, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 3: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_mux4(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG4, &config->bioz_cfg.calibration.bist_r_err, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 4: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_set_bioz_calibration(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set BioZ MUX configuration 1 */
+	ret = max86178_set_bioz_mux1(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 1: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ MUX configuration 2 */
+	ret = max86178_set_bioz_mux2(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 2: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ MUX configuration 3 */
+	ret = max86178_set_bioz_mux3(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 3: %d", ret);
+		return ret;
+	}
+
+	/* Set BioZ MUX configuration 4 */
+	ret = max86178_set_bioz_mux4(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ MUX configuration 4: %d", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static int max86178_bioz_init(const struct device *dev)
+{
+	int ret = 0;
+
+	/* Set BioZ setup */
+	ret = max86178_set_bioz_setup(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ setup: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_set_bioz_calibration(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set BioZ calibration: %d", ret);
 		return ret;
 	}
 	return 0;
@@ -1614,6 +2450,18 @@ static int max86178_init(const struct device *dev)
 	ret = max86178_ppg_init(dev);
 	if (ret < 0) {
 		LOG_ERR("PPG initialization failed");
+		return ret;
+	}
+
+	ret = max86178_ecg_init(dev);
+	if (ret < 0) {
+		LOG_ERR("ECG initialization failed");
+		return ret;
+	}
+
+	ret = max86178_bioz_init(dev);
+	if (ret < 0) {
+		LOG_ERR("BioZ initialization failed");
 		return ret;
 	}
 
@@ -2093,6 +2941,8 @@ static int max86178_init(const struct device *dev)
 		.drvn_assign =                                                                     \
 			DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), bioz), calibration),      \
 				   drvn_assign, 0),                                                \
+		.bist_r_err = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), bioz), calibration),      \
+				   bist_r_err, 0),                                                 \
 	}
 
 /* BioZ Lead Detect Configuration */

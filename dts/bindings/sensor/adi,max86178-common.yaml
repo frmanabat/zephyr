@@ -1228,6 +1228,10 @@ child-binding:
       drvn-assign:
         type: int
         description: Drive negative assignment (2-bit value)
+      
+      bist-r-err:
+        type: int
+        description: BioZ built-in self-test resistance error threshold (8-bit value)
 
       # ---------------------------------------------------------------------------
         # Properties for lead_detect node

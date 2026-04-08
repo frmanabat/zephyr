@@ -400,7 +400,9 @@
 
 /* ECG_CAL_CFG1 (0x84) */
 #define MAX86178_ECG_CAL_CFG1_ECG_CAL_EN_MSK  BIT(0)
-#define MAX86178_ECG_CAL_CFG1_ECG_DEC_RATE_MSK GENMASK(3, 1)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_DUTY_MSK BIT(1)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_FREQ_MSK GENMASK(4, 2)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_HIGH_MSB_MSK GENMASK(7, 5)
 
 /* ECG_CAL_CFG3 (0x86) */
 #define MAX86178_ECG_CAL_CFG3_ECG_CAL_N_SEL_MSK GENMASK(1, 0)
@@ -415,6 +417,16 @@
 #define MAX86178_ECG_LEAD_CFG1_ECG_LOFF_MODE_MSK     BIT(3)
 #define MAX86178_ECG_LEAD_CFG1_EN_ECG_LOFF_MSK       BIT(6)
 #define MAX86178_ECG_LEAD_CFG1_EN_ECG_LON_MSK       BIT(7)
+
+/* ECG_LEAD_CFG2 (0x89) */
+#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_THRESH_MSK  GENMASK(3, 0)
+#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IMAG_MSK   GENMASK(6, 4)
+#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IPOL_MSK	 BIT(7)
+
+/* ECG_LEAD_BIAS (0x90) */
+#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_N_MSK  BIT(0)
+#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_P_MSK  BIT(1)
+#define MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK     GENMASK(4, 2)
 
 /* ECG_RLD_CFG1 (0x92) */
 #define MAX86178_RLD_CFG1_RLD_GAIN_MSK          GENMASK(1, 0)
@@ -465,8 +477,9 @@
 /* BIOZ_CFG7 (0xA6) */
 #define MAX86178_BIOZ_CFG7_BIOZ_AMP_BW_MSK		GENMASK(1, 0)
 #define MAX86178_BIOZ_CFG7_BIOZ_AMP_RGE_MSK		GENMASK(3, 2)
-#define MAX86178_BIOZ_CFG7_BIOZ_DAC_RESET_MSK	BIT(5)
-#define MAX86178_BIOZ_CFG7_BIOZ_DRV_RESTORE_MSK	BIT(6)
+#define MAX86178_BIOZ_CFG7_BIOZ_DAC_RESET_MSK	BIT(4)
+#define MAX86178_BIOZ_CFG7_BIOZ_DRV_RESET_MSK	BIT(5)
+#define MAX86178_BIOZ_CFG7_BIOZ_DC_RESTORE_MSK	BIT(6)
 #define MAX86178_BIOZ_CFG7_BIOZ_EXT_CAP_MSK		BIT(7)
 
 /* BIOZ_CFG8 (0xA7) */
@@ -1343,10 +1356,10 @@ struct max86178_ppg_threshold_cfg {
 	enum max86178_ppg_thresh_chan_sel thresh2_chan_sel;
 	enum max86178_ppg_time_hyst time_hyst;
 	enum max86178_ppg_level_hyst level_hyst;
-	uint16_t thresh1_hi;
-	uint16_t thresh1_lo;
-	uint16_t thresh2_hi;
-	uint16_t thresh2_lo;
+	uint8_t thresh1_hi;
+	uint8_t thresh1_lo;
+	uint8_t thresh2_hi;
+	uint8_t thresh2_lo;
 };
 
 struct max86178_ppg_cfg {
@@ -1483,6 +1496,7 @@ struct max86178_bioz_calibration {
 	enum max86178_bioz_bin_assign bin_assign;
 	uint8_t drvp_assign : 2;
 	uint8_t drvn_assign : 2;
+	uint8_t bist_r_err;
 };
 
 struct max86178_bioz_lead_detect {
