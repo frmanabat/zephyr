@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2026 Analog Devices Inc.
+ * Copyright (c) 2026 Analog Devices, Inc.
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -9,7 +9,7 @@
 #include "max86178.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(max86178, CONFIG_SENSOR_LOG_LEVEL);
+LOG_MODULE_REGISTER(MAX86178, CONFIG_SENSOR_LOG_LEVEL);
 
 /* I2C bus operations */
 #if defined(MAX86178_BUS_I2C)
@@ -159,11 +159,31 @@ static const struct sensor_driver_api max86178_api = {
 	.channel_get = max86178_channel_get,
 	.attr_set = max86178_attr_set,
 	.attr_get = max86178_attr_get,
+#ifdef CONFIG_MAX86178_TRIGGER
+	.trigger_set = max86178_trigger_set,
+#endif /* CONFIG_MAX86178_TRIGGER */
 };
 
 static int max86178_osc_enable(const struct device *dev, bool enable)
 {
-	return max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_PLL_EN_MSK, enable ? 1 : 0);
+	int ret = 0;
+	uint8_t reg_val = 0;
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_PLL_EN_MSK, enable ? 1 : 0);
+	if (ret < 0) {
+		LOG_ERR("Failed to %s internal oscillator: %d", enable ? "enable" : "disable", ret);
+		return ret;
+	}
+
+	if (enable) {
+		while(FIELD_GET(MAX86178_STATUS3_PHASE_LOCK_MSK, reg_val) == 0) {
+			ret = max86178_reg_read(dev, MAX86178_STATUS3, &reg_val, 1);
+			if (ret < 0) {
+				LOG_ERR("Failed to read PLL lock status: %d", ret);
+				return ret;
+			}
+		}
+	}
+	return 0;
 }
 
 static int max86178_set_pll_cfg6(const struct device *dev, enum ref_clk_sel ref_clk, enum clk_ref_sel clk_freq_sel, enum max86178_clk_fine_tune clk_fine_tune)
@@ -2509,6 +2529,28 @@ static int max86178_soft_reset(const struct device *dev)
 	return 0;
 }
 
+static int max86178_ecg_en(const struct device *dev, bool enable)
+{
+	int ret;
+	ret = max86178_reg_update(dev, MAX86178_ECG_CFG1, MAX86178_ECG_CFG1_ECG_EN_MSK, enable ? 1 : 0);
+	if (ret < 0) {
+		LOG_ERR("Failed to %s ECG channel: %d", enable ? "enable" : "disable", ret);
+		return ret;
+	}
+	return 0;
+}
+
+static int max86178_bioz_en(const struct device *dev, bool enable)
+{
+	int ret;
+	ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_BIOZ_EN_MSK, enable ? 1 : 0);
+	if (ret < 0) {
+		LOG_ERR("Failed to %s BioZ channel: %d", enable ? "enable" : "disable", ret);
+		return ret;
+	}
+	return 0;
+}
+
 static int max86178_init(const struct device *dev)
 {
 	const struct max86178_dev_config *config = dev->config;
@@ -2567,18 +2609,54 @@ static int max86178_init(const struct device *dev)
 		return ret;
 	}
 
+	/* Initialize ECG */
 	ret = max86178_ecg_init(dev);
 	if (ret < 0) {
 		LOG_ERR("ECG initialization failed");
 		return ret;
 	}
 
+	/* Initialize BioZ */
 	ret = max86178_bioz_init(dev);
 	if (ret < 0) {
 		LOG_ERR("BioZ initialization failed");
 		return ret;
 	}
 
+	ret = max86178_osc_enable(dev, true);
+	if (ret < 0) {
+		LOG_ERR("Failed to disable internal oscillator: %d", ret);
+		return ret;
+	}
+
+	/* Enable Channels */
+	ret = max86178_set_ppg_meas_en(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to set PPG measurement enable: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_ecg_en(dev, config->ecg_cfg.setup.ecg_en);
+	if (ret < 0) {
+		LOG_ERR("Failed to enable ECG channel: %d", ret);
+		return ret;
+	}
+
+	ret = max86178_bioz_en(dev, config->bioz_cfg.setup.bioz_en);
+	if (ret < 0) {
+		LOG_ERR("Failed to enable BioZ channel: %d", ret);
+		return ret;
+	}
+
+	/*TEST*/
+	k_sleep(K_MSEC(100));
+	uint8_t status;
+	ret = max86178_reg_read(dev, MAX86178_STATUS1, &status, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read status register: %d", ret);
+		return ret;
+	}
+	LOG_INF("Status register after initialization: 0x%02X", status);
 	LOG_INF("MAX86178 initialized");
 	return 0;
 }
@@ -3127,6 +3205,23 @@ static int max86178_init(const struct device *dev)
 	}
 
 /*******************************************************************************
+ * IRQ CONFIGURATION PARSING MACROS
+ ******************************************************************************/
+#ifdef CONFIG_MAX86178_TRIGGER
+#define MAX86178_CFG_IRQ(inst)                                                                      \
+	COND_CODE_1(DT_INST_NODE_HAS_PROP(inst, int1_gpios),	\
+		(	\
+			.interrupt_gpio = GPIO_DT_SPEC_INST_GET(inst, int1_gpios),	\
+			.route_to_int2 = false,	\
+		),	\
+		(	\
+			.interrupt_gpio = GPIO_DT_SPEC_INST_GET(inst, int2_gpios),	\
+			.route_to_int2 = true,	\
+		))
+#else
+#define MAX86178_CFG_IRQ(inst)
+#endif /* CONFIG_MAX86178_TRIGGER */
+/*******************************************************************************
  * DEVICE INSTANTIATION MACROS
  ******************************************************************************/
 
@@ -3142,6 +3237,7 @@ static int max86178_init(const struct device *dev)
 		.bioz_cfg = MAX86178_BIOZ_CFG(inst),                                               \
 		.fifo_cfg = MAX86178_FIFO_CFG(inst),                                               \
 		.resp_cfg = MAX86178_RESP_CFG(inst),                                               \
+		COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) \
 	}
 
 #define MAX86178_CONFIG_SPI(inst)                                                                  \
@@ -3157,6 +3253,7 @@ static int max86178_init(const struct device *dev)
 		.bioz_cfg = MAX86178_BIOZ_CFG(inst),                                               \
 		.fifo_cfg = MAX86178_FIFO_CFG(inst),                                               \
 		.resp_cfg = MAX86178_RESP_CFG(inst),                                               \
+		COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) \
 	}
 
 #define MAX86178_DEFINE(inst)                                                                      \

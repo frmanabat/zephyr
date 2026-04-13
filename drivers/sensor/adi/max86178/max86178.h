@@ -13,6 +13,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
+#include <zephyr/drivers/sensor/max86178.h>
 
 #define DT_DRV_COMPAT adi_max86178
 #if DT_ANY_INST_ON_BUS_STATUS_OKAY(spi)
@@ -194,6 +195,8 @@
 #define MAX86178_INT2_EN3         0xC7u /* Interrupt2 Enable 3 */
 #define MAX86178_INT2_EN4         0xC8u /* Interrupt2 Enable 4 */
 #define MAX86178_INT2_EN5         0xC9u /* Interrupt2 Enable 5 */
+
+#define MAX86178_INT1_INT2_OFFSET 5u /* Offset to convert INT1 interrupt bits to INT2 interrupt bits */
 
 /* Device Identification Registers */
 #define MAX86178_PART_ID          0xFFu /* Part ID Register */
@@ -1542,8 +1545,119 @@ struct max86178_fifo_cfg {
  *
  */
 struct max86178_data {
-	/* Add driver runtime data here */
+#ifdef CONFIG_MAX86178_TRIGGER
+	const struct device *dev;
+	struct gpio_callback gpio_cb;
+
+	/* PPG Threshold Interrupts */
+	const struct sensor_trigger *ppg_thresh1_hilo_trigger;
+	sensor_trigger_handler_t ppg_thresh1_hilo_handler;
+	const struct sensor_trigger *ppg_thresh2_hilo_trigger;
+	sensor_trigger_handler_t ppg_thresh2_hilo_handler;
+
+	/* PPG Data Ready and Overflow Interrupts */
+	const struct sensor_trigger *exp_ovf_trigger;
+	sensor_trigger_handler_t exp_ovf_handler;
+	const struct sensor_trigger *alc_ovf_trigger;
+	sensor_trigger_handler_t alc_ovf_handler;
+	const struct sensor_trigger *fifo_data_rdy_trigger;
+	sensor_trigger_handler_t fifo_data_rdy_handler;
+	const struct sensor_trigger *ppg_frame_rdy_trigger;
+	sensor_trigger_handler_t ppg_frame_rdy_handler;
+	const struct sensor_trigger *a_full_trigger;
+	sensor_trigger_handler_t a_full_handler;
+
+	/* LED Compensation Interrupts */
+	const struct sensor_trigger *led1_compb_trigger;
+	sensor_trigger_handler_t led1_compb_handler;
+	const struct sensor_trigger *led2_compb_trigger;
+	sensor_trigger_handler_t led2_compb_handler;
+	const struct sensor_trigger *led3_compb_trigger;
+	sensor_trigger_handler_t led3_compb_handler;
+	const struct sensor_trigger *led4_compb_trigger;
+	sensor_trigger_handler_t led4_compb_handler;
+	const struct sensor_trigger *led5_compb_trigger;
+	sensor_trigger_handler_t led5_compb_handler;
+	const struct sensor_trigger *led6_compb_trigger;
+	sensor_trigger_handler_t led6_compb_handler;
+	const struct sensor_trigger *invalid_ppg_cfg_trigger;
+	sensor_trigger_handler_t invalid_ppg_cfg_handler;
+
+	/* PLL Lock/Unlock Interrupts */
+	const struct sensor_trigger *phase_lock_trigger;
+	sensor_trigger_handler_t phase_lock_handler;
+	const struct sensor_trigger *phase_unlock_trigger;
+	sensor_trigger_handler_t phase_unlock_handler;
+	const struct sensor_trigger *freq_lock_trigger;
+	sensor_trigger_handler_t freq_lock_handler;
+	const struct sensor_trigger *freq_unlock_trigger;
+	sensor_trigger_handler_t freq_unlock_handler;
+
+	/* ECG Lead Detection Interrupts */
+	const struct sensor_trigger *ecg_loff_nl_trigger;
+	sensor_trigger_handler_t ecg_loff_nl_handler;
+	const struct sensor_trigger *ecg_loff_nh_trigger;
+	sensor_trigger_handler_t ecg_loff_nh_handler;
+	const struct sensor_trigger *ecg_loff_pl_trigger;
+	sensor_trigger_handler_t ecg_loff_pl_handler;
+	const struct sensor_trigger *ecg_loff_ph_trigger;
+	sensor_trigger_handler_t ecg_loff_ph_handler;
+	const struct sensor_trigger *rld_oor_trigger;
+	sensor_trigger_handler_t rld_oor_handler;
+	const struct sensor_trigger *ecg_fast_rec_trigger;
+	sensor_trigger_handler_t ecg_fast_rec_handler;
+	const struct sensor_trigger *ecg_lon_trigger;
+	sensor_trigger_handler_t ecg_lon_handler;
+
+	/* BioZ Lead Detection Interrupts */
+	const struct sensor_trigger *bioz_loff_nl_trigger;
+	sensor_trigger_handler_t bioz_loff_nl_handler;
+	const struct sensor_trigger *bioz_loff_nh_trigger;
+	sensor_trigger_handler_t bioz_loff_nh_handler;
+	const struct sensor_trigger *bioz_loff_pl_trigger;
+	sensor_trigger_handler_t bioz_loff_pl_handler;
+	const struct sensor_trigger *bioz_loff_ph_trigger;
+	sensor_trigger_handler_t bioz_loff_ph_handler;
+	const struct sensor_trigger *bioz_drvp_off_trigger;
+	sensor_trigger_handler_t bioz_drvp_off_handler;
+	const struct sensor_trigger *bioz_undr_trigger;
+	sensor_trigger_handler_t bioz_undr_handler;
+	const struct sensor_trigger *bioz_over_trigger;
+	sensor_trigger_handler_t bioz_over_handler;
+	const struct sensor_trigger *bioz_lon_trigger;
+	sensor_trigger_handler_t bioz_lon_handler;
+
+#if defined(CONFIG_MAX86178_TRIGGER_OWN_THREAD)
+	K_KERNEL_STACK_MEMBER(thread_stack, CONFIG_MAX86178_THREAD_STACK_SIZE);
+	struct k_thread thread;
+	struct k_sem gpio_sem;
+#elif defined(CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD)
+	struct k_work work;
+#endif /* CONFIG_MAX86178_TRIGGER_OWN_THREAD || CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD */
+#endif /* CONFIG_MAX86178_TRIGGER */
+#ifdef CONFIG_MAX86178_STREAM
+	struct rtio_iodev_sqe *sqe;
+	struct rtio *rtio_ctx;
+	struct rtio_iodev *iodev;
+	uint8_t status1;
+	uint8_t fifo_counter;
+	uint64_t timestamp;
+	struct rtio *r_cb;
+	uint8_t fifo_watermark_irq;
+	uint8_t fifo_samples;
+	uint16_t fifo_total_bytes;
+#endif
 };
+
+struct max86178_fifo_data {
+	uint8_t is_fifo: 1;
+	uint64_t timestamp;
+	uint8_t status1;
+	uint8_t fifo_samples;
+	uint16_t fifo_byte_count;
+	uint8_t sample_set_size;
+};
+
 
 /**
  * @brief MAX86178 device configuration structure
@@ -1559,6 +1673,11 @@ struct max86178_dev_config {
 	struct max86178_ecg_cfg ecg_cfg;
 	struct max86178_bioz_cfg bioz_cfg;
 	struct max86178_resp_setup resp_cfg;
+
+#ifdef CONFIG_MAX86178_TRIGGER
+	struct gpio_dt_spec interrupt_gpio;
+	bool route_to_int2;
+#endif /* CONFIG_MAX86178_TRIGGER */
 };
 
 /**
@@ -1594,4 +1713,23 @@ int max86178_reg_write(const struct device *dev, uint8_t reg_addr, uint8_t *data
  */
 int max86178_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask, uint8_t value);
 
+#ifdef CONFIG_MAX86178_TRIGGER
+/**
+ * @brief Initialize the MAX86178 trigger
+ * 
+ * @param dev Device pointer
+ * @return int 0 on success, negative error code on failure
+ */
+int max86178_trigger_init(const struct device *dev);
+/**
+ * @brief Set a trigger for the MAX86178
+ * 
+ * @param dev Device pointer
+ * @param trig Trigger configuration
+ * @param handler Trigger handler function
+ * @return int 0 on success, negative error code on failure
+ */
+int max86178_trigger_set(const struct device *dev, const struct sensor_trigger *trig,
+			      sensor_trigger_handler_t handler);
+#endif /* CONFIG_MAX86178_TRIGGER */
 #endif /* ZEPHYR_DRIVERS_SENSOR_MAX86178_MAX86178_H_ */
