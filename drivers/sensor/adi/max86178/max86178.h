@@ -599,6 +599,29 @@
 #define MAX86178_BIOZ_SYNTH_CLK_MAX 28000000U
 
 #define MAX86178_FIFO_WATERMARK_MAX 256
+
+#define MAX86178_SAMPLE_SIZE_BYTES 3u
+
+/* FIFO Tags */
+#define MAX86178_PPG_MEAS1_TAG 0x0u
+#define MAX86178_PPG_MEAS2_TAG 0x1u
+#define MAX86178_PPG_MEAS3_TAG 0x2u
+#define MAX86178_PPG_MEAS4_TAG 0x3u
+#define MAX86178_PPG_MEAS5_TAG 0x4u
+#define MAX86178_PPG_MEAS6_TAG 0x5u
+#define MAX86178_PPG_DARK_TAG 0x6u
+#define MAX86178_PPG_ALC_OVF_TAG 0x7u
+#define MAX86178_PPG_EXP_OVF_TAG 0x8u
+#define MAX86178_BIOZ_I_TAG 0x9u
+#define MAX86178_BIOZ_Q_TAG 0xAu
+#define MAX86178_ECG_AND_FAST_RECOVERY_TAG 0xBu
+#define MAX86178_ECGP_ECGN_TAG 0xCu
+#define MAX86178_CAPP_CAPN_TAG 0xDu
+#define MAX86178_TIMING_TAG 0xEu
+
+#define MAX86178_FIFO_DATA_FIELD GENMASK(19, 0)
+
+
 enum clk_ref_sel {
 	MAX86178_REF_CLK_32000 = 0,
 	MAX86178_REF_CLK_32768,
@@ -1640,7 +1663,7 @@ struct max86178_data {
 	struct rtio *rtio_ctx;
 	struct rtio_iodev *iodev;
 	uint8_t status1;
-	uint8_t fifo_counter;
+	uint8_t fifo_counter [2];
 	uint64_t timestamp;
 	struct rtio *r_cb;
 	uint8_t fifo_watermark_irq;
@@ -1653,7 +1676,7 @@ struct max86178_fifo_data {
 	uint8_t is_fifo: 1;
 	uint64_t timestamp;
 	uint8_t status1;
-	uint8_t fifo_samples;
+	uint16_t fifo_samples;
 	uint16_t fifo_byte_count;
 	uint8_t sample_set_size;
 };
@@ -1720,7 +1743,7 @@ int max86178_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask
  * @param dev Device pointer
  * @return int 0 on success, negative error code on failure
  */
-int max86178_trigger_init(const struct device *dev);
+int max86178_init_interrupt(const struct device *dev);
 /**
  * @brief Set a trigger for the MAX86178
  * 
@@ -1732,4 +1755,11 @@ int max86178_trigger_init(const struct device *dev);
 int max86178_trigger_set(const struct device *dev, const struct sensor_trigger *trig,
 			      sensor_trigger_handler_t handler);
 #endif /* CONFIG_MAX86178_TRIGGER */
+
+#ifdef CONFIG_MAX86178_STREAM
+void max86178_stream_irq_handler(const struct device *dev);
+void max86178_submit_stream(const struct device *dev, struct rtio_iodev_sqe *iodev_sqe);
+void max86178_submit(const struct device *dev, struct rtio_iodev_sqe *iodev_sqe);
+int max86178_get_decoder(const struct device *dev, const struct sensor_decoder_api **decoder);
+#endif
 #endif /* ZEPHYR_DRIVERS_SENSOR_MAX86178_MAX86178_H_ */

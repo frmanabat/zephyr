@@ -15,7 +15,7 @@ static void max86178_thread_cb(const struct device *dev)
 {
 	const struct max86178_dev_config *cfg = dev->config;
 	struct max86178_data *data = dev->data;
-	uint8_t status [5];
+	uint8_t status[5];
 	int ret;
 
 	/* Clear the status */
@@ -49,13 +49,169 @@ static void max86178_thread_cb(const struct device *dev)
         return;
     }
 
-	ret = gpio_pin_interrupt_configure_dt(&cfg->interrupt_gpio, GPIO_INT_EDGE_TO_ACTIVE);
-	if (ret) {
-		LOG_ERR("Failed to enable interrupt: %d", ret);
-		return;
+    if ((data->ppg_thresh1_hilo_handler != NULL) && (status[0] & MAX86178_STATUS1_PPG_THRESH1_HILO_MSK)) {
+        data->ppg_thresh1_hilo_handler(dev, data->ppg_thresh1_hilo_trigger);
+    }
+
+    if ((data->ppg_thresh2_hilo_handler != NULL) && (status[0] & MAX86178_STATUS1_PPG_THRESH2_HILO_MSK)) {
+        data->ppg_thresh2_hilo_handler(dev, data->ppg_thresh2_hilo_trigger);
+    }
+
+    if ((data->exp_ovf_handler != NULL) && (status[0] & MAX86178_STATUS1_EXP_OVF_MSK)) {
+        data->exp_ovf_handler(dev, data->exp_ovf_trigger);
+    }
+
+    if ((data->alc_ovf_handler != NULL) && (status[0] & MAX86178_STATUS1_ALC_OVF_MSK)) {
+        data->alc_ovf_handler(dev, data->alc_ovf_trigger);
+    }
+
+    if ((data->fifo_data_rdy_handler != NULL) && (status[0] & MAX86178_STATUS1_FIFO_DATA_RDY_MSK)) {
+        data->fifo_data_rdy_handler(dev, data->fifo_data_rdy_trigger);
+    }
+
+    if ((data->ppg_frame_rdy_handler != NULL) && (status[0] & MAX86178_STATUS1_PPG_FRAME_RDY_MSK)) {
+        data->ppg_frame_rdy_handler(dev, data->ppg_frame_rdy_trigger);
+    }
+
+    if ((data->a_full_handler != NULL) && (status[0] & MAX86178_STATUS1_A_FULL_MSK)) {
+        data->a_full_handler(dev, data->a_full_trigger);
+    }
+
+    if ((data->led1_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED1_COMPB_MSK)) {
+        data->led1_compb_handler(dev, data->led1_compb_trigger);
+    }
+
+    if ((data->led2_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED2_COMPB_MSK)) {
+        data->led2_compb_handler(dev, data->led2_compb_trigger);
+    }
+
+    if ((data->led3_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED3_COMPB_MSK)) {
+        data->led3_compb_handler(dev, data->led3_compb_trigger);
+    }
+
+    if ((data->led4_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED4_COMPB_MSK)) {
+        data->led4_compb_handler(dev, data->led4_compb_trigger);
+    }
+
+    if ((data->led5_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED5_COMPB_MSK)) {
+        data->led5_compb_handler(dev, data->led5_compb_trigger);
+    }
+
+    if ((data->led6_compb_handler != NULL) && (status[1] & MAX86178_STATUS2_LED6_COMPB_MSK)) {
+        data->led6_compb_handler(dev, data->led6_compb_trigger);
+    }
+
+    if ((data->invalid_ppg_cfg_handler != NULL) && (status[1] & MAX86178_STATUS2_INVALID_PPG_CFG_MSK)) {
+        data->invalid_ppg_cfg_handler(dev, data->invalid_ppg_cfg_trigger);
+    }
+
+    if ((data->phase_lock_handler != NULL) && (status[2] & MAX86178_STATUS3_PHASE_LOCK_MSK)) {
+        data->phase_lock_handler(dev, data->phase_lock_trigger);
+    }
+
+    if ((data->phase_unlock_handler != NULL) && (status[2] & MAX86178_STATUS3_PHASE_UNLOCK_MSK)) {
+        data->phase_unlock_handler(dev, data->phase_unlock_trigger);
+    }
+
+    if ((data->freq_lock_handler != NULL) && (status[2] & MAX86178_STATUS3_FREQ_LOCK_MSK)) {
+        data->freq_lock_handler(dev, data->freq_lock_trigger);
+    }
+
+    if ((data->freq_unlock_handler != NULL) && (status[2] & MAX86178_STATUS3_FREQ_UNLOCK_MSK)) {
+        data->freq_unlock_handler(dev, data->freq_unlock_trigger);
+    }
+
+    if ((data->ecg_loff_nl_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_LOFF_NL_MSK)) {
+        data->ecg_loff_nl_handler(dev, data->ecg_loff_nl_trigger);
+    }
+
+    if ((data->ecg_loff_nh_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_LOFF_NH_MSK)) {
+        data->ecg_loff_nh_handler(dev, data->ecg_loff_nh_trigger);
+    }
+
+    if ((data->ecg_loff_pl_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_LOFF_PL_MSK)) {
+        data->ecg_loff_pl_handler(dev, data->ecg_loff_pl_trigger);
+    }
+
+    if ((data->ecg_loff_ph_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_LOFF_PH_MSK)) {
+        data->ecg_loff_ph_handler(dev, data->ecg_loff_ph_trigger);
+    }
+
+    if ((data->rld_oor_handler != NULL) && (status[3] & MAX86178_STATUS4_RLD_OOR_MSK)) {
+        data->rld_oor_handler(dev, data->rld_oor_trigger);
+    }
+
+    if ((data->ecg_fast_rec_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_FAST_REC_MSK)) {
+        data->ecg_fast_rec_handler(dev, data->ecg_fast_rec_trigger);
+    }
+
+    if ((data->ecg_lon_handler != NULL) && (status[3] & MAX86178_STATUS4_ECG_LON_MSK)) {
+        data->ecg_lon_handler(dev, data->ecg_lon_trigger);
+    }
+
+    if ((data->bioz_loff_nl_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_LOFF_NL_MSK)) {
+        data->bioz_loff_nl_handler(dev, data->bioz_loff_nl_trigger);
+    }
+
+    if ((data->bioz_loff_nh_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_LOFF_NH_MSK)) {
+        data->bioz_loff_nh_handler(dev, data->bioz_loff_nh_trigger);
+    }
+
+    if ((data->bioz_loff_pl_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_LOFF_PL_MSK)) {
+        data->bioz_loff_pl_handler(dev, data->bioz_loff_pl_trigger);
+    }
+
+    if ((data->bioz_loff_ph_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_LOFF_PH_MSK)) {
+        data->bioz_loff_ph_handler(dev, data->bioz_loff_ph_trigger);
+    }
+
+    if ((data->bioz_drvp_off_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_DRV_OOR_MSK)) {
+        data->bioz_drvp_off_handler(dev, data->bioz_drvp_off_trigger);
+    }
+
+    if ((data->bioz_undr_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_UNDR_MSK)) {
+        data->bioz_undr_handler(dev, data->bioz_undr_trigger);
+    }
+
+    if ((data->bioz_over_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_OVER_MSK)) {
+        data->bioz_over_handler(dev, data->bioz_over_trigger);
+    }
+
+    if ((data->bioz_lon_handler != NULL) && (status[4] & MAX86178_STATUS5_BIOZ_LON_MSK)) {
+        data->bioz_lon_handler(dev, data->bioz_lon_trigger);
+    }
+
+     /* Re-enable the interrupt */
+     ret = gpio_pin_interrupt_configure_dt(&cfg->interrupt_gpio, GPIO_INT_EDGE_TO_ACTIVE);
+     if (ret) {
+         LOG_ERR("Failed to enable interrupt: %d", ret);
+         return;
+     }
+
+}
+
+#ifdef CONFIG_MAX86178_TRIGGER_OWN_THREAD
+static void max86178_thread(void *p1, void *p2, void *p3)
+{
+	ARG_UNUSED(p2);
+	ARG_UNUSED(p3);
+
+	struct max86178_data *data = p1;
+
+	while (true) {
+		k_sem_take(&data->gpio_sem, K_FOREVER);
+		max86178_thread_cb(data->dev);
 	}
 }
-#endif
+#elif defined(CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD)
+static void max86178_work_cb(struct k_work *work)
+{
+	struct max86178_data *data = CONTAINER_OF(work, struct max86178_data, work);
+
+	max86178_thread_cb(data->dev);
+}
+#endif /* CONFIG_MAX86178_TRIGGER_OWN_THREAD || CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD */
+#endif /* CONFIG_MAX86178_TRIGGER_OWN_THREAD || CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD */
 
 static void max86178_gpio_callback(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
@@ -364,7 +520,7 @@ int max86178_init_interrupt(const struct device *dev)
 #if defined(CONFIG_MAX86178_TRIGGER_OWN_THREAD)
     k_sem_init(&data->gpio_sem, 0, K_SEM_MAX_LIMIT);
     k_thread_create(&data->thread, data->thread_stack, CONFIG_MAX86178_THREAD_STACK_SIZE,
-                    (k_thread_entry_t)max86178_thread_cb, data, NULL, NULL,
+                    (k_thread_entry_t)max86178_thread, (void *)data, NULL, NULL,
                     CONFIG_MAX86178_THREAD_PRIORITY, 0, K_NO_WAIT);
     k_thread_name_set(&data->thread, dev->name);
 #elif defined(CONFIG_MAX86178_TRIGGER_GLOBAL_THREAD)

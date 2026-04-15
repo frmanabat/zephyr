@@ -162,6 +162,10 @@ static const struct sensor_driver_api max86178_api = {
 #ifdef CONFIG_MAX86178_TRIGGER
 	.trigger_set = max86178_trigger_set,
 #endif /* CONFIG_MAX86178_TRIGGER */
+#ifdef CONFIG_SENSOR_ASYNC_API
+	.get_decoder = max86178_get_decoder,
+	.submit = max86178_submit,
+#endif /* CONFIG_SENSOR_ASYNC_API */
 };
 
 static int max86178_osc_enable(const struct device *dev, bool enable)
@@ -1223,6 +1227,13 @@ static int max86178_fifo_init(const struct device *dev)
 				 config->fifo_cfg.fifo_a_full_type ? 1 : 0);
 	if (ret < 0) {
 		LOG_ERR("Failed to set FIFO almost full type: %d", ret);
+		return ret;
+	}
+
+	/* Set Interrupt Enable */
+	ret = max86178_reg_update(dev, config->route_to_int2 ? MAX86178_INT2_EN1 : MAX86178_INT1_EN1, MAX86178_INT_EN1_A_FULL_MSK, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set FIFO interrupt enable: %d", ret);
 		return ret;
 	}
 
@@ -2648,6 +2659,14 @@ static int max86178_init(const struct device *dev)
 		return ret;
 	}
 
+#ifdef CONFIG_MAX86178_TRIGGER
+	ret = max86178_init_interrupt(dev);
+	if (ret < 0) {
+		LOG_ERR("Failed to initialize triggers: %d", ret);
+		return ret;
+	}
+#endif /* CONFIG_MAX86178_TRIGGER */
+
 	/*TEST*/
 	k_sleep(K_MSEC(100));
 	uint8_t status;
@@ -2658,6 +2677,14 @@ static int max86178_init(const struct device *dev)
 	}
 	LOG_INF("Status register after initialization: 0x%02X", status);
 	LOG_INF("MAX86178 initialized");
+
+	k_sleep(K_SECONDS(1));
+	ret = max86178_reg_read(dev, MAX86178_FIFO_COUNTER2_DATA_COUNT_MSK, &status, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to read FIFO data count: %d", ret);
+		return ret;
+	}
+	LOG_INF("FIFO data count after initialization: %d", status);
 	return 0;
 }
 /*******************************************************************************
@@ -3256,8 +3283,35 @@ static int max86178_init(const struct device *dev)
 		COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) \
 	}
 
+#ifdef CONFIG_MAX86178_STREAM
+#define MAX86178_RTIO_SPI_DEFINE(inst)                                                             \
+	COND_CODE_1(CONFIG_SPI_RTIO,                                                               \
+		    (SPI_DT_IODEV_DEFINE(max86178_iodev_##inst, DT_DRV_INST(inst),                \
+					 SPI_OP_MODE_MASTER | SPI_WORD_SET(8) |                   \
+						 SPI_TRANSFER_MSB, 0);),                           \
+		    ())
+
+#define MAX86178_RTIO_I2C_DEFINE(inst)                                                             \
+	COND_CODE_1(CONFIG_I2C_RTIO, (I2C_DT_IODEV_DEFINE(max86178_iodev_##inst,                  \
+							   DT_DRV_INST(inst));),                   \
+		    ())
+
+/** RTIO SQE/CQE pool size depends on the fifo-watermark */
+#define MAX86178_RTIO_DEFINE(inst)                                                                 \
+	/* Conditionally include SPI and/or I2C parts based on their presence */                  \
+	COND_CODE_1(DT_INST_ON_BUS(inst, spi), (MAX86178_RTIO_SPI_DEFINE(inst)), ())              \
+	COND_CODE_1(DT_INST_ON_BUS(inst, i2c), (MAX86178_RTIO_I2C_DEFINE(inst)), ())              \
+	RTIO_DEFINE(max86178_rtio_ctx_##inst, 8, 8);
+#else
+#define MAX86178_RTIO_DEFINE(inst)
+#endif /* CONFIG_MAX86178_STREAM */
+
 #define MAX86178_DEFINE(inst)                                                                      \
-	static struct max86178_data max86178_data_##inst;                                          \
+	MAX86178_RTIO_DEFINE(inst)                                                                 \
+	static struct max86178_data max86178_data_##inst = {                                       \
+		IF_ENABLED(CONFIG_MAX86178_STREAM,                                                 \
+			   (.rtio_ctx = &max86178_rtio_ctx_##inst,                                 \
+			    .iodev = &max86178_iodev_##inst, ))};                                  \
 	static const struct max86178_dev_config max86178_config_##inst =                           \
 		COND_CODE_1(DT_INST_ON_BUS(inst, i2c), (MAX86178_CONFIG_I2C(inst)),                \
 			    (MAX86178_CONFIG_SPI(inst)));                                          \
