@@ -378,7 +378,7 @@
 
 /* THRESHOLD_HYST (0x71) */
 #define MAX86178_THRESH_HYST_LEVEL_HYST_MSK GENMASK(2, 0)
-#define MAX86178_THRESH_HYST_TIME_HYST_MSK GENMASK(5, 4)
+#define MAX86178_THRESH_HYST_TIME_HYST_MSK GENMASK(4, 3)
 #define MAX86178_THRESH_HYST_THRESH1_PPG_SEL_MSK BIT(6)
 #define MAX86178_THRESH_HYST_THRESH2_PPG_SEL_MSK BIT(7)
 
@@ -1568,12 +1568,6 @@ struct max86178_fifo_cfg {
  *
  */
 struct max86178_data {
-	struct max86178_clk_cfg clk_cfg;
-	struct max86178_fifo_cfg fifo_cfg;
-	struct max86178_ppg_cfg ppg_cfg;
-	struct max86178_ecg_cfg ecg_cfg;
-	struct max86178_bioz_cfg bioz_cfg;
-	struct max86178_resp_setup resp_cfg;
 #ifdef CONFIG_MAX86178_TRIGGER
 	const struct device *dev;
 	struct gpio_callback gpio_cb;
