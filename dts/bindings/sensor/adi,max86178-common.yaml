@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 
 description: |
+  MAX86178 multi-sensor AFE - common properties
+
   The MAX86178 is a highly integrated, multiple vital-sign monitoring device
   with a complete photoplethysmogram (PPG), electrocardiogram (ECG) and
   biopotential (BioZ) analog front end (AFE) for wearable applications.
@@ -12,9 +14,8 @@ description: |
   - ECG with calibration, lead detection, and RLD
   - BioZ with calibration and lead detection
   - Respiration monitoring
-compatible: "adi,max86178"
 
-include: [sensor-device.yaml, spi-device.yaml]
+include: sensor-device.yaml
 
 properties:
   # =========================================================================
