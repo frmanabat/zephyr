@@ -135,7 +135,7 @@ static uint16_t get_channel_mask(enum sensor_channel chan_type)
 }
 
 static int max86178_decoder_get_frame_count(const uint8_t *buffer, struct sensor_chan_spec channel,
-					       uint16_t *frame_count)
+					    uint16_t *frame_count)
 {
 #ifndef CONFIG_MAX86178_STREAM
 	return -ENOTSUP;
@@ -164,7 +164,7 @@ static int max86178_decoder_get_frame_count(const uint8_t *buffer, struct sensor
 }
 
 static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spec channel,
-				    uint32_t *fit, uint16_t max_count, void *data_out)
+				   uint32_t *fit, uint16_t max_count, void *data_out)
 {
 #ifndef CONFIG_MAX86178_STREAM
 	return -ENOTSUP;
@@ -181,8 +181,8 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 	buffer += sizeof(struct max86178_fifo_data);
 	const uint8_t *buffer_end = buffer + data->fifo_byte_count;
 	int count = 0;
-	uint32_t samples_seen = 0;  /* Track how many matching samples we've seen */
-	uint32_t start_offset = *fit;  /* Number of samples to skip (already decoded) */
+	uint32_t samples_seen = 0;    /* Track how many matching samples we've seen */
+	uint32_t start_offset = *fit; /* Number of samples to skip (already decoded) */
 
 	while (count < max_count && buffer < buffer_end) {
 		uint32_t fifo_data = sys_get_be24(buffer);
@@ -190,7 +190,8 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 		if (count_instance_from_fifo_data(fifo_data, channel_enabled_mask)) {
 			/* Only decode if we've skipped past already-decoded samples */
 			if (samples_seen >= start_offset) {
-				uint32_t sample_value = FIELD_GET(MAX86178_FIFO_DATA_FIELD, fifo_data);
+				uint32_t sample_value =
+					FIELD_GET(MAX86178_FIFO_DATA_FIELD, fifo_data);
 
 				out[count].readings[0].value = sample_value;
 				count++;
@@ -200,73 +201,74 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 		buffer += MAX86178_SAMPLE_SIZE_BYTES;
 	}
 
-	*fit += count;  /* Update fit with number of newly decoded samples */
+	*fit += count; /* Update fit with number of newly decoded samples */
 	return count;
 }
 
-static int max86178_decoder_get_size_info(struct sensor_chan_spec channel, size_t *base_size, size_t *frame_size)
+static int max86178_decoder_get_size_info(struct sensor_chan_spec channel, size_t *base_size,
+					  size_t *frame_size)
 {
-   	__ASSERT_NO_MSG(base_size != NULL);
+	__ASSERT_NO_MSG(base_size != NULL);
 	__ASSERT_NO_MSG(frame_size != NULL);
 
-    switch ((int)channel.chan_type) {
-    case SENSOR_CHAN_PPG_MEAS1:
-    case SENSOR_CHAN_PPG_MEAS2:
-    case SENSOR_CHAN_PPG_MEAS3:
-    case SENSOR_CHAN_PPG_MEAS4:
-    case SENSOR_CHAN_PPG_MEAS5:
-    case SENSOR_CHAN_PPG_MEAS6:
-    case SENSOR_CHAN_PPG_DARK:
-    case SENSOR_CHAN_PPG_ALC_OVF:
-    case SENSOR_CHAN_PPG_EXP_OVF:
-    case SENSOR_CHAN_BIOZ_I:
-    case SENSOR_CHAN_BIOZ_Q:
-    case SENSOR_CHAN_ECG_AND_FAST_REC:
-    case SENSOR_CHAN_ECGP_ECGN:
-    case SENSOR_CHAN_CAPP_CAPN:
-    case SENSOR_CHAN_TIMING:
-        *base_size = sizeof(struct sensor_q31_data);
-        *frame_size = sizeof(struct sensor_q31_sample_data);
-        return 0;
-    default:
-        LOG_ERR("Unsupported channel type: %d", channel.chan_type);
-        return -ENOTSUP;
-    }
+	switch ((int)channel.chan_type) {
+	case SENSOR_CHAN_PPG_MEAS1:
+	case SENSOR_CHAN_PPG_MEAS2:
+	case SENSOR_CHAN_PPG_MEAS3:
+	case SENSOR_CHAN_PPG_MEAS4:
+	case SENSOR_CHAN_PPG_MEAS5:
+	case SENSOR_CHAN_PPG_MEAS6:
+	case SENSOR_CHAN_PPG_DARK:
+	case SENSOR_CHAN_PPG_ALC_OVF:
+	case SENSOR_CHAN_PPG_EXP_OVF:
+	case SENSOR_CHAN_BIOZ_I:
+	case SENSOR_CHAN_BIOZ_Q:
+	case SENSOR_CHAN_ECG_AND_FAST_REC:
+	case SENSOR_CHAN_ECGP_ECGN:
+	case SENSOR_CHAN_CAPP_CAPN:
+	case SENSOR_CHAN_TIMING:
+		*base_size = sizeof(struct sensor_q31_data);
+		*frame_size = sizeof(struct sensor_q31_sample_data);
+		return 0;
+	default:
+		LOG_ERR("Unsupported channel type: %d", channel.chan_type);
+		return -ENOTSUP;
+	}
 }
 
 static bool max86178_decoder_has_trigger(const uint8_t *buffer, enum sensor_trigger_type trigger)
 {
 #ifdef CONFIG_MAX86178_STREAM
-    return false;
+	return false;
 #endif
-    const struct max86178_fifo_data *fifo_data = (const struct max86178_fifo_data *)buffer;
+	const struct max86178_fifo_data *fifo_data = (const struct max86178_fifo_data *)buffer;
 
-    switch (trigger) {
-    case SENSOR_TRIG_FIFO_FULL:
-    case SENSOR_TRIG_FIFO_WATERMARK:
-        return FIELD_GET(MAX86178_STATUS1_A_FULL_MSK, fifo_data->status1);
-    default:
-        return false;
-    }
+	switch (trigger) {
+	case SENSOR_TRIG_FIFO_FULL:
+	case SENSOR_TRIG_FIFO_WATERMARK:
+		return FIELD_GET(MAX86178_STATUS1_A_FULL_MSK, fifo_data->status1);
+	default:
+		return false;
+	}
 }
 
 SENSOR_DECODER_API_DT_DEFINE() = {
-    .get_frame_count = max86178_decoder_get_frame_count,
-    .get_size_info = max86178_decoder_get_size_info,
-    .decode = max86178_decoder_decode,
-    .has_trigger = max86178_decoder_has_trigger,
+	.get_frame_count = max86178_decoder_get_frame_count,
+	.get_size_info = max86178_decoder_get_size_info,
+	.decode = max86178_decoder_decode,
+	.has_trigger = max86178_decoder_has_trigger,
 };
 
 /**
  * @brief Get the sensor decoder API for MAX86178
- * 
+ *
  * @param dev Device pointer
  * @param decoder Decoder API pointer
  * @return int 0 on success, negative error code otherwise
  */
 int max86178_get_decoder(const struct device *dev, const struct sensor_decoder_api **decoder)
 {
-    ARG_UNUSED(dev);
-    *decoder = &SENSOR_DECODER_NAME();
-    return 0;
+	ARG_UNUSED(dev);
+	*decoder = &SENSOR_DECODER_NAME();
+	return 0;
 }
