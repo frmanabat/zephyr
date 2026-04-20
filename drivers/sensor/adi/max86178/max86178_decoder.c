@@ -12,10 +12,15 @@ LOG_MODULE_DECLARE(MAX86178);
 
 /* FIFO tag field is in bits 23:20 */
 #define MAX86178_FIFO_TAG_MASK GENMASK(23, 20)
+#define MAX86178_FIFO_TIMING_TAG_MASK GENMASK(19, 18)
+#define MAX86178_FIFO_DATA_FIELD GENMASK(19, 0)
+#define MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD GENMASK(9, 0)
+#define MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD GENMASK(13, 0)
 
 static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_enabled_mask)
 {
 	uint8_t tag = FIELD_GET(MAX86178_FIFO_TAG_MASK, fifo_data);
+	uint8_t tag_timing = FIELD_GET(MAX86178_FIFO_TIMING_TAG_MASK, fifo_data);
 	uint16_t tag_bit_mask = 0;
 
 	/* Map tag value to corresponding bit position */
@@ -63,10 +68,14 @@ static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_e
 		tag_bit_mask = BIT(13);
 		break;
 	case MAX86178_TIMING_TAG:
-		tag_bit_mask = BIT(14);
+		if (tag_timing == 0) {
+			tag_bit_mask = BIT(14); /* ECG/PPG timing */
+		} else if (tag_timing == 1) {
+			tag_bit_mask = BIT(15); /* BIOZ/PPG timing */
+		}
 		break;
 	default:
-		return false;
+		break;
 	}
 
 	/* Check if this tag's bit is enabled in the channel mask */
@@ -121,11 +130,14 @@ static uint16_t get_channel_mask(enum sensor_channel chan_type)
 	case SENSOR_CHAN_CAPP_CAPN:
 		channel_enabled_mask = BIT(13);
 		break;
-	case SENSOR_CHAN_TIMING:
+	case SENSOR_CHAN_TIMING_ECG_PPG:
 		channel_enabled_mask = BIT(14);
 		break;
+	case SENSOR_CHAN_TIMING_BIOZ_PPG:
+		channel_enabled_mask = BIT(15);
+		break;
 	case SENSOR_CHAN_ALL:
-		channel_enabled_mask = GENMASK(14, 0);
+		channel_enabled_mask = GENMASK(15, 0);
 		break;
 	default:
 		break;
@@ -186,14 +198,25 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 
 	while (count < max_count && buffer < buffer_end) {
 		uint32_t fifo_data = sys_get_be24(buffer);
-
+		uint32_t sample_value = 0;
 		if (count_instance_from_fifo_data(fifo_data, channel_enabled_mask)) {
 			/* Only decode if we've skipped past already-decoded samples */
 			if (samples_seen >= start_offset) {
-				uint32_t sample_value =
-					FIELD_GET(MAX86178_FIFO_DATA_FIELD, fifo_data);
+				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG) {
+					/* For timing channel, decode the timing tag bits instead of sample value */
+					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD, fifo_data);
+					out[count].readings[0].value = sample_value;
+				} else if (channel.chan_type == SENSOR_CHAN_TIMING_BIOZ_PPG) {
+					/* For timing channel, decode the timing tag bits instead of sample value */
+					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD, fifo_data);
+					out[count].readings[0].value = sample_value;
+				}
+				else {
+					sample_value =
+						FIELD_GET(MAX86178_FIFO_DATA_FIELD, fifo_data);
 
-				out[count].readings[0].value = sample_value;
+					out[count].readings[0].value = sample_value;
+				}
 				count++;
 			}
 			samples_seen++;
@@ -226,7 +249,8 @@ static int max86178_decoder_get_size_info(struct sensor_chan_spec channel, size_
 	case SENSOR_CHAN_ECG_AND_FAST_REC:
 	case SENSOR_CHAN_ECGP_ECGN:
 	case SENSOR_CHAN_CAPP_CAPN:
-	case SENSOR_CHAN_TIMING:
+	case SENSOR_CHAN_TIMING_ECG_PPG:
+	case SENSOR_CHAN_TIMING_BIOZ_PPG:
 		*base_size = sizeof(struct sensor_q31_data);
 		*frame_size = sizeof(struct sensor_q31_sample_data);
 		return 0;

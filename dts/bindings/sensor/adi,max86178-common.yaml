@@ -41,7 +41,7 @@ properties:
 ################################################################################
 
 child-binding:
-  description: MAX86178 functional blocks (clk, fifo, ppg, ecg, bioz, resp)
+  description: MAX86178 functional blocks (clk, fifo, ppg, ecg, bioz, resp, sys-cfg)
 
   properties:
     # =========================================================================
@@ -157,6 +157,22 @@ child-binding:
         - 2 # MAX86178_SMP_AVE_4 - Average 4 samples
         - 3 # MAX86178_SMP_AVE_8 - Average 8 samples
         - 4 # MAX86178_SMP_AVE_16 - Average 16 samples
+    
+    # =========================================================================
+    # SYSTEM CONFIGURATION PROPERTIES (properties of the max86178 node itself)
+    # =========================================================================
+
+    ecg-ppg-timing-data-en:
+      type: boolean
+      description: Enable ECG/PPG timing data in FIFO
+    
+    bioz-ppg-timing-data-en:
+      type: boolean
+      description: Enable BioZ/PPG timing data in FIFO
+    
+    ecg-bioz-timing-data-en:
+      type: boolean
+      description: Enable ECG/BioZ timing data in FIFO
 
     # =========================================================================
     # RESPIRATION DIRECT PROPERTIES (properties of the resp node itself)

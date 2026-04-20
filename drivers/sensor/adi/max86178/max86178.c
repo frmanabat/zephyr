@@ -16,6 +16,7 @@ LOG_MODULE_REGISTER(MAX86178, CONFIG_SENSOR_LOG_LEVEL);
 static int max86178_bus_check_i2c(const union max86178_bus *bus)
 {
 	if (!i2c_is_ready_dt(&bus->i2c)) {
+		LOG_ERR("I2C bus not ready");
 		return -ENODEV;
 	}
 	return 0;
@@ -39,6 +40,7 @@ static int max86178_reg_access_i2c(const struct device *dev, bool read, uint8_t 
 static int max86178_bus_check_spi(const union max86178_bus *bus)
 {
 	if (!spi_is_ready_dt(&bus->spi)) {
+		LOG_ERR("SPI bus not ready");
 		return -ENODEV;
 	}
 	return 0;
@@ -9090,6 +9092,23 @@ static int max86178_bioz_en(const struct device *dev, enum max86178_bioz_en bioz
 	return 0;
 }
 
+static int max86178_sys_cfg_init(const struct device *dev)
+{
+	int ret = 0;
+	const struct max86178_dev_config *config = dev->config;
+	uint8_t reg_val;
+
+	reg_val = FIELD_PREP(MAX86178_SYS_CFG1_ECG_BIOZ_TIMING_DATA_MSK, config->sys_cfg.ecg_bioz_timing_data_en) |
+		  FIELD_PREP(MAX86178_SYS_CFG1_BIOZ_PPG_TIMING_DATA_MSK, config->sys_cfg.bioz_ppg_timing_data_en) |
+		  FIELD_PREP(MAX86178_SYS_CFG1_ECG_PPG_TIMING_DATA_MSK, config->sys_cfg.ecg_ppg_timing_data_en);
+	ret = max86178_reg_write(dev, MAX86178_SYS_CFG1, &reg_val, 1);
+	if (ret < 0) {
+		LOG_ERR("Failed to set system configuration: %d", ret);
+		return ret;
+	}
+	return 0;
+}
+
 static int max86178_init(const struct device *dev)
 {
 	const struct max86178_dev_config *config = dev->config;
@@ -9159,6 +9178,13 @@ static int max86178_init(const struct device *dev)
 	ret = max86178_bioz_init(dev);
 	if (ret < 0) {
 		LOG_ERR("BioZ initialization failed");
+		return ret;
+	}
+
+	/* Initialize system configuration */
+	ret = max86178_sys_cfg_init(dev);
+	if (ret < 0) {
+		LOG_ERR("System configuration initialization failed");
 		return ret;
 	}
 
@@ -9693,6 +9719,16 @@ static int max86178_init(const struct device *dev)
 	}
 
 /*******************************************************************************
+ * SYSTEM CONFIGURATION PARSING MACROS
+ ******************************************************************************/
+#define MAX86178_SYS_CFG(inst)                                                                    \
+	{                                                                                          \
+		.ecg_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), ecg_ppg_timing_data_en, false), \
+		.bioz_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), bioz_ppg_timing_data_en, false), \
+		.ecg_bioz_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), ecg_bioz_timing_data_en, false), \
+	}
+
+/*******************************************************************************
  * IRQ CONFIGURATION PARSING MACROS
  ******************************************************************************/
 #ifdef CONFIG_MAX86178_TRIGGER
@@ -9724,6 +9760,7 @@ static int max86178_init(const struct device *dev)
 	 .bioz_cfg = MAX86178_BIOZ_CFG(inst),                                                      \
 	 .fifo_cfg = MAX86178_FIFO_CFG(inst),                                                      \
 	 .resp_cfg = MAX86178_RESP_CFG(inst),                                                      \
+	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                       \
 	 COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) }
 
 #define MAX86178_CONFIG_SPI(inst)                                                                  \
@@ -9737,6 +9774,7 @@ static int max86178_init(const struct device *dev)
 	 .bioz_cfg = MAX86178_BIOZ_CFG(inst),                                                      \
 	 .fifo_cfg = MAX86178_FIFO_CFG(inst),                                                      \
 	 .resp_cfg = MAX86178_RESP_CFG(inst),                                                      \
+	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                       \
 	 COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) }
 
 #ifdef CONFIG_MAX86178_STREAM

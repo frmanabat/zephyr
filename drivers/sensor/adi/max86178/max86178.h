@@ -619,7 +619,6 @@
 #define MAX86178_CAPP_CAPN_TAG 0xDu
 #define MAX86178_TIMING_TAG 0xEu
 
-#define MAX86178_FIFO_DATA_FIELD GENMASK(19, 0)
 
 
 enum clk_ref_sel {
@@ -1557,6 +1556,12 @@ struct max86178_resp_setup {
 	uint8_t cg_lpf_duty : 3;
 };
 
+struct max86178_sys_cfg {
+	bool ecg_ppg_timing_data_en;
+	bool bioz_ppg_timing_data_en;
+	bool ecg_bioz_timing_data_en;
+};
+
 struct max86178_fifo_cfg {
 	bool fifo_rollover_en;
 	bool fifo_a_full_type;
@@ -1696,6 +1701,7 @@ struct max86178_dev_config {
 	struct max86178_ecg_cfg ecg_cfg;
 	struct max86178_bioz_cfg bioz_cfg;
 	struct max86178_resp_setup resp_cfg;
+	struct max86178_sys_cfg sys_cfg;
 
 #ifdef CONFIG_MAX86178_TRIGGER
 	struct gpio_dt_spec interrupt_gpio;
