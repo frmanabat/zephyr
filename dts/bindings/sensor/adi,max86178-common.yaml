@@ -75,22 +75,22 @@ child-binding:
       type: int
       description: PPG channel 1 power control
       enum:
-        - 0 # MAX86178_PPG_CHAN_ENABLED - Channel enabled
-        - 1 # MAX86178_PPG_CHAN_PWRDN - Channel powered down
+        - 0 # MAX86178_DT_PPG_CHAN_ENABLED - Channel enabled
+        - 1 # MAX86178_DT_PPG_CHAN_PWRDN - Channel powered down
 
     ppg2-pwrdn:
       type: int
       description: PPG channel 2 power control
       enum:
-        - 0 # MAX86178_PPG_CHAN_ENABLED - Channel enabled
-        - 1 # MAX86178_PPG_CHAN_PWRDN - Channel powered down
+        - 0 # MAX86178_DT_PPG_CHAN_ENABLED - Channel enabled
+        - 1 # MAX86178_DT_PPG_CHAN_PWRDN - Channel powered down
 
     ppg-sync-mode:
       type: int
       description: PPG synchronization mode
       enum:
-        - 0 # MAX86178_PPG_INTERNAL_SYNC - Internal sync
-        - 1 # MAX86178_PPG_EXTERNAL_SYNC - External sync via TRIG pin
+        - 0 # MAX86178_DT_PPG_INTERNAL_SYNC - Internal sync
+        - 1 # MAX86178_DT_PPG_EXTERNAL_SYNC - External sync via TRIG pin
 
     prox-data-en:
       type: boolean
@@ -112,37 +112,37 @@ child-binding:
       type: int
       description: Photodiode 1 bias setting
       enum:
-        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
-        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
-        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
-        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
-    
+        - 0 # MAX86178_DT_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_DT_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_DT_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_DT_PPG_PD_BIAS_250pF_TO_500pF
+
     pd2-bias:
       type: int
       description: Photodiode 2 bias setting
       enum:
-        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
-        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
-        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
-        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
-    
+        - 0 # MAX86178_DT_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_DT_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_DT_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_DT_PPG_PD_BIAS_250pF_TO_500pF
+
     pd3-bias:
       type: int
       description: Photodiode 3 bias setting
       enum:
-        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
-        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
-        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
-        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
-    
+        - 0 # MAX86178_DT_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_DT_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_DT_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_DT_PPG_PD_BIAS_250pF_TO_500pF
+
     pd4-bias:
       type: int
       description: Photodiode 4 bias setting
       enum:
-        - 0 # MAX86178_PPG_PD_BIAS_NOT_RECOMMENDED
-        - 1 # MAX86178_PPG_PD_BIAS_0_TO_125pF
-        - 2 # MAX86178_PPG_PD_BIAS_125pF_TO_250pF
-        - 3 # MAX86178_PPG_PD_BIAS_250pF_TO_500pF
+        - 0 # MAX86178_DT_PPG_PD_BIAS_NOT_RECOMMENDED
+        - 1 # MAX86178_DT_PPG_PD_BIAS_0_TO_125pF
+        - 2 # MAX86178_DT_PPG_PD_BIAS_125pF_TO_250pF
+        - 3 # MAX86178_DT_PPG_PD_BIAS_250pF_TO_500pF
 
     meas1-config-sel:
       type: boolean
@@ -152,11 +152,11 @@ child-binding:
       type: int
       description: Sample averaging
       enum:
-        - 0 # MAX86178_SMP_AVE_1 - No averaging
-        - 1 # MAX86178_SMP_AVE_2 - Average 2 samples
-        - 2 # MAX86178_SMP_AVE_4 - Average 4 samples
-        - 3 # MAX86178_SMP_AVE_8 - Average 8 samples
-        - 4 # MAX86178_SMP_AVE_16 - Average 16 samples
+        - 0 # MAX86178_DT_SMP_AVE_1 - No averaging
+        - 1 # MAX86178_DT_SMP_AVE_2 - Average 2 samples
+        - 2 # MAX86178_DT_SMP_AVE_4 - Average 4 samples
+        - 3 # MAX86178_DT_SMP_AVE_8 - Average 8 samples
+        - 4 # MAX86178_DT_SMP_AVE_16 - Average 16 samples
     
     # =========================================================================
     # SYSTEM CONFIGURATION PROPERTIES (properties of the max86178 node itself)
@@ -223,15 +223,15 @@ child-binding:
         type: int
         description: Reference clock source selection
         enum:
-          - 0 # MAX86178_REF_CLK_SEL_INTERNAL - Internal oscillator
-          - 1 # MAX86178_REF_CLK_SEL_EXTERNAL - External clock via CLKIN pin
+          - 0 # MAX86178_DT_REF_CLK_SEL_INTERNAL - Internal oscillator
+          - 1 # MAX86178_DT_REF_CLK_SEL_EXTERNAL - External clock via CLKIN pin
 
       clk-freq-sel:
         type: int
         description: Reference clock frequency selection
         enum:
-          - 0 # MAX86178_REF_CLK_32000 - 32.000 kHz
-          - 1 # MAX86178_REF_CLK_32768 - 32.768 kHz
+          - 0 # MAX86178_DT_REF_CLK_32000 - 32.000 kHz
+          - 1 # MAX86178_DT_REF_CLK_32768 - 32.768 kHz
 
       clk-fine-tune:
         type: int
@@ -268,12 +268,12 @@ child-binding:
         type: int
         description: ECG decimation rate
         enum:
-          - 0 # MAX86178_ECG_DEC_RATE_16 - Decimation by 16
-          - 1 # MAX86178_ECG_DEC_RATE_32 - Decimation by 32
-          - 2 # MAX86178_ECG_DEC_RATE_64 - Decimation by 64
-          - 3 # MAX86178_ECG_DEC_RATE_128 - Decimation by 128
-          - 4 # MAX86178_ECG_DEC_RATE_256 - Decimation by 256
-          - 5 # MAX86178_ECG_DEC_RATE_512 - Decimation by 512
+          - 0 # MAX86178_DT_ECG_DEC_RATE_16 - Decimation by 16
+          - 1 # MAX86178_DT_ECG_DEC_RATE_32 - Decimation by 32
+          - 2 # MAX86178_DT_ECG_DEC_RATE_64 - Decimation by 64
+          - 3 # MAX86178_DT_ECG_DEC_RATE_128 - Decimation by 128
+          - 4 # MAX86178_DT_ECG_DEC_RATE_256 - Decimation by 256
+          - 5 # MAX86178_DT_ECG_DEC_RATE_512 - Decimation by 512
 
       # ---------------------------------------------------------------------------
       # BioZ Clock Configuration (in "bioz_clk" node)
@@ -282,50 +282,50 @@ child-binding:
         type: int
         description: BioZ K divider
         enum:
-          - 0  # MAX86178_BIOZ_KDIV_1
-          - 1  # MAX86178_BIOZ_KDIV_2
-          - 2  # MAX86178_BIOZ_KDIV_4
-          - 3  # MAX86178_BIOZ_KDIV_8
-          - 4  # MAX86178_BIOZ_KDIV_16
-          - 5  # MAX86178_BIOZ_KDIV_32
-          - 6  # MAX86178_BIOZ_KDIV_64
-          - 7  # MAX86178_BIOZ_KDIV_128
-          - 8  # MAX86178_BIOZ_KDIV_256
-          - 9  # MAX86178_BIOZ_KDIV_512
-          - 10 # MAX86178_BIOZ_KDIV_1024
-          - 11 # MAX86178_BIOZ_KDIV_2048
-          - 12 # MAX86178_BIOZ_KDIV_4096
-          - 13 # MAX86178_BIOZ_KDIV_8192
+          - 0  # MAX86178_DT_BIOZ_KDIV_1
+          - 1  # MAX86178_DT_BIOZ_KDIV_2
+          - 2  # MAX86178_DT_BIOZ_KDIV_4
+          - 3  # MAX86178_DT_BIOZ_KDIV_8
+          - 4  # MAX86178_DT_BIOZ_KDIV_16
+          - 5  # MAX86178_DT_BIOZ_KDIV_32
+          - 6  # MAX86178_DT_BIOZ_KDIV_64
+          - 7  # MAX86178_DT_BIOZ_KDIV_128
+          - 8  # MAX86178_DT_BIOZ_KDIV_256
+          - 9  # MAX86178_DT_BIOZ_KDIV_512
+          - 10 # MAX86178_DT_BIOZ_KDIV_1024
+          - 11 # MAX86178_DT_BIOZ_KDIV_2048
+          - 12 # MAX86178_DT_BIOZ_KDIV_4096
+          - 13 # MAX86178_DT_BIOZ_KDIV_8192
 
       bioz-ndiv:
         type: int
         description: BioZ N divider
         enum:
-          - 0 # MAX86178_BIOZ_NDIV_256
-          - 1 # MAX86178_BIOZ_NDIV_512
-          - 2 # MAX86178_BIOZ_NDIV_1024
+          - 0 # MAX86178_DT_BIOZ_NDIV_256
+          - 1 # MAX86178_DT_BIOZ_NDIV_512
+          - 2 # MAX86178_DT_BIOZ_NDIV_1024
 
       bioz-adc-osr:
         type: int
         description: BioZ ADC oversampling ratio
         enum:
-          - 0 # MAX86178_BIOZ_ADC_OSR_8
-          - 1 # MAX86178_BIOZ_ADC_OSR_16
-          - 2 # MAX86178_BIOZ_ADC_OSR_32
-          - 3 # MAX86178_BIOZ_ADC_OSR_64
-          - 4 # MAX86178_BIOZ_ADC_OSR_128
-          - 5 # MAX86178_BIOZ_ADC_OSR_256
-          - 6 # MAX86178_BIOZ_ADC_OSR_512
-          - 7 # MAX86178_BIOZ_ADC_OSR_1024
+          - 0 # MAX86178_DT_BIOZ_ADC_OSR_8
+          - 1 # MAX86178_DT_BIOZ_ADC_OSR_16
+          - 2 # MAX86178_DT_BIOZ_ADC_OSR_32
+          - 3 # MAX86178_DT_BIOZ_ADC_OSR_64
+          - 4 # MAX86178_DT_BIOZ_ADC_OSR_128
+          - 5 # MAX86178_DT_BIOZ_ADC_OSR_256
+          - 6 # MAX86178_DT_BIOZ_ADC_OSR_512
+          - 7 # MAX86178_DT_BIOZ_ADC_OSR_1024
 
       bioz-dac-osr:
         type: int
         description: BioZ DAC oversampling ratio
         enum:
-          - 0 # MAX86178_BIOZ_DAC_OSR_32
-          - 1 # MAX86178_BIOZ_DAC_OSR_64
-          - 2 # MAX86178_BIOZ_DAC_OSR_128
-          - 3 # MAX86178_BIOZ_DAC_OSR_256
+          - 0 # MAX86178_DT_BIOZ_DAC_OSR_32
+          - 1 # MAX86178_DT_BIOZ_DAC_OSR_64
+          - 2 # MAX86178_DT_BIOZ_DAC_OSR_128
+          - 3 # MAX86178_DT_BIOZ_DAC_OSR_256
 
       # ---------------------------------------------------------------------------
       # PPG MEASUREMENT SLOT PROPERTIES (for meas_1 through meas_6 nodes)
@@ -335,23 +335,23 @@ child-binding:
         type: int
         description: LED driver A selection
         enum:
-          - 0 # MAX86178_PPG_DRVA_LED1_DRV - LED1
-          - 1 # MAX86178_PPG_DRVA_LED2_DRV - LED2
-          - 2 # MAX86178_PPG_DRVA_LED3_DRV - LED3
-          - 3 # MAX86178_PPG_DRVA_LED4_DRV - LED4
-          - 4 # MAX86178_PPG_DRVA_LED5_DRV - LED5
-          - 5 # MAX86178_PPG_DRVA_LED6_DRV - LED6
+          - 0 # MAX86178_DT_PPG_DRVA_LED1_DRV - LED1
+          - 1 # MAX86178_DT_PPG_DRVA_LED2_DRV - LED2
+          - 2 # MAX86178_DT_PPG_DRVA_LED3_DRV - LED3
+          - 3 # MAX86178_DT_PPG_DRVA_LED4_DRV - LED4
+          - 4 # MAX86178_DT_PPG_DRVA_LED5_DRV - LED5
+          - 5 # MAX86178_DT_PPG_DRVA_LED6_DRV - LED6
 
       drvb:
         type: int
         description: LED driver B selection
         enum:
-          - 0 # MAX86178_PPG_DRVB_LED1_DRV - LED1
-          - 1 # MAX86178_PPG_DRVB_LED2_DRV - LED2
-          - 2 # MAX86178_PPG_DRVB_LED3_DRV - LED3
-          - 3 # MAX86178_PPG_DRVB_LED4_DRV - LED4
-          - 4 # MAX86178_PPG_DRVB_LED5_DRV - LED5
-          - 5 # MAX86178_PPG_DRVB_LED6_DRV - LED6
+          - 0 # MAX86178_DT_PPG_DRVB_LED1_DRV - LED1
+          - 1 # MAX86178_DT_PPG_DRVB_LED2_DRV - LED2
+          - 2 # MAX86178_DT_PPG_DRVB_LED3_DRV - LED3
+          - 3 # MAX86178_DT_PPG_DRVB_LED4_DRV - LED4
+          - 4 # MAX86178_DT_PPG_DRVB_LED5_DRV - LED5
+          - 5 # MAX86178_DT_PPG_DRVB_LED6_DRV - LED6
 
       drva-pa:
         type: int
@@ -368,175 +368,175 @@ child-binding:
         type: int
         description: Photodiode 1 connection
         enum:
-          - 1 # MAX86178_PD_NOT_SEL - Not selected
-          - 2 # MAX86178_PD_CONN_TO_PPG1 - Connected to PPG1 channel
-          - 3 # MAX86178_PD_CONN_TO_PPG2 - Connected to PPG2 channel
+          - 1 # MAX86178_DT_PD_NOT_SEL - Not selected
+          - 2 # MAX86178_DT_PD_CONN_TO_PPG1 - Connected to PPG1 channel
+          - 3 # MAX86178_DT_PD_CONN_TO_PPG2 - Connected to PPG2 channel
 
       pd2-sel:
         type: int
         description: Photodiode 2 connection
         enum:
-          - 1 # MAX86178_PD_NOT_SEL - Not selected
-          - 2 # MAX86178_PD_CONN_TO_PPG1 - Connected to PPG1 channel
-          - 3 # MAX86178_PD_CONN_TO_PPG2 - Connected to PPG2 channel
+          - 1 # MAX86178_DT_PD_NOT_SEL - Not selected
+          - 2 # MAX86178_DT_PD_CONN_TO_PPG1 - Connected to PPG1 channel
+          - 3 # MAX86178_DT_PD_CONN_TO_PPG2 - Connected to PPG2 channel
 
       pd3-sel:
         type: int
         description: Photodiode 3 connection
         enum:
-          - 1 # MAX86178_PD_NOT_SEL - Not selected
-          - 2 # MAX86178_PD_CONN_TO_PPG1 - Connected to PPG1 channel
-          - 3 # MAX86178_PD_CONN_TO_PPG2 - Connected to PPG2 channel
+          - 1 # MAX86178_DT_PD_NOT_SEL - Not selected
+          - 2 # MAX86178_DT_PD_CONN_TO_PPG1 - Connected to PPG1 channel
+          - 3 # MAX86178_DT_PD_CONN_TO_PPG2 - Connected to PPG2 channel
 
       pd4-sel:
         type: int
         description: Photodiode 4 connection
         enum:
-          - 1 # MAX86178_PD_NOT_SEL - Not selected
-          - 2 # MAX86178_PD_CONN_TO_PPG1 - Connected to PPG1 channel
-          - 3 # MAX86178_PD_CONN_TO_PPG2 - Connected to PPG2 channel
+          - 1 # MAX86178_DT_PD_NOT_SEL - Not selected
+          - 2 # MAX86178_DT_PD_CONN_TO_PPG1 - Connected to PPG1 channel
+          - 3 # MAX86178_DT_PD_CONN_TO_PPG2 - Connected to PPG2 channel
 
       # Ambient Mode
       amb-mode:
         type: int
         description: Ambient light measurement mode
         enum:
-          - 0 # MAX86178_PPG_AMB_NORMAL_MODE - Normal PPG mode
-          - 1 # MAX86178_PPG_AMB_DIRECT_AMB_CONV - Direct ambient light conversion
+          - 0 # MAX86178_DT_PPG_AMB_NORMAL_MODE - Normal PPG mode
+          - 1 # MAX86178_DT_PPG_AMB_DIRECT_AMB_CONV - Direct ambient light conversion
 
       # Averaging and Filtering
       avg-num:
         type: int
         description: Number of ADC samples to average per exposure
         enum:
-          - 0 # MAX86178_PPG_AVG_NUM_1
-          - 1 # MAX86178_PPG_AVG_NUM_2
-          - 2 # MAX86178_PPG_AVG_NUM_4
-          - 3 # MAX86178_PPG_AVG_NUM_8
-          - 4 # MAX86178_PPG_AVG_NUM_16
-          - 5 # MAX86178_PPG_AVG_NUM_32
-          - 6 # MAX86178_PPG_AVG_NUM_64
-          - 7 # MAX86178_PPG_AVG_NUM_128
+          - 0 # MAX86178_DT_PPG_AVG_NUM_1
+          - 1 # MAX86178_DT_PPG_AVG_NUM_2
+          - 2 # MAX86178_DT_PPG_AVG_NUM_4
+          - 3 # MAX86178_DT_PPG_AVG_NUM_8
+          - 4 # MAX86178_DT_PPG_AVG_NUM_16
+          - 5 # MAX86178_DT_PPG_AVG_NUM_32
+          - 6 # MAX86178_DT_PPG_AVG_NUM_64
+          - 7 # MAX86178_DT_PPG_AVG_NUM_128
 
       sinc3-sel:
         type: int
         description: SINC3 filter enable
         enum:
-          - 0 # MAX86178_PPG_SINC3_OFF
-          - 1 # MAX86178_PPG_SINC3_ON
+          - 0 # MAX86178_DT_PPG_SINC3_OFF
+          - 1 # MAX86178_DT_PPG_SINC3_ON
 
       filt-sel:
         type: int
         description: Ambient cancellation filter selection
         enum:
-          - 0 # MAX86178_PPG_FILT_SEL_CDM - Coded division multiplexing
-          - 1 # MAX86178_PPG_FILT_SEL_FDM - Frequency division multiplexing
+          - 0 # MAX86178_DT_PPG_FILT_SEL_CDM - Coded division multiplexing
+          - 1 # MAX86178_DT_PPG_FILT_SEL_FDM - Frequency division multiplexing
 
       filt2-sel:
         type: int
         description: Second filter order selection
         enum:
-          - 0 # MAX86178_PPG_FILT2_3RD_ORDER
-          - 1 # MAX86178_PPG_FILT2_2ND_ORDER
+          - 0 # MAX86178_DT_PPG_FILT2_3RD_ORDER
+          - 1 # MAX86178_DT_PPG_FILT2_2ND_ORDER
 
       # ADC Configuration
       ppg1-adc-rge:
         type: int
         description: PPG1 ADC range
         enum:
-          - 0 # MAX86178_PPG_ADC_RGE_4uA - 4µA full scale
-          - 1 # MAX86178_PPG_ADC_RGE_8uA - 8µA full scale
-          - 2 # MAX86178_PPG_ADC_RGE_16uA - 16µA full scale
-          - 3 # MAX86178_PPG_ADC_RGE_32uA - 32µA full scale
+          - 0 # MAX86178_DT_PPG_ADC_RGE_4uA - 4µA full scale
+          - 1 # MAX86178_DT_PPG_ADC_RGE_8uA - 8µA full scale
+          - 2 # MAX86178_DT_PPG_ADC_RGE_16uA - 16µA full scale
+          - 3 # MAX86178_DT_PPG_ADC_RGE_32uA - 32µA full scale
 
       ppg2-adc-rge:
         type: int
         description: PPG2 ADC range
         enum:
-          - 0 # MAX86178_PPG_ADC_RGE_4uA - 4µA full scale
-          - 1 # MAX86178_PPG_ADC_RGE_8uA - 8µA full scale
-          - 2 # MAX86178_PPG_ADC_RGE_16uA - 16µA full scale
-          - 3 # MAX86178_PPG_ADC_RGE_32uA - 32µA full scale
+          - 0 # MAX86178_DT_PPG_ADC_RGE_4uA - 4µA full scale
+          - 1 # MAX86178_DT_PPG_ADC_RGE_8uA - 8µA full scale
+          - 2 # MAX86178_DT_PPG_ADC_RGE_16uA - 16µA full scale
+          - 3 # MAX86178_DT_PPG_ADC_RGE_32uA - 32µA full scale
 
       ppg1-dac-off:
         type: int
         description: PPG1 DAC offset current
         enum:
-          - 0  # MAX86178_PPG_DAC_OFF_0uA
-          - 1  # MAX86178_PPG_DAC_OFF_2uA
-          - 2  # MAX86178_PPG_DAC_OFF_4uA
-          - 3  # MAX86178_PPG_DAC_OFF_6uA
-          - 4  # MAX86178_PPG_DAC_OFF_8uA
-          - 5  # MAX86178_PPG_DAC_OFF_10uA
-          - 6  # MAX86178_PPG_DAC_OFF_12uA
-          - 7  # MAX86178_PPG_DAC_OFF_14uA
-          - 8  # MAX86178_PPG_DAC_OFF_16uA
-          - 9  # MAX86178_PPG_DAC_OFF_18uA
-          - 10 # MAX86178_PPG_DAC_OFF_20uA
-          - 11 # MAX86178_PPG_DAC_OFF_22uA
-          - 12 # MAX86178_PPG_DAC_OFF_24uA
-          - 13 # MAX86178_PPG_DAC_OFF_26uA
-          - 14 # MAX86178_PPG_DAC_OFF_28uA
-          - 15 # MAX86178_PPG_DAC_OFF_30uA
+          - 0  # MAX86178_DT_PPG_DAC_OFF_0uA
+          - 1  # MAX86178_DT_PPG_DAC_OFF_2uA
+          - 2  # MAX86178_DT_PPG_DAC_OFF_4uA
+          - 3  # MAX86178_DT_PPG_DAC_OFF_6uA
+          - 4  # MAX86178_DT_PPG_DAC_OFF_8uA
+          - 5  # MAX86178_DT_PPG_DAC_OFF_10uA
+          - 6  # MAX86178_DT_PPG_DAC_OFF_12uA
+          - 7  # MAX86178_DT_PPG_DAC_OFF_14uA
+          - 8  # MAX86178_DT_PPG_DAC_OFF_16uA
+          - 9  # MAX86178_DT_PPG_DAC_OFF_18uA
+          - 10 # MAX86178_DT_PPG_DAC_OFF_20uA
+          - 11 # MAX86178_DT_PPG_DAC_OFF_22uA
+          - 12 # MAX86178_DT_PPG_DAC_OFF_24uA
+          - 13 # MAX86178_DT_PPG_DAC_OFF_26uA
+          - 14 # MAX86178_DT_PPG_DAC_OFF_28uA
+          - 15 # MAX86178_DT_PPG_DAC_OFF_30uA
 
       ppg2-dac-off:
         type: int
         description: PPG2 DAC offset current
         enum:
-          - 0  # MAX86178_PPG_DAC_OFF_0uA
-          - 1  # MAX86178_PPG_DAC_OFF_2uA
-          - 2  # MAX86178_PPG_DAC_OFF_4uA
-          - 3  # MAX86178_PPG_DAC_OFF_6uA
-          - 4  # MAX86178_PPG_DAC_OFF_8uA
-          - 5  # MAX86178_PPG_DAC_OFF_10uA
-          - 6  # MAX86178_PPG_DAC_OFF_12uA
-          - 7  # MAX86178_PPG_DAC_OFF_14uA
-          - 8  # MAX86178_PPG_DAC_OFF_16uA
-          - 9  # MAX86178_PPG_DAC_OFF_18uA
-          - 10 # MAX86178_PPG_DAC_OFF_20uA
-          - 11 # MAX86178_PPG_DAC_OFF_22uA
-          - 12 # MAX86178_PPG_DAC_OFF_24uA
-          - 13 # MAX86178_PPG_DAC_OFF_26uA
-          - 14 # MAX86178_PPG_DAC_OFF_28uA
-          - 15 # MAX86178_PPG_DAC_OFF_30uA
+          - 0  # MAX86178_DT_PPG_DAC_OFF_0uA
+          - 1  # MAX86178_DT_PPG_DAC_OFF_2uA
+          - 2  # MAX86178_DT_PPG_DAC_OFF_4uA
+          - 3  # MAX86178_DT_PPG_DAC_OFF_6uA
+          - 4  # MAX86178_DT_PPG_DAC_OFF_8uA
+          - 5  # MAX86178_DT_PPG_DAC_OFF_10uA
+          - 6  # MAX86178_DT_PPG_DAC_OFF_12uA
+          - 7  # MAX86178_DT_PPG_DAC_OFF_14uA
+          - 8  # MAX86178_DT_PPG_DAC_OFF_16uA
+          - 9  # MAX86178_DT_PPG_DAC_OFF_18uA
+          - 10 # MAX86178_DT_PPG_DAC_OFF_20uA
+          - 11 # MAX86178_DT_PPG_DAC_OFF_22uA
+          - 12 # MAX86178_DT_PPG_DAC_OFF_24uA
+          - 13 # MAX86178_DT_PPG_DAC_OFF_26uA
+          - 14 # MAX86178_DT_PPG_DAC_OFF_28uA
+          - 15 # MAX86178_DT_PPG_DAC_OFF_30uA
 
       # Timing Configuration
       tint:
         type: int
         description: LED integration time
         enum:
-          - 0 # MAX86178_PPG_TINT_14_6us - 14.6 µs
-          - 1 # MAX86178_PPG_TINT_29_2us - 29.2 µs
-          - 2 # MAX86178_PPG_TINT_58_6us - 58.6 µs
-          - 3 # MAX86178_PPG_TINT_117_0us - 117.0 µs
+          - 0 # MAX86178_DT_PPG_TINT_14_6us - 14.6 µs
+          - 1 # MAX86178_DT_PPG_TINT_29_2us - 29.2 µs
+          - 2 # MAX86178_DT_PPG_TINT_58_6us - 58.6 µs
+          - 3 # MAX86178_DT_PPG_TINT_117_0us - 117.0 µs
 
       pd-setlng:
         type: int
         description: Photodiode settling time
         enum:
-          - 0 # MAX86178_PPG_PD_SETLNG_7_8us - 7.8 µs
-          - 1 # MAX86178_PPG_PD_SETLNG_11_8us - 11.8 µs
-          - 2 # MAX86178_PPG_PD_SETLNG_15_8us - 15.8 µs
-          - 3 # MAX86178_PPG_PD_SETLNG_23_8us - 23.8 µs
+          - 0 # MAX86178_DT_PPG_PD_SETLNG_7_8us - 7.8 µs
+          - 1 # MAX86178_DT_PPG_PD_SETLNG_11_8us - 11.8 µs
+          - 2 # MAX86178_DT_PPG_PD_SETLNG_15_8us - 15.8 µs
+          - 3 # MAX86178_DT_PPG_PD_SETLNG_23_8us - 23.8 µs
 
       led-setlng:
         type: int
         description: LED settling time
         enum:
-          - 0 # MAX86178_PPG_LED_SETLNG_7_7us - 7.7 µs
-          - 1 # MAX86178_PPG_LED_SETLNG_11_7us - 11.7 µs
-          - 2 # MAX86178_PPG_LED_SETLNG_15_7us - 15.7 µs
-          - 3 # MAX86178_PPG_LED_SETLNG_23_7us - 23.7 µs
+          - 0 # MAX86178_DT_PPG_LED_SETLNG_7_7us - 7.7 µs
+          - 1 # MAX86178_DT_PPG_LED_SETLNG_11_7us - 11.7 µs
+          - 2 # MAX86178_DT_PPG_LED_SETLNG_15_7us - 15.7 µs
+          - 3 # MAX86178_DT_PPG_LED_SETLNG_23_7us - 23.7 µs
 
       # LED Range
       led-rge:
         type: int
         description: LED current range
         enum:
-          - 0 # MAX86178_PPG_LED_RGE_32mA - 32 mA max
-          - 1 # MAX86178_PPG_LED_RGE_64mA - 64 mA max
-          - 2 # MAX86178_PPG_LED_RGE_96mA - 96 mA max
-          - 3 # MAX86178_PPG_LED_RGE_128mA - 128 mA max
+          - 0 # MAX86178_DT_PPG_LED_RGE_32mA - 32 mA max
+          - 1 # MAX86178_DT_PPG_LED_RGE_64mA - 64 mA max
+          - 2 # MAX86178_DT_PPG_LED_RGE_96mA - 96 mA max
+          - 3 # MAX86178_DT_PPG_LED_RGE_128mA - 128 mA max
 
       # ---------------------------------------------------------------------------
       # Properties for thresh node
@@ -545,61 +545,61 @@ child-binding:
         type: int
         description: Threshold 1 measurement slot selection
         enum:
-          - 0 # MAX86178_PPG_THRESH_DISABLED
-          - 1 # MAX86178_PPG_THRESH_MEAS1
-          - 2 # MAX86178_PPG_THRESH_MEAS2
-          - 3 # MAX86178_PPG_THRESH_MEAS3
-          - 4 # MAX86178_PPG_THRESH_MEAS4
-          - 5 # MAX86178_PPG_THRESH_MEAS5
-          - 6 # MAX86178_PPG_THRESH_MEAS6
+          - 0 # MAX86178_DT_PPG_THRESH_DISABLED
+          - 1 # MAX86178_DT_PPG_THRESH_MEAS1
+          - 2 # MAX86178_DT_PPG_THRESH_MEAS2
+          - 3 # MAX86178_DT_PPG_THRESH_MEAS3
+          - 4 # MAX86178_DT_PPG_THRESH_MEAS4
+          - 5 # MAX86178_DT_PPG_THRESH_MEAS5
+          - 6 # MAX86178_DT_PPG_THRESH_MEAS6
 
       thresh2-meas-sel:
         type: int
         description: Threshold 2 measurement slot selection
         enum:
-          - 0 # MAX86178_PPG_THRESH_DISABLED
-          - 1 # MAX86178_PPG_THRESH_MEAS1
-          - 2 # MAX86178_PPG_THRESH_MEAS2
-          - 3 # MAX86178_PPG_THRESH_MEAS3
-          - 4 # MAX86178_PPG_THRESH_MEAS4
-          - 5 # MAX86178_PPG_THRESH_MEAS5
-          - 6 # MAX86178_PPG_THRESH_MEAS6
+          - 0 # MAX86178_DT_PPG_THRESH_DISABLED
+          - 1 # MAX86178_DT_PPG_THRESH_MEAS1
+          - 2 # MAX86178_DT_PPG_THRESH_MEAS2
+          - 3 # MAX86178_DT_PPG_THRESH_MEAS3
+          - 4 # MAX86178_DT_PPG_THRESH_MEAS4
+          - 5 # MAX86178_DT_PPG_THRESH_MEAS5
+          - 6 # MAX86178_DT_PPG_THRESH_MEAS6
 
       thresh1-chan-sel:
         type: int
         description: Threshold 1 PPG channel selection
         enum:
-          - 0 # MAX86178_PPG_THRESH_PPG_CHAN1
-          - 1 # MAX86178_PPG_THRESH_PPG_CHAN2
+          - 0 # MAX86178_DT_PPG_THRESH_PPG_CHAN1
+          - 1 # MAX86178_DT_PPG_THRESH_PPG_CHAN2
 
       thresh2-chan-sel:
         type: int
         description: Threshold 2 PPG channel selection
         enum:
-          - 0 # MAX86178_PPG_THRESH_PPG_CHAN1
-          - 1 # MAX86178_PPG_THRESH_PPG_CHAN2
+          - 0 # MAX86178_DT_PPG_THRESH_PPG_CHAN1
+          - 1 # MAX86178_DT_PPG_THRESH_PPG_CHAN2
 
       time-hyst:
         type: int
         description: Time-based hysteresis
         enum:
-          - 0 # MAX86178_PPG_TIME_HYST_DISABLED
-          - 1 # MAX86178_PPG_TIME_HYST_2_SAMPLES
-          - 2 # MAX86178_PPG_TIME_HYST_4_SAMPLES
-          - 3 # MAX86178_PPG_TIME_HYST_8_SAMPLES
+          - 0 # MAX86178_DT_PPG_TIME_HYST_DISABLED
+          - 1 # MAX86178_DT_PPG_TIME_HYST_2_SAMPLES
+          - 2 # MAX86178_DT_PPG_TIME_HYST_4_SAMPLES
+          - 3 # MAX86178_DT_PPG_TIME_HYST_8_SAMPLES
 
       level-hyst:
         type: int
         description: Level-based hysteresis
         enum:
-          - 0 # MAX86178_PPG_LEVEL_HYST_DISABLED
-          - 1 # MAX86178_PPG_LEVEL_HYST_2_SAMPLES
-          - 2 # MAX86178_PPG_LEVEL_HYST_4_SAMPLES
-          - 3 # MAX86178_PPG_LEVEL_HYST_8_SAMPLES
-          - 4 # MAX86178_PPG_LEVEL_HYST_16_SAMPLES
-          - 5 # MAX86178_PPG_LEVEL_HYST_32_SAMPLES
-          - 6 # MAX86178_PPG_LEVEL_HYST_64_SAMPLES
-          - 7 # MAX86178_PPG_LEVEL_HYST_128_SAMPLES
+          - 0 # MAX86178_DT_PPG_LEVEL_HYST_DISABLED
+          - 1 # MAX86178_DT_PPG_LEVEL_HYST_2_SAMPLES
+          - 2 # MAX86178_DT_PPG_LEVEL_HYST_4_SAMPLES
+          - 3 # MAX86178_DT_PPG_LEVEL_HYST_8_SAMPLES
+          - 4 # MAX86178_DT_PPG_LEVEL_HYST_16_SAMPLES
+          - 5 # MAX86178_DT_PPG_LEVEL_HYST_32_SAMPLES
+          - 6 # MAX86178_DT_PPG_LEVEL_HYST_64_SAMPLES
+          - 7 # MAX86178_DT_PPG_LEVEL_HYST_128_SAMPLES
 
       thresh1-hi:
         type: int
@@ -641,17 +641,17 @@ child-binding:
         type: int
         description: ECG input polarity
         enum:
-          - 0 # MAX86178_ECG_INPUT_POL_NORMAL
-          - 1 # MAX86178_ECG_INPUT_POL_INVERTED
+          - 0 # MAX86178_DT_ECG_INPUT_POL_NORMAL
+          - 1 # MAX86178_DT_ECG_INPUT_POL_INVERTED
 
       ecg-pga-gain:
         type: int
         description: ECG programmable gain amplifier gain
         enum:
-          - 0 # MAX86178_ECG_PGA_GAIN_1 - Gain of 1
-          - 1 # MAX86178_ECG_PGA_GAIN_2 - Gain of 2
-          - 2 # MAX86178_ECG_PGA_GAIN_4 - Gain of 4
-          - 3 # MAX86178_ECG_PGA_GAIN_8 - Gain of 8
+          - 0 # MAX86178_DT_ECG_PGA_GAIN_1 - Gain of 1
+          - 1 # MAX86178_DT_ECG_PGA_GAIN_2 - Gain of 2
+          - 2 # MAX86178_DT_ECG_PGA_GAIN_4 - Gain of 4
+          - 3 # MAX86178_DT_ECG_PGA_GAIN_8 - Gain of 8
 
       ecg-ina-rge:
         type: int
@@ -669,8 +669,8 @@ child-binding:
         type: int
         description: ECG auto recovery mode
         enum:
-          - 0 # MAX86178_ECG_AUTO_REC_DISABLED
-          - 1 # MAX86178_ECG_AUTO_REC_ENABLED
+          - 0 # MAX86178_DT_ECG_AUTO_REC_DISABLED
+          - 1 # MAX86178_DT_ECG_AUTO_REC_ENABLED
 
       ecg-mux-sel:
         type: int
@@ -680,9 +680,9 @@ child-binding:
         type: int
         description: ECG fast recovery mode
         enum:
-          - 0 # MAX86178_EN_ECG_FAST_REC_NORMAL_MODE
-          - 1 # MAX86178_EN_ECG_FAST_REC_MANUAL_FAST_REC_MODE
-          - 2 # MAX86178_EN_ECG_FAST_REC_AUTO_FAST_REC_MODE
+          - 0 # MAX86178_DT_EN_ECG_FAST_REC_NORMAL_MODE
+          - 1 # MAX86178_DT_EN_ECG_FAST_REC_MANUAL_FAST_REC_MODE
+          - 2 # MAX86178_DT_EN_ECG_FAST_REC_AUTO_FAST_REC_MODE
 
       ecg-fast-rec-thres:
         type: int
@@ -699,74 +699,74 @@ child-binding:
         type: int
         description: Calibration frequency divider
         enum:
-          - 0 # MAX86178_ECG_CAL_FREQ_DIV_128
-          - 1 # MAX86178_ECG_CAL_FREQ_DIV_512
-          - 2 # MAX86178_ECG_CAL_FREQ_DIV_2048
-          - 3 # MAX86178_ECG_CAL_FREQ_DIV_8192
-          - 4 # MAX86178_ECG_CAL_FREQ_DIV_32768
-          - 5 # MAX86178_ECG_CAL_FREQ_DIV_131072
-          - 6 # MAX86178_ECG_CAL_FREQ_DIV_524288
-          - 7 # MAX86178_ECG_CAL_FREQ_DIV_2097152
+          - 0 # MAX86178_DT_ECG_CAL_FREQ_DIV_128
+          - 1 # MAX86178_DT_ECG_CAL_FREQ_DIV_512
+          - 2 # MAX86178_DT_ECG_CAL_FREQ_DIV_2048
+          - 3 # MAX86178_DT_ECG_CAL_FREQ_DIV_8192
+          - 4 # MAX86178_DT_ECG_CAL_FREQ_DIV_32768
+          - 5 # MAX86178_DT_ECG_CAL_FREQ_DIV_131072
+          - 6 # MAX86178_DT_ECG_CAL_FREQ_DIV_524288
+          - 7 # MAX86178_DT_ECG_CAL_FREQ_DIV_2097152
 
       ecg-cal-duty:
         type: int
         description: Calibration duty cycle
         enum:
-          - 0 # MAX86178_ECG_CAL_DUTY_CAL_HIGH - Always high
-          - 1 # MAX86178_ECG_CAL_DUTY_CAL_50 - 50% duty cycle
+          - 0 # MAX86178_DT_ECG_CAL_DUTY_CAL_HIGH - Always high
+          - 1 # MAX86178_DT_ECG_CAL_DUTY_CAL_50 - 50% duty cycle
 
       ecg-cal-en:
         type: int
         description: Enable calibration signal
         enum:
-          - 0 # MAX86178_ECG_CAL_DISABLED
-          - 1 # MAX86178_ECG_CAL_ENABLED
+          - 0 # MAX86178_DT_ECG_CAL_DISABLED
+          - 1 # MAX86178_DT_ECG_CAL_ENABLED
 
       ecg-open-p:
         type: int
         description: Positive pin isolation
         enum:
-          - 0 # MAX86178_ECG_PIN_INTERNALLY_CONNECTED
-          - 1 # MAX86178_ECG_PIN_INTERNALLY_ISOLATED
+          - 0 # MAX86178_DT_ECG_PIN_INTERNALLY_CONNECTED
+          - 1 # MAX86178_DT_ECG_PIN_INTERNALLY_ISOLATED
 
       ecg-open-n:
         type: int
         description: Negative pin isolation
         enum:
-          - 0 # MAX86178_ECG_PIN_INTERNALLY_CONNECTED
-          - 1 # MAX86178_ECG_PIN_INTERNALLY_ISOLATED
+          - 0 # MAX86178_DT_ECG_PIN_INTERNALLY_CONNECTED
+          - 1 # MAX86178_DT_ECG_PIN_INTERNALLY_ISOLATED
 
       ecg-cal-mode:
         type: int
         description: Calibration mode
         enum:
-          - 0 # MAX86178_ECG_CAL_MODE_UNIPOLAR
-          - 1 # MAX86178_ECG_CAL_MODE_BIPOLAR
+          - 0 # MAX86178_DT_ECG_CAL_MODE_UNIPOLAR
+          - 1 # MAX86178_DT_ECG_CAL_MODE_BIPOLAR
 
       ecg-cal-mag:
         type: int
         description: Calibration magnitude
         enum:
-          - 0 # MAX86178_ECG_CAL_MAG_0_5mV - 0.5 mV
-          - 1 # MAX86178_ECG_CAL_MAG_1mV - 1.0 mV
+          - 0 # MAX86178_DT_ECG_CAL_MAG_0_5mV - 0.5 mV
+          - 1 # MAX86178_DT_ECG_CAL_MAG_1mV - 1.0 mV
 
       ecg-cal-p-sel:
         type: int
         description: Positive electrode calibration connection
         enum:
-          - 0 # MAX86178_ECG_CAL_SEL_NO_CAL
-          - 1 # MAX86178_ECG_CAL_SEL_CONN_VMID_ECG
-          - 2 # MAX86178_ECG_CAL_SEL_CONN_VCALP
-          - 3 # MAX86178_ECG_CAL_SEL_CONN_VCALN
+          - 0 # MAX86178_DT_ECG_CAL_SEL_NO_CAL
+          - 1 # MAX86178_DT_ECG_CAL_SEL_CONN_VMID_ECG
+          - 2 # MAX86178_DT_ECG_CAL_SEL_CONN_VCALP
+          - 3 # MAX86178_DT_ECG_CAL_SEL_CONN_VCALN
 
       ecg-cal-n-sel:
         type: int
         description: Negative electrode calibration connection
         enum:
-          - 0 # MAX86178_ECG_CAL_SEL_NO_CAL
-          - 1 # MAX86178_ECG_CAL_SEL_CONN_VMID_ECG
-          - 2 # MAX86178_ECG_CAL_SEL_CONN_VCALP
-          - 3 # MAX86178_ECG_CAL_SEL_CONN_VCALN
+          - 0 # MAX86178_DT_ECG_CAL_SEL_NO_CAL
+          - 1 # MAX86178_DT_ECG_CAL_SEL_CONN_VMID_ECG
+          - 2 # MAX86178_DT_ECG_CAL_SEL_CONN_VCALP
+          - 3 # MAX86178_DT_ECG_CAL_SEL_CONN_VCALN
 
       # ---------------------------------------------------------------------------
         # Properties for lead_detect node
@@ -775,55 +775,55 @@ child-binding:
         type: int
         description: Enable lead-on detection
         enum:
-          - 0 # MAX86178_ECG_LON_DISABLED
-          - 1 # MAX86178_ECG_LON_ENABLED
+          - 0 # MAX86178_DT_ECG_LON_DISABLED
+          - 1 # MAX86178_DT_ECG_LON_ENABLED
 
       en-ecg-loff:
         type: int
         description: Enable lead-off detection
         enum:
-          - 0 # MAX86178_ECG_LOFF_DISABLED
-          - 1 # MAX86178_ECG_LOFF_ENABLED
+          - 0 # MAX86178_DT_ECG_LOFF_DISABLED
+          - 1 # MAX86178_DT_ECG_LOFF_ENABLED
 
       ecg-loff-mode:
         type: int
         description: Lead-off detection mode
         enum:
-          - 0 # MAX86178_ECG_DC_LEAD_OFF_DETECTION_MODE
-          - 1 # MAX86178_ECG_AC_LEAD_OFF_DETECTION_MODE
+          - 0 # MAX86178_DT_ECG_DC_LEAD_OFF_DETECTION_MODE
+          - 1 # MAX86178_DT_ECG_AC_LEAD_OFF_DETECTION_MODE
 
       ecg-loff-freq:
         type: int
         description: Lead-off detection frequency (AC mode)
         enum:
-          - 0 # MAX86178_ECG_LOFF_FREQ_DISABLED
-          - 1 # MAX86178_ECG_LOFF_FREQ_4Hz
-          - 2 # MAX86178_ECG_LOFF_FREQ_8Hz
-          - 3 # MAX86178_ECG_LOFF_FREQ_16Hz
-          - 4 # MAX86178_ECG_LOFF_FREQ_32Hz
-          - 5 # MAX86178_ECG_LOFF_FREQ_64Hz
-          - 6 # MAX86178_ECG_LOFF_FREQ_128Hz
-          - 7 # MAX86178_ECG_LOFF_FREQ_256Hz
+          - 0 # MAX86178_DT_ECG_LOFF_FREQ_DISABLED
+          - 1 # MAX86178_DT_ECG_LOFF_FREQ_4Hz
+          - 2 # MAX86178_DT_ECG_LOFF_FREQ_8Hz
+          - 3 # MAX86178_DT_ECG_LOFF_FREQ_16Hz
+          - 4 # MAX86178_DT_ECG_LOFF_FREQ_32Hz
+          - 5 # MAX86178_DT_ECG_LOFF_FREQ_64Hz
+          - 6 # MAX86178_DT_ECG_LOFF_FREQ_128Hz
+          - 7 # MAX86178_DT_ECG_LOFF_FREQ_256Hz
 
       ecg-loff-ipol:
         type: int
         description: Lead-off current polarity
         enum:
-          - 0 # MAX86178_ECG_LOFF_IPOL_NON_INVERTED
-          - 1 # MAX86178_ECG_LOFF_IPOL_INVERTED
+          - 0 # MAX86178_DT_ECG_LOFF_IPOL_NON_INVERTED
+          - 1 # MAX86178_DT_ECG_LOFF_IPOL_INVERTED
 
       ecg-loff-current-mag:
         type: int
         description: Lead-off current magnitude
         enum:
-          - 0 # MAX86178_ECG_LOFF_IMAG_0nA
-          - 1 # MAX86178_ECG_LOFF_IMAG_5nA
-          - 2 # MAX86178_ECG_LOFF_IMAG_10nA
-          - 3 # MAX86178_ECG_LOFF_IMAG_20nA
-          - 4 # MAX86178_ECG_LOFF_IMAG_50nA
-          - 5 # MAX86178_ECG_LOFF_IMAG_100nA
-          - 6 # MAX86178_ECG_LOFF_IMAG_200nA
-          - 7 # MAX86178_ECG_LOFF_IMAG_400nA
+          - 0 # MAX86178_DT_ECG_LOFF_IMAG_0nA
+          - 1 # MAX86178_DT_ECG_LOFF_IMAG_5nA
+          - 2 # MAX86178_DT_ECG_LOFF_IMAG_10nA
+          - 3 # MAX86178_DT_ECG_LOFF_IMAG_20nA
+          - 4 # MAX86178_DT_ECG_LOFF_IMAG_50nA
+          - 5 # MAX86178_DT_ECG_LOFF_IMAG_100nA
+          - 6 # MAX86178_DT_ECG_LOFF_IMAG_200nA
+          - 7 # MAX86178_DT_ECG_LOFF_IMAG_400nA
 
       ecg-loff-thresh:
         type: int
@@ -836,23 +836,23 @@ child-binding:
         type: int
         description: Bias resistor value
         enum:
-          - 0 # MAX86178_ECG_RBIAS_50M - 50 MΩ
-          - 1 # MAX86178_ECG_RBIAS_100M - 100 MΩ
-          - 2 # MAX86178_ECG_RBIAS_200M - 200 MΩ
+          - 0 # MAX86178_DT_ECG_RBIAS_50M - 50 MΩ
+          - 1 # MAX86178_DT_ECG_RBIAS_100M - 100 MΩ
+          - 2 # MAX86178_DT_ECG_RBIAS_200M - 200 MΩ
 
       en-ecg-rbias-p:
         type: int
         description: Enable positive electrode bias resistor
         enum:
-          - 0 # MAX86178_EN_ECG_RBIAS_DISCONNECTED
-          - 1 # MAX86178_EN_ECG_RBIAS_CONNECTED
+          - 0 # MAX86178_DT_EN_ECG_RBIAS_DISCONNECTED
+          - 1 # MAX86178_DT_EN_ECG_RBIAS_CONNECTED
 
       en-ecg-rbias-n:
         type: int
         description: Enable negative electrode bias resistor
         enum:
-          - 0 # MAX86178_EN_ECG_RBIAS_DISCONNECTED
-          - 1 # MAX86178_EN_ECG_RBIAS_CONNECTED
+          - 0 # MAX86178_DT_EN_ECG_RBIAS_DISCONNECTED
+          - 1 # MAX86178_DT_EN_ECG_RBIAS_CONNECTED
 
       # ---------------------------------------------------------------------------
         # Properties for rld node
@@ -861,52 +861,52 @@ child-binding:
         type: int
         description: Enable right leg drive
         enum:
-          - 0 # MAX86178_RLD_DISABLED
-          - 1 # MAX86178_RLD_ENABLED
+          - 0 # MAX86178_DT_RLD_DISABLED
+          - 1 # MAX86178_DT_RLD_ENABLED
 
       rld-mode:
         type: int
         description: RLD operating mode
         enum:
-          - 0 # MAX86178_RLD_MODE_OPEN_LOOP
-          - 1 # MAX86178_RLD_MODE_CLOSED_LOOP
+          - 0 # MAX86178_DT_RLD_MODE_OPEN_LOOP
+          - 1 # MAX86178_DT_RLD_MODE_CLOSED_LOOP
 
       rld-rbias:
         type: int
         description: RLD bias voltage source
         enum:
-          - 0 # MAX86178_RLD_RBIAS_VMID
-          - 1 # MAX86178_RLD_RBIAS_VRLD
+          - 0 # MAX86178_DT_RLD_RBIAS_VMID
+          - 1 # MAX86178_DT_RLD_RBIAS_VRLD
 
       en-rld-oor:
         type: int
         description: Enable RLD out-of-range detection
         enum:
-          - 0 # MAX86178_EN_RLD_OOR_DISABLED
-          - 1 # MAX86178_EN_RLD_OOR_ENABLED
+          - 0 # MAX86178_DT_EN_RLD_OOR_DISABLED
+          - 1 # MAX86178_DT_EN_RLD_OOR_ENABLED
 
       actv-cm-p:
         type: int
         description: Active common-mode positive electrode
         enum:
-          - 0 # MAX86178_ECG_ACTV_CM_DISABLED
-          - 1 # MAX86178_ECG_ACTV_CM_ENABLED
+          - 0 # MAX86178_DT_ECG_ACTV_CM_DISABLED
+          - 1 # MAX86178_DT_ECG_ACTV_CM_ENABLED
 
       actv-cm-n:
         type: int
         description: Active common-mode negative electrode
         enum:
-          - 0 # MAX86178_ECG_ACTV_CM_DISABLED
-          - 1 # MAX86178_ECG_ACTV_CM_ENABLED
+          - 0 # MAX86178_DT_ECG_ACTV_CM_DISABLED
+          - 1 # MAX86178_DT_ECG_ACTV_CM_ENABLED
 
       rld-gain:
         type: int
         description: RLD amplifier gain
         enum:
-          - 0 # MAX86178_RLD_GAIN_12
-          - 1 # MAX86178_RLD_GAIN_24
-          - 2 # MAX86178_RLD_GAIN_48
-          - 3 # MAX86178_RLD_GAIN_97
+          - 0 # MAX86178_DT_RLD_GAIN_12
+          - 1 # MAX86178_DT_RLD_GAIN_24
+          - 2 # MAX86178_DT_RLD_GAIN_48
+          - 3 # MAX86178_DT_RLD_GAIN_97
 
       rld-ext-res:
         type: boolean
@@ -944,76 +944,76 @@ child-binding:
         type: int
         description: Enable ECG/BioZ bandgap reference
         enum:
-          - 0 # MAX86178_ECG_BIOZ_BG_EN_DISABLED
-          - 1 # MAX86178_ECG_BIOZ_BG_EN_ENABLED
+          - 0 # MAX86178_DT_ECG_BIOZ_BG_EN_DISABLED
+          - 1 # MAX86178_DT_ECG_BIOZ_BG_EN_ENABLED
 
       bioz-en:
         type: int
         description: BioZ channel enable
         enum:
-          - 0 # MAX86178_BIOZ_EN_DISABLED
-          - 1 # MAX86178_BIOZ_EN_I_CHANNEL - I channel only
-          - 2 # MAX86178_BIOZ_EN_Q_CHANNEL - Q channel only
-          - 3 # MAX86178_BIOZ_EN_UTILITY - Utility mode
+          - 0 # MAX86178_DT_BIOZ_EN_DISABLED
+          - 1 # MAX86178_DT_BIOZ_EN_I_CHANNEL - I channel only
+          - 2 # MAX86178_DT_BIOZ_EN_Q_CHANNEL - Q channel only
+          - 3 # MAX86178_DT_BIOZ_EN_UTILITY - Utility mode
 
       bioz-dhpf:
         type: int
         description: BioZ digital high-pass filter
         enum:
-          - 0 # MAX86178_BIOZ_DHPF_BYPASS
-          - 1 # MAX86178_BIOZ_DHPF_0_00025
-          - 2 # MAX86178_BIOZ_DHPF_0_002
+          - 0 # MAX86178_DT_BIOZ_DHPF_BYPASS
+          - 1 # MAX86178_DT_BIOZ_DHPF_0_00025
+          - 2 # MAX86178_DT_BIOZ_DHPF_0_002
 
       bioz-dlpf:
         type: int
         description: BioZ digital low-pass filter
         enum:
-          - 0 # MAX86178_BIOZ_DLPF_BYPASS
-          - 1 # MAX86178_BIOZ_DLPF_0_005
-          - 2 # MAX86178_BIOZ_DLPF_0_02
-          - 3 # MAX86178_BIOZ_DLPF_0_08
-          - 4 # MAX86178_BIOZ_DLPF_0_25
+          - 0 # MAX86178_DT_BIOZ_DLPF_BYPASS
+          - 1 # MAX86178_DT_BIOZ_DLPF_0_005
+          - 2 # MAX86178_DT_BIOZ_DLPF_0_02
+          - 3 # MAX86178_DT_BIOZ_DLPF_0_08
+          - 4 # MAX86178_DT_BIOZ_DLPF_0_25
 
       en-bioz-thresh:
         type: int
         description: Enable BioZ threshold interrupts
         enum:
-          - 0 # MAX86178_EN_BIOZ_THRESH_DISABLED
-          - 1 # MAX86178_EN_BIOZ_THRESH_ENABLED
+          - 0 # MAX86178_DT_EN_BIOZ_THRESH_DISABLED
+          - 1 # MAX86178_DT_EN_BIOZ_THRESH_ENABLED
 
       bioz-ext-res:
         type: int
         description: BioZ external resistor
         enum:
-          - 0 # MAX86178_BIOZ_EXT_RES_INTERNAL
-          - 1 # MAX86178_BIOZ_EXT_RES_EXTERNAL
+          - 0 # MAX86178_DT_BIOZ_EXT_RES_INTERNAL
+          - 1 # MAX86178_DT_BIOZ_EXT_RES_EXTERNAL
 
       bioz-vdrv-mag:
         type: int
         description: BioZ voltage drive magnitude
         enum:
-          - 0 # MAX86178_BIOZ_VDRV_MAG_50mV
-          - 1 # MAX86178_BIOZ_VDRV_MAG_100mV
-          - 2 # MAX86178_BIOZ_VDRV_MAG_250mV
-          - 3 # MAX86178_BIOZ_VDRV_MAG_500mV
+          - 0 # MAX86178_DT_BIOZ_VDRV_MAG_50mV
+          - 1 # MAX86178_DT_BIOZ_VDRV_MAG_100mV
+          - 2 # MAX86178_DT_BIOZ_VDRV_MAG_250mV
+          - 3 # MAX86178_DT_BIOZ_VDRV_MAG_500mV
 
       bioz-idrv-rge:
         type: int
         description: BioZ current drive range
         enum:
-          - 0 # MAX86178_BIOZ_IDRV_RGE_552_5K
-          - 1 # MAX86178_BIOZ_IDRV_RGE_110_5K
-          - 2 # MAX86178_BIOZ_IDRV_RGE_5_525K
-          - 3 # MAX86178_BIOZ_IDRV_RGE_276_25
+          - 0 # MAX86178_DT_BIOZ_IDRV_RGE_552_5K
+          - 1 # MAX86178_DT_BIOZ_IDRV_RGE_110_5K
+          - 2 # MAX86178_DT_BIOZ_IDRV_RGE_5_525K
+          - 3 # MAX86178_DT_BIOZ_IDRV_RGE_276_25
 
       bioz-drv-mode:
         type: int
         description: BioZ drive mode
         enum:
-          - 0 # MAX86178_BIOZ_DRV_MODE_CURRENT - Current drive sine-wave
-          - 1 # MAX86178_BIOZ_DRV_MODE_VOLTAGE - Voltage drive sine-wave
-          - 2 # MAX86178_BIOZ_DRV_MODE_H_BRIDGE - H-Bridge alternating
-          - 3 # MAX86178_BIOZ_DRV_MODE_STANDBY - Standby low-power
+          - 0 # MAX86178_DT_BIOZ_DRV_MODE_CURRENT - Current drive sine-wave
+          - 1 # MAX86178_DT_BIOZ_DRV_MODE_VOLTAGE - Voltage drive sine-wave
+          - 2 # MAX86178_DT_BIOZ_DRV_MODE_H_BRIDGE - H-Bridge alternating
+          - 3 # MAX86178_DT_BIOZ_DRV_MODE_STANDBY - Standby low-power
 
       en-util-mode:
         type: boolean
@@ -1023,8 +1023,8 @@ child-binding:
         type: int
         description: BioZ DC code selection
         enum:
-          - 0 # MAX86178_BIOZ_DC_CODE_SEL_DDS - DDS DAC code
-          - 1 # MAX86178_BIOZ_DC_CODE_SEL_DC_CODE - DC DAC code
+          - 0 # MAX86178_DT_BIOZ_DC_CODE_SEL_DDS - DDS DAC code
+          - 1 # MAX86178_DT_BIOZ_DC_CODE_SEL_DC_CODE - DC DAC code
 
       bioz-dc-dac-code:
         type: int
@@ -1034,66 +1034,66 @@ child-binding:
         type: int
         description: BioZ analog high-pass filter
         enum:
-          - 0  # MAX86178_BIOZ_AHPF_100Hz
-          - 1  # MAX86178_BIOZ_AHPF_200Hz
-          - 2  # MAX86178_BIOZ_AHPF_500Hz
-          - 3  # MAX86178_BIOZ_AHPF_1000Hz
-          - 4  # MAX86178_BIOZ_AHPF_2000Hz
-          - 5  # MAX86178_BIOZ_AHPF_5000Hz
-          - 6  # MAX86178_BIOZ_AHPF_10000Hz
-          - 7  # MAX86178_BIOZ_AHPF_BYPASS
-          - 8  # MAX86178_BIOZ_AHPF_42_4M - 42.4MΩ
-          - 9  # MAX86178_BIOZ_AHPF_21_2M - 21.2MΩ
-          - 10 # MAX86178_BIOZ_AHPF_8_4M - 8.4MΩ
-          - 11 # MAX86178_BIOZ_AHPF_4_2M - 4.2MΩ
-          - 12 # MAX86178_BIOZ_AHPF_2_2M - 2.2MΩ
-          - 13 # MAX86178_BIOZ_AHPF_848K - 848kΩ
-          - 14 # MAX86178_BIOZ_AHPF_848K_2 - 848kΩ
-          - 15 # MAX86178_BIOZ_AHPF_BYPASS_2
+          - 0  # MAX86178_DT_BIOZ_AHPF_100Hz
+          - 1  # MAX86178_DT_BIOZ_AHPF_200Hz
+          - 2  # MAX86178_DT_BIOZ_AHPF_500Hz
+          - 3  # MAX86178_DT_BIOZ_AHPF_1000Hz
+          - 4  # MAX86178_DT_BIOZ_AHPF_2000Hz
+          - 5  # MAX86178_DT_BIOZ_AHPF_5000Hz
+          - 6  # MAX86178_DT_BIOZ_AHPF_10000Hz
+          - 7  # MAX86178_DT_BIOZ_AHPF_BYPASS
+          - 8  # MAX86178_DT_BIOZ_AHPF_42_4M - 42.4MΩ
+          - 9  # MAX86178_DT_BIOZ_AHPF_21_2M - 21.2MΩ
+          - 10 # MAX86178_DT_BIOZ_AHPF_8_4M - 8.4MΩ
+          - 11 # MAX86178_DT_BIOZ_AHPF_4_2M - 4.2MΩ
+          - 12 # MAX86178_DT_BIOZ_AHPF_2_2M - 2.2MΩ
+          - 13 # MAX86178_DT_BIOZ_AHPF_848K - 848kΩ
+          - 14 # MAX86178_DT_BIOZ_AHPF_848K_2 - 848kΩ
+          - 15 # MAX86178_DT_BIOZ_AHPF_BYPASS_2
 
       bioz-ina-mode:
         type: int
         description: BioZ INA power mode
         enum:
-          - 0 # MAX86178_BIOZ_INA_MODE_HIGH_POWER - High-power low-noise
-          - 1 # MAX86178_BIOZ_INA_MODE_LOW_POWER
+          - 0 # MAX86178_DT_BIOZ_INA_MODE_HIGH_POWER - High-power low-noise
+          - 1 # MAX86178_DT_BIOZ_INA_MODE_LOW_POWER
 
       bioz-dm-dis:
         type: int
         description: BioZ demodulation disable
         enum:
-          - 0 # MAX86178_BIOZ_DM_ENABLED
-          - 1 # MAX86178_BIOZ_DM_DISABLED
+          - 0 # MAX86178_DT_BIOZ_DM_ENABLED
+          - 1 # MAX86178_DT_BIOZ_DM_DISABLED
 
       bioz-gain:
         type: int
         description: BioZ gain
         enum:
-          - 0 # MAX86178_BIOZ_GAIN_1
-          - 1 # MAX86178_BIOZ_GAIN_2
-          - 2 # MAX86178_BIOZ_GAIN_5
-          - 3 # MAX86178_BIOZ_GAIN_10
+          - 0 # MAX86178_DT_BIOZ_GAIN_1
+          - 1 # MAX86178_DT_BIOZ_GAIN_2
+          - 2 # MAX86178_DT_BIOZ_GAIN_5
+          - 3 # MAX86178_DT_BIOZ_GAIN_10
 
       bioz-ext-cap:
         type: int
         description: BioZ external capacitor
         enum:
-          - 0 # MAX86178_BIOZ_EXT_CAP_INTERNAL - Internal switch shorts pins
-          - 1 # MAX86178_BIOZ_EXT_CAP_EXTERNAL - External cap, switch open
+          - 0 # MAX86178_DT_BIOZ_EXT_CAP_INTERNAL - Internal switch shorts pins
+          - 1 # MAX86178_DT_BIOZ_EXT_CAP_EXTERNAL - External cap, switch open
 
       bioz-dc-restore:
         type: int
         description: BioZ DC restore switch
         enum:
-          - 0 # MAX86178_BIOZ_DC_RESTORE_SWITCH_OPEN
-          - 1 # MAX86178_BIOZ_DC_RESTORE_SWITCH_CLOSED
+          - 0 # MAX86178_DT_BIOZ_DC_RESTORE_SWITCH_OPEN
+          - 1 # MAX86178_DT_BIOZ_DC_RESTORE_SWITCH_CLOSED
 
       bioz-drv-reset:
         type: int
         description: BioZ drive reset switch
         enum:
-          - 0 # MAX86178_BIOZ_DRV_RESET_SWITCH_OPEN
-          - 1 # MAX86178_BIOZ_DRV_RESET_SWITCH_CLOSED
+          - 0 # MAX86178_DT_BIOZ_DRV_RESET_SWITCH_OPEN
+          - 1 # MAX86178_DT_BIOZ_DRV_RESET_SWITCH_CLOSED
 
       bioz-dac-reset:
         type: boolean
@@ -1103,19 +1103,19 @@ child-binding:
         type: int
         description: BioZ amplifier range
         enum:
-          - 0 # MAX86178_BIOZ_AMP_RGE_LOW
-          - 1 # MAX86178_BIOZ_AMP_RGE_MEDIUM_LOW
-          - 2 # MAX86178_BIOZ_AMP_RGE_MEDIUM_HIGH
-          - 3 # MAX86178_BIOZ_AMP_RGE_HIGH
+          - 0 # MAX86178_DT_BIOZ_AMP_RGE_LOW
+          - 1 # MAX86178_DT_BIOZ_AMP_RGE_MEDIUM_LOW
+          - 2 # MAX86178_DT_BIOZ_AMP_RGE_MEDIUM_HIGH
+          - 3 # MAX86178_DT_BIOZ_AMP_RGE_HIGH
 
       bioz-amp-bw:
         type: int
         description: BioZ amplifier bandwidth
         enum:
-          - 0 # MAX86178_BIOZ_AMP_BW_LOW
-          - 1 # MAX86178_BIOZ_AMP_BW_MEDIUM_LOW
-          - 2 # MAX86178_BIOZ_AMP_BW_MEDIUM_HIGH
-          - 3 # MAX86178_BIOZ_AMP_BW_HIGH
+          - 0 # MAX86178_DT_BIOZ_AMP_BW_LOW
+          - 1 # MAX86178_DT_BIOZ_AMP_BW_MEDIUM_LOW
+          - 2 # MAX86178_DT_BIOZ_AMP_BW_MEDIUM_HIGH
+          - 3 # MAX86178_DT_BIOZ_AMP_BW_HIGH
 
       rld-sel-bioz:
         type: boolean
@@ -1125,50 +1125,50 @@ child-binding:
         type: int
         description: BioZ RLD drive source
         enum:
-          - 0 # MAX86178_BIOZ_RLD_DRV_VMID_TX
-          - 1 # MAX86178_BIOZ_RLD_DRV_VRLD
+          - 0 # MAX86178_DT_BIOZ_RLD_DRV_VMID_TX
+          - 1 # MAX86178_DT_BIOZ_RLD_DRV_VRLD
 
       bioz-cmres-dis:
         type: int
         description: BioZ common-mode resistor
         enum:
-          - 0 # MAX86178_BIOZ_CMRES_DIS_100M - 100MΩ
-          - 1 # MAX86178_BIOZ_CMRES_DIS_0 - Disabled
+          - 0 # MAX86178_DT_BIOZ_CMRES_DIS_100M - 100MΩ
+          - 1 # MAX86178_DT_BIOZ_CMRES_DIS_0 - Disabled
 
       bioz-stbyon:
         type: int
         description: BioZ standby enable
         enum:
-          - 0 # MAX86178_BIOZ_STBYON_DISABLED
-          - 1 # MAX86178_BIOZ_STBYON_ENABLED
+          - 0 # MAX86178_DT_BIOZ_STBYON_DISABLED
+          - 1 # MAX86178_DT_BIOZ_STBYON_ENABLED
 
       bioz-ipol:
         type: int
         description: BioZ current polarity
         enum:
-          - 0 # MAX86178_BIOZ_IPOL_NON_INVERTED
-          - 1 # MAX86178_BIOZ_IPOL_INVERTED
+          - 0 # MAX86178_DT_BIOZ_IPOL_NON_INVERTED
+          - 1 # MAX86178_DT_BIOZ_IPOL_INVERTED
 
       bioz-fast:
         type: int
         description: BioZ fast start mode
         enum:
-          - 0 # MAX86178_BIOZ_FAST_NORMAL
-          - 1 # MAX86178_BIOZ_FAST_START_ENABLED
+          - 0 # MAX86178_DT_BIOZ_FAST_NORMAL
+          - 1 # MAX86178_DT_BIOZ_FAST_START_ENABLED
 
       bioz-ina-chop-en:
         type: int
         description: BioZ INA chopper enable
         enum:
-          - 0 # MAX86178_BIOZ_INA_CHOP_DISABLED
-          - 1 # MAX86178_BIOZ_INA_CHOP_ENABLED
+          - 0 # MAX86178_DT_BIOZ_INA_CHOP_DISABLED
+          - 1 # MAX86178_DT_BIOZ_INA_CHOP_ENABLED
 
       bioz-ch-fsel:
         type: int
         description: BioZ chopper frequency select
         enum:
-          - 0 # MAX86178_BIOZ_CH_FSEL_50KHZ
-          - 1 # MAX86178_BIOZ_CH_FSEL_25KHZ
+          - 0 # MAX86178_DT_BIOZ_CH_FSEL_50KHZ
+          - 1 # MAX86178_DT_BIOZ_CH_FSEL_25KHZ
 
       bioz-lo-thresh:
         type: int
@@ -1185,17 +1185,17 @@ child-binding:
         type: int
         description: BioZ mux resistor selection
         enum:
-          - 0 # MAX86178_BMUX_RSEL_5000_OHM
-          - 1 # MAX86178_BMUX_RSEL_800_OHM
-          - 2 # MAX86178_BMUX_RSEL_500_OHM
-          - 3 # MAX86178_BMUX_RSEL_200_OHM
+          - 0 # MAX86178_DT_BMUX_RSEL_5000_OHM
+          - 1 # MAX86178_DT_BMUX_RSEL_800_OHM
+          - 2 # MAX86178_DT_BMUX_RSEL_500_OHM
+          - 3 # MAX86178_DT_BMUX_RSEL_200_OHM
 
       bmux-bist-en:
         type: int
         description: BioZ built-in self-test enable
         enum:
-          - 0 # MAX86178_BMUX_BIST_DISABLED
-          - 1 # MAX86178_BMUX_BIST_ENABLED
+          - 0 # MAX86178_DT_BMUX_BIST_DISABLED
+          - 1 # MAX86178_DT_BMUX_BIST_ENABLED
 
       connect-cal-only:
         type: boolean
@@ -1213,49 +1213,49 @@ child-binding:
         type: int
         description: GSR (galvanic skin response) resistor selection
         enum:
-          - 0 # MAX86178_BMUX_GSR_RSEL_25K
-          - 1 # MAX86178_BMUX_GSR_RSEL_100K
-          - 2 # MAX86178_BMUX_GSR_RSEL_500K
-          - 3 # MAX86178_BMUX_GSR_RSEL_1000K
+          - 0 # MAX86178_DT_BMUX_GSR_RSEL_25K
+          - 1 # MAX86178_DT_BMUX_GSR_RSEL_100K
+          - 2 # MAX86178_DT_BMUX_GSR_RSEL_500K
+          - 3 # MAX86178_DT_BMUX_GSR_RSEL_1000K
 
       gsr-load-en:
         type: int
         description: GSR load enable
         enum:
-          - 0 # MAX86178_GSR_LOAD_DISABLED
-          - 1 # MAX86178_GSR_LOAD_ENABLED
+          - 0 # MAX86178_DT_GSR_LOAD_DISABLED
+          - 1 # MAX86178_DT_GSR_LOAD_ENABLED
 
       en-ext-inload:
         type: int
         description: Enable external input load
         enum:
-          - 0 # MAX86178_EN_EXT_INLOAD_DISABLED
-          - 1 # MAX86178_EN_EXT_INLOAD_ENABLED
+          - 0 # MAX86178_DT_EN_EXT_INLOAD_DISABLED
+          - 1 # MAX86178_DT_EN_EXT_INLOAD_ENABLED
 
       en-int-inload:
         type: int
         description: Enable internal input load
         enum:
-          - 0 # MAX86178_EN_INT_INLOAD_DISABLED
-          - 1 # MAX86178_EN_INT_INLOAD_ENABLED
+          - 0 # MAX86178_DT_EN_INT_INLOAD_DISABLED
+          - 1 # MAX86178_DT_EN_INT_INLOAD_ENABLED
 
       bip-assign:
         type: int
         description: BioZ positive input assignment
         enum:
-          - 0 # MAX86178_BIOZ_BIP_ASSIGN_EL1
-          - 1 # MAX86178_BIOZ_BIP_ASSIGN_EL2A
-          - 2 # MAX86178_BIOZ_BIP_ASSIGN_EL2B
-          - 3 # MAX86178_BIOZ_BIP_ASSIGN_UTILITY_ADC
+          - 0 # MAX86178_DT_BIOZ_BIP_ASSIGN_EL1
+          - 1 # MAX86178_DT_BIOZ_BIP_ASSIGN_EL2A
+          - 2 # MAX86178_DT_BIOZ_BIP_ASSIGN_EL2B
+          - 3 # MAX86178_DT_BIOZ_BIP_ASSIGN_UTILITY_ADC
 
       bin-assign:
         type: int
         description: BioZ negative input assignment
         enum:
-          - 0 # MAX86178_BIOZ_BIN_ASSIGN_EL4
-          - 1 # MAX86178_BIOZ_BIN_ASSIGN_EL3A
-          - 2 # MAX86178_BIOZ_BIN_ASSIGN_EL3B
-          - 3 # MAX86178_BIOZ_BIN_ASSIGN_UTILITY_ADC
+          - 0 # MAX86178_DT_BIOZ_BIN_ASSIGN_EL4
+          - 1 # MAX86178_DT_BIOZ_BIN_ASSIGN_EL3A
+          - 2 # MAX86178_DT_BIOZ_BIN_ASSIGN_EL3B
+          - 3 # MAX86178_DT_BIOZ_BIN_ASSIGN_UTILITY_ADC
 
       drvp-assign:
         type: int
@@ -1276,29 +1276,29 @@ child-binding:
         type: int
         description: Enable BioZ lead-on detection
         enum:
-          - 0 # MAX86178_EN_BIOZ_LON_DISABLED
-          - 1 # MAX86178_EN_BIOZ_LON_ENABLED
+          - 0 # MAX86178_DT_EN_BIOZ_LON_DISABLED
+          - 1 # MAX86178_DT_EN_BIOZ_LON_ENABLED
 
       en-bioz-loff:
         type: int
         description: Enable BioZ lead-off detection
         enum:
-          - 0 # MAX86178_EN_BIOZ_LOFF_DISABLED
-          - 1 # MAX86178_EN_BIOZ_LOFF_ENABLED
+          - 0 # MAX86178_DT_EN_BIOZ_LOFF_DISABLED
+          - 1 # MAX86178_DT_EN_BIOZ_LOFF_ENABLED
 
       en-ext-bioz-loff:
         type: int
         description: BioZ external lead-off
         enum:
-          - 0 # MAX86178_EN_EXT_BIOZ_LOFF_INTERNAL
-          - 1 # MAX86178_EN_EXT_BIOZ_LOFF_EXTERNAL
+          - 0 # MAX86178_DT_EN_EXT_BIOZ_LOFF_INTERNAL
+          - 1 # MAX86178_DT_EN_EXT_BIOZ_LOFF_EXTERNAL
 
       en-bioz-drv-oor:
         type: int
         description: Enable BioZ drive out-of-range detection
         enum:
-          - 0 # MAX86178_EN_BIOZ_DRV_OOR_DISABLED
-          - 1 # MAX86178_EN_BIOZ_DRV_OOR_ENABLED
+          - 0 # MAX86178_DT_EN_BIOZ_DRV_OOR_DISABLED
+          - 1 # MAX86178_DT_EN_BIOZ_DRV_OOR_ENABLED
 
       bioz-loff-ipol:
         type: boolean
@@ -1335,6 +1335,6 @@ child-binding:
         type: int
         description: BioZ bias resistor value
         enum:
-          - 0 # MAX86178_BIOZ_RBIAS_50M - 50 MΩ
-          - 1 # MAX86178_BIOZ_RBIAS_100M - 100 MΩ
-          - 2 # MAX86178_BIOZ_RBIAS_200M - 200 MΩ
+          - 0 # MAX86178_DT_BIOZ_RBIAS_50M - 50 MΩ
+          - 1 # MAX86178_DT_BIOZ_RBIAS_100M - 100 MΩ
+          - 2 # MAX86178_DT_BIOZ_RBIAS_200M - 200 MΩ
