@@ -13,7 +13,157 @@ description: |
   - PPG with up to 6 measurement slots
   - ECG with calibration, lead detection, and RLD
   - BioZ with calibration and lead detection
+  - System-level settings like FIFO configuration and timing data output
   - Respiration monitoring
+
+  Overlay Structure:
+
+  The overlay file should follow this hierarchical node structure:
+
+    &parent_bus {           // Parent bus: &spi1 or &i2c0
+      max86178@XX {         // Sensor node (address depends on interface)
+        compatible = "..."; // Required: "adi,max86178"
+        reg = <...>;        // Required: SPI chip select or I2C address
+
+        // Optional top-level nodes (all are child nodes of max86178):
+        clk { }             // Clock configuration (contains: osc, ppg, ecg, bioz)
+        fifo { }            // FIFO configuration (flat properties only)
+        sys-cfg { }         // System configuration (flat properties only)
+        ppg { }             // PPG configuration (contains: meas_1-6, threshold)
+        ecg { }             // ECG configuration (contains: setup, calibration, lead_detect, lead_bias, rld)
+        bioz { }            // BioZ configuration (contains: setup, calibration, lead_detect, lead_bias)
+        resp { }            // Respiration configuration (flat properties only)
+      };
+    };
+
+  Example overlay implementation (SPI):
+
+    #include <zephyr/dt-bindings/sensor/max86178.h>
+
+    &spi1 {                                    // Or &i2c0 for I2C interface
+      max86178@0 {                             // SPI chip select 0 (or @6d for I2C address 0x6d)
+        compatible = "adi,max86178";
+        reg = <0x0>;                           // SPI chip select (or <0x6d> for I2C)
+        spi-max-frequency = <1000000>;         // Only needed for SPI
+        int1-gpios = <&gpio0 24 GPIO_ACTIVE_LOW>;
+
+        // Clock Configuration Block
+        clk {
+          osc {                                // Oscillator settings
+            ref-clk-sel = <MAX86178_DT_REF_CLK_SEL_INTERNAL>;
+            clk-freq-sel = <MAX86178_DT_REF_CLK_32768>;
+          };
+
+          ppg {                                // PPG clock divider
+            fr-clk-div = <5>;
+          };
+
+          ecg {                                // ECG clock settings
+            ecg-dec-rate = <MAX86178_DT_ECG_DEC_RATE_512>;
+          };
+
+          bioz {                               // BioZ clock settings
+            bioz-kdiv = <MAX86178_DT_BIOZ_KDIV_8>;
+            bioz-ndiv = <MAX86178_DT_BIOZ_NDIV_1024>;
+            bioz-adc-osr = <MAX86178_DT_BIOZ_ADC_OSR_256>;
+          };
+        };
+
+        // FIFO Configuration Block
+        fifo {
+          fifo-rollover-en;                    // Boolean properties don't need values
+          fifo-watermark = <150>;
+        };
+
+        // System Configuration Block
+        sys-cfg {
+          ecg-ppg-timing-data-en;              // Enable timing data in FIFO
+        };
+
+        // PPG Configuration Block
+        ppg {
+          meas1-en;                            // Enable measurement slot 1
+          ppg1-pwrdn = <MAX86178_DT_PPG_CHAN_ENABLED>;
+          smp-ave = <MAX86178_DT_SMP_AVE_4>;
+
+          meas_1 {                             // Measurement slot 1 configuration
+            drva = <MAX86178_DT_PPG_DRVA_LED1_DRV>;
+            avg-num = <MAX86178_DT_PPG_AVG_NUM_2>;
+            ppg1-adc-rge = <MAX86178_DT_PPG_ADC_RGE_16uA>;
+          };
+
+          threshold {                          // Threshold configuration
+            thresh1-meas-sel = <MAX86178_DT_PPG_THRESH_MEAS1>;
+          };
+        };
+
+        // ECG Configuration Block
+        ecg {
+          setup {                              // ECG setup configuration
+            ecg-en;
+            ecg-pga-gain = <MAX86178_DT_ECG_PGA_GAIN_4>;
+          };
+
+          calibration {                        // ECG calibration settings
+            ecg-cal-en = <MAX86178_DT_ECG_CAL_ENABLED>;
+          };
+
+          lead_detect {                        // Lead detection settings
+            en-ecg-loff = <MAX86178_DT_ECG_LOFF_ENABLED>;
+          };
+
+          lead_bias {                          // Lead bias settings
+            en-ecg-rbias-p = <MAX86178_DT_EN_ECG_RBIAS_CONNECTED>;
+          };
+
+          rld {                                // Right leg drive settings
+            rld-en = <MAX86178_DT_RLD_ENABLED>;
+          };
+        };
+
+        // BioZ Configuration Block
+        bioz {
+          setup {                              // BioZ setup configuration
+            bioz-en = <MAX86178_DT_BIOZ_EN_Q_CHANNEL>;
+            bioz-vdrv-mag = <MAX86178_DT_BIOZ_VDRV_MAG_250mV>;
+            bioz-gain = <MAX86178_DT_BIOZ_GAIN_1>;
+          };
+
+          calibration {                        // BioZ calibration settings
+            bioz-mux-en;
+          };
+
+          lead_detect {                        // BioZ lead detection
+            en-bioz-loff = <MAX86178_DT_EN_BIOZ_LOFF_DISABLED>;
+          };
+
+          lead_bias {                          // BioZ lead bias
+            en-bioz-rbias-p;
+          };
+        };
+
+        // Respiration Configuration Block
+        resp {
+          cg-mode = <1>;
+        };
+      };
+    };
+
+  Key Structure Rules:
+  1. Include the dt-bindings header at the top: #include <zephyr/dt-bindings/sensor/max86178.h>
+  2. Reference the parent bus (&spi1 or &i2c0)
+  3. The sensor node must have: compatible = "adi,max86178" and reg property
+     - For SPI: add spi-max-frequency property
+     - For I2C: reg = (7-bit I2C address)
+  4. All functional blocks (clk, ppg, ecg, bioz, etc.) are direct children of the sensor node
+  5. Some blocks have sub-nodes (clk has osc/ppg/ecg/bioz, ecg has setup/calibration/etc.)
+  6. PPG measurement slots are named meas_1 through meas_6
+  7. Boolean properties are specified without values (e.g., fifo-rollover-en;)
+  8. Enum properties use the MAX86178_DT_ macros from the dt-bindings header
+
+  All enum properties support macros from dt-bindings/sensor/max86178.h.
+  The macro names follow the pattern MAX86178_DT_<PROPERTY>_<VALUE>.
+  See each property's enum comments for the corresponding dt-binding macro.
 
 include: sensor-device.yaml
 

@@ -207,7 +207,6 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD, fifo_data);
 					out[count].readings[0].value = sample_value;
 				} else if (channel.chan_type == SENSOR_CHAN_TIMING_BIOZ_PPG) {
-					/* For timing channel, decode the timing tag bits instead of sample value */
 					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD, fifo_data);
 					out[count].readings[0].value = sample_value;
 				}
