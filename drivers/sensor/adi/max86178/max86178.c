@@ -54,7 +54,7 @@ static int max86178_reg_access_spi(const struct device *dev, bool read, uint8_t 
 	int ret;
 
 	addr_buf[0] = reg_addr;
-	addr_buf[1] = read ? BIT(7) : 0; /* Set MSB for read operations */
+	addr_buf[1] = read ? MAX86178_SPI_READ_BIT : 0; /* Set MSB for read operations */
 
 	const struct spi_buf tx_bufs[] = {
 		{
@@ -119,6 +119,7 @@ int max86178_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask
 
 	ret = max86178_reg_read(dev, reg_addr, &reg_val, 1);
 	if (ret < 0) {
+		LOG_ERR("Failed to read register 0x%02X: %d", reg_addr, ret);
 		return ret;
 	}
 
@@ -151,6 +152,7 @@ static int max86178_chan_to_meas_idx(enum sensor_channel chan, uint8_t *meas_idx
 		*meas_idx = 5;
 		return 0;
 	default:
+		LOG_ERR("Unsupported channel type: %d", chan);
 		return -EINVAL;
 	}
 }
@@ -158,7 +160,7 @@ static int max86178_chan_to_meas_idx(enum sensor_channel chan, uint8_t *meas_idx
 /* Helper function to get the base register address for a measurement */
 static uint8_t max86178_meas_base_reg(uint8_t meas_idx)
 {
-	return MAX86178_MEAS1_SEL + (meas_idx * 8);
+	return MAX86178_MEAS1_SEL + (meas_idx * MAX86178_MEAS_REG_STRIDE);
 }
 
 /*******************************************************************************
@@ -168,7 +170,7 @@ static uint8_t max86178_meas_base_reg(uint8_t meas_idx)
 static int max86178_set_ppg_thresh1_hi(const struct device *dev, const struct sensor_value *val)
 {
 	int ret;
-	uint8_t thresh_hi = val->val1 & 0xFF;
+	uint8_t thresh_hi = val->val1 & MAX86178_BYTE_MASK;
 
 	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH1, &thresh_hi, 1);
 	if (ret < 0) {
@@ -198,7 +200,7 @@ static int max86178_get_ppg_thresh1_hi(const struct device *dev, struct sensor_v
 static int max86178_set_ppg_thresh1_lo(const struct device *dev, const struct sensor_value *val)
 {
 	int ret;
-	uint8_t thresh_lo = val->val1 & 0xFF;
+	uint8_t thresh_lo = val->val1 & MAX86178_BYTE_MASK;
 
 	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH1, &thresh_lo, 1);
 	if (ret < 0) {
@@ -228,7 +230,7 @@ static int max86178_get_ppg_thresh1_lo(const struct device *dev, struct sensor_v
 static int max86178_set_ppg_thresh2_hi(const struct device *dev, const struct sensor_value *val)
 {
 	int ret;
-	uint8_t thresh_hi = val->val1 & 0xFF;
+	uint8_t thresh_hi = val->val1 & MAX86178_BYTE_MASK;
 
 	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH2, &thresh_hi, 1);
 	if (ret < 0) {
@@ -258,7 +260,7 @@ static int max86178_get_ppg_thresh2_hi(const struct device *dev, struct sensor_v
 static int max86178_set_ppg_thresh2_lo(const struct device *dev, const struct sensor_value *val)
 {
 	int ret;
-	uint8_t thresh_lo = val->val1 & 0xFF;
+	uint8_t thresh_lo = val->val1 & MAX86178_BYTE_MASK;
 
 	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH2, &thresh_lo, 1);
 	if (ret < 0) {
@@ -826,6 +828,7 @@ static int max86178_set_pd_bias(const struct device *dev, const struct sensor_va
 		mask = MAX86178_PD_BIAS_PD4_MSK;
 		break;
 	default:
+		LOG_ERR("Invalid PD number: %d", pd_num);
 		return -EINVAL;
 	}
 
@@ -864,6 +867,7 @@ static int max86178_get_pd_bias(const struct device *dev, struct sensor_value *v
 		mask = MAX86178_PD_BIAS_PD4_MSK;
 		break;
 	default:
+		LOG_ERR("Invalid PD number: %d", pd_num);
 		return -EINVAL;
 	}
 
@@ -895,6 +899,7 @@ static int ppg_adc_range_to_enum(int32_t microamps, uint8_t *enum_val)
 		*enum_val = MAX86178_PPG_ADC_RGE_32uA;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_adc_range_to_enum: %d", microamps);
 		return -EINVAL;
 	}
 }
@@ -915,6 +920,7 @@ static int ppg_adc_range_from_enum(uint8_t enum_val, int32_t *microamps)
 		*microamps = 32;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_adc_range_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -935,6 +941,7 @@ static int ppg_led_range_to_enum(int32_t microamps, uint8_t *enum_val)
 		*enum_val = MAX86178_PPG_LED_RGE_128mA;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_led_range_to_enum: %d", microamps);
 		return -EINVAL;
 	}
 }
@@ -955,6 +962,7 @@ static int ppg_led_range_from_enum(uint8_t enum_val, int32_t *microamps)
 		*microamps = 128000;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_led_range_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -978,6 +986,7 @@ static int smp_ave_to_enum(int32_t samples, uint8_t *enum_val)
 		*enum_val = MAX86178_SMP_AVE_16;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for smp_ave_to_enum: %d", samples);
 		return -EINVAL;
 	}
 }
@@ -1001,6 +1010,7 @@ static int smp_ave_from_enum(uint8_t enum_val, int32_t *samples)
 		*samples = 16;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for smp_ave_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1033,6 +1043,7 @@ static int ppg_avg_num_to_enum(int32_t samples, uint8_t *enum_val)
 		*enum_val = MAX86178_PPG_AVG_NUM_128;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_avg_num_to_enum: %d", samples);
 		return -EINVAL;
 	}
 }
@@ -1065,6 +1076,7 @@ static int ppg_avg_num_from_enum(uint8_t enum_val, int32_t *samples)
 		*samples = 128;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ppg_avg_num_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1085,6 +1097,7 @@ static int ecg_pga_gain_to_enum(int32_t gain, uint8_t *enum_val)
 		*enum_val = MAX86178_ECG_PGA_GAIN_8;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_pga_gain_to_enum: %d", gain);
 		return -EINVAL;
 	}
 }
@@ -1105,6 +1118,7 @@ static int ecg_pga_gain_from_enum(uint8_t enum_val, int32_t *gain)
 		*gain = 8;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_pga_gain_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1137,6 +1151,7 @@ static int ecg_loff_freq_to_enum(int32_t hz, uint8_t *enum_val)
 		*enum_val = MAX86178_ECG_LOFF_FREQ_256Hz;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_loff_freq_to_enum: %d", hz);
 		return -EINVAL;
 	}
 }
@@ -1169,6 +1184,7 @@ static int ecg_loff_freq_from_enum(uint8_t enum_val, int32_t *hz)
 		*hz = 256;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_loff_freq_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1201,6 +1217,7 @@ static int ecg_loff_imag_to_enum(int32_t nanoamps, uint8_t *enum_val)
 		*enum_val = MAX86178_ECG_LOFF_IMAG_400nA;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_loff_imag_to_enum: %d", nanoamps);
 		return -EINVAL;
 	}
 }
@@ -1233,6 +1250,7 @@ static int ecg_loff_imag_from_enum(uint8_t enum_val, int32_t *nanoamps)
 		*nanoamps = 400;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_loff_imag_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1265,6 +1283,7 @@ static int bioz_adc_osr_to_enum(int32_t osr, uint8_t *enum_val)
 		*enum_val = MAX86178_BIOZ_ADC_OSR_1024;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_adc_osr_to_enum: %d", osr);
 		return -EINVAL;
 	}
 }
@@ -1297,6 +1316,7 @@ static int bioz_adc_osr_from_enum(uint8_t enum_val, int32_t *osr)
 		*osr = 1024;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_adc_osr_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1317,6 +1337,7 @@ static int bioz_dac_osr_to_enum(int32_t osr, uint8_t *enum_val)
 		*enum_val = MAX86178_BIOZ_DAC_OSR_256;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_dac_osr_to_enum: %d", osr);
 		return -EINVAL;
 	}
 }
@@ -1337,6 +1358,7 @@ static int bioz_dac_osr_from_enum(uint8_t enum_val, int32_t *osr)
 		*osr = 256;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_dac_osr_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1357,6 +1379,7 @@ static int bioz_vdrv_mag_to_enum(int32_t microvolts, uint8_t *enum_val)
 		*enum_val = MAX86178_BIOZ_VDRV_MAG_500mV;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_vdrv_mag_to_enum: %d", microvolts);
 		return -EINVAL;
 	}
 }
@@ -1377,6 +1400,7 @@ static int bioz_vdrv_mag_from_enum(uint8_t enum_val, int32_t *microvolts)
 		*microvolts = 500000;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_vdrv_mag_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1421,6 +1445,7 @@ static int bioz_gain_from_enum(uint8_t enum_val, struct sensor_value *val)
 		val->val2 = 0;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_gain_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1438,6 +1463,7 @@ static int ecg_rbias_value_to_enum(int32_t megaohms, uint8_t *enum_val)
 		*enum_val = MAX86178_ECG_RBIAS_200M;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_rbias_value_to_enum: %d", megaohms);
 		return -EINVAL;
 	}
 }
@@ -1455,6 +1481,7 @@ static int ecg_rbias_value_from_enum(uint8_t enum_val, int32_t *megaohms)
 		*megaohms = 200;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for ecg_rbias_value_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1475,6 +1502,7 @@ static int rld_gain_to_enum(int32_t gain, uint8_t *enum_val)
 		*enum_val = MAX86178_RLD_GAIN_97;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for rld_gain_to_enum: %d", gain);
 		return -EINVAL;
 	}
 }
@@ -1495,6 +1523,7 @@ static int rld_gain_from_enum(uint8_t enum_val, int32_t *gain)
 		*gain = 97;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for rld_gain_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1512,6 +1541,7 @@ static int bioz_rbias_value_to_enum(int32_t megaohms, uint8_t *enum_val)
 		*enum_val = MAX86178_BIOZ_RBIAS_200M;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_rbias_value_to_enum: %d", megaohms);
 		return -EINVAL;
 	}
 }
@@ -1529,6 +1559,7 @@ static int bioz_rbias_value_from_enum(uint8_t enum_val, int32_t *megaohms)
 		*megaohms = 200;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bioz_rbias_value_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1549,6 +1580,7 @@ static int bmux_rsel_to_enum(int32_t ohms, uint8_t *enum_val)
 		*enum_val = MAX86178_BMUX_RSEL_5000_OHM;
 		return 0;
 	default:
+		LOG_ERR("Invalid BMUX RSEL value: %d (valid: 200, 500, 800, 5000)", ohms);
 		return -EINVAL;
 	}
 }
@@ -1569,6 +1601,7 @@ static int bmux_rsel_from_enum(uint8_t enum_val, int32_t *ohms)
 		*ohms = 5000;
 		return 0;
 	default:
+		LOG_ERR("Invalid BMUX RSEL enum value: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1589,6 +1622,7 @@ static int bmux_gsr_rsel_to_enum(int32_t kiloohms, uint8_t *enum_val)
 		*enum_val = MAX86178_BMUX_GSR_RSEL_1000K;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bmux_gsr_rsel_to_enum: %d", kiloohms);
 		return -EINVAL;
 	}
 }
@@ -1609,6 +1643,7 @@ static int bmux_gsr_rsel_from_enum(uint8_t enum_val, int32_t *kiloohms)
 		*kiloohms = 1000;
 		return 0;
 	default:
+		LOG_ERR("Invalid value for bmux_gsr_rsel_from_enum: %d", enum_val);
 		return -EINVAL;
 	}
 }
@@ -1647,6 +1682,7 @@ static int max86178_get_smp_ave(const struct device *dev, struct sensor_value *v
 
 	ret = smp_ave_from_enum(FIELD_GET(MAX86178_PPG_CFG3_SMP_AVE_MSK, reg_val), &samples);
 	if (ret < 0) {
+		LOG_ERR("Failed to convert sample average enum: %d", ret);
 		return ret;
 	}
 
@@ -1669,6 +1705,7 @@ static int max86178_set_ppg_drva(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel for DRVA set: %d", chan);
 		return ret;
 	}
 
@@ -1693,6 +1730,7 @@ static int max86178_get_ppg_drva(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel for DRVA get: %d", chan);
 		return ret;
 	}
 
@@ -1722,6 +1760,7 @@ static int max86178_set_ppg_drvb(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel for DRVB set: %d", chan);
 		return ret;
 	}
 
@@ -1746,6 +1785,7 @@ static int max86178_get_ppg_drvb(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel for DRVB get: %d", chan);
 		return ret;
 	}
 
@@ -1776,6 +1816,7 @@ static int max86178_set_ppg_drva_pa(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1800,6 +1841,7 @@ static int max86178_get_ppg_drva_pa(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1831,6 +1873,7 @@ static int max86178_set_ppg_drvb_pa(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1855,6 +1898,7 @@ static int max86178_get_ppg_drvb_pa(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1886,6 +1930,7 @@ static int max86178_set_ppg_amb_mode(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1909,6 +1954,7 @@ static int max86178_get_ppg_amb_mode(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1941,6 +1987,7 @@ static int max86178_set_ppg_avg_num(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1965,6 +2012,7 @@ static int max86178_get_ppg_avg_num(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -1977,6 +2025,7 @@ static int max86178_get_ppg_avg_num(const struct device *dev, enum sensor_channe
 
 	ret = ppg_avg_num_from_enum(FIELD_GET(MAX86178_MEAS_CFG1_AVER_MSK, reg_val), &samples);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -1999,6 +2048,7 @@ static int max86178_set_ppg_sinc3_sel(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2023,6 +2073,7 @@ static int max86178_get_ppg_sinc3_sel(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2052,6 +2103,7 @@ static int max86178_set_ppg_filt_sel(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2076,6 +2128,7 @@ static int max86178_get_ppg_filt_sel(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2105,6 +2158,7 @@ static int max86178_set_ppg_filt2_sel(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2129,6 +2183,7 @@ static int max86178_get_ppg_filt2_sel(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2158,6 +2213,7 @@ static int max86178_set_ppg_tint(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2182,6 +2238,7 @@ static int max86178_get_ppg_tint(const struct device *dev, enum sensor_channel c
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2214,6 +2271,7 @@ static int max86178_set_ppg1_adc_rge(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2238,6 +2296,7 @@ static int max86178_get_ppg1_adc_rge(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2251,6 +2310,7 @@ static int max86178_get_ppg1_adc_rge(const struct device *dev, enum sensor_chann
 	ret = ppg_adc_range_from_enum(FIELD_GET(MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK, reg_val),
 				      &microamps);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -2275,6 +2335,7 @@ static int max86178_set_ppg2_adc_rge(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2299,6 +2360,7 @@ static int max86178_get_ppg2_adc_rge(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2312,6 +2374,7 @@ static int max86178_get_ppg2_adc_rge(const struct device *dev, enum sensor_chann
 	ret = ppg_adc_range_from_enum(FIELD_GET(MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK, reg_val),
 				      &microamps);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -2334,6 +2397,7 @@ static int max86178_set_ppg1_dac_off(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2358,6 +2422,7 @@ static int max86178_get_ppg1_dac_off(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2387,6 +2452,7 @@ static int max86178_set_ppg2_dac_off(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2411,6 +2477,7 @@ static int max86178_get_ppg2_dac_off(const struct device *dev, enum sensor_chann
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2442,6 +2509,7 @@ static int max86178_set_ppg_led_rge(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2466,6 +2534,7 @@ static int max86178_get_ppg_led_rge(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2479,6 +2548,7 @@ static int max86178_get_ppg_led_rge(const struct device *dev, enum sensor_channe
 	ret = ppg_led_range_from_enum(FIELD_GET(MAX86178_MEAS_CFG4_LED_RGE_MSK, reg_val),
 				      &microamps);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -2502,6 +2572,7 @@ static int max86178_set_ppg_led_setlng(const struct device *dev, enum sensor_cha
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2526,6 +2597,7 @@ static int max86178_get_ppg_led_setlng(const struct device *dev, enum sensor_cha
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2555,6 +2627,7 @@ static int max86178_set_ppg_pd_setlng(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2579,6 +2652,7 @@ static int max86178_get_ppg_pd_setlng(const struct device *dev, enum sensor_chan
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2608,6 +2682,7 @@ static int max86178_set_ppg_pd1_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2632,6 +2707,7 @@ static int max86178_get_ppg_pd1_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2661,6 +2737,7 @@ static int max86178_set_ppg_pd2_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2685,6 +2762,7 @@ static int max86178_get_ppg_pd2_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2714,6 +2792,7 @@ static int max86178_set_ppg_pd3_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2738,6 +2817,7 @@ static int max86178_get_ppg_pd3_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2767,6 +2847,7 @@ static int max86178_set_ppg_pd4_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2791,6 +2872,7 @@ static int max86178_get_ppg_pd4_sel(const struct device *dev, enum sensor_channe
 
 	ret = max86178_chan_to_meas_idx(chan, &meas_idx);
 	if (ret < 0) {
+		LOG_ERR("Invalid channel: %d", chan);
 		return ret;
 	}
 
@@ -2878,6 +2960,7 @@ static int max86178_get_ecg_pga_gain(const struct device *dev, struct sensor_val
 
 	ret = ecg_pga_gain_from_enum(FIELD_GET(MAX86178_ECG_CFG2_ECG_PGA_GAIN_MSK, reg_val), &gain);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -3251,8 +3334,8 @@ static int max86178_set_ecg_cal_high(const struct device *dev, const struct sens
 		return -EINVAL;
 	}
 
-	msb = (uint8_t)((val->val1 >> 8) & 0x07);
-	lsb = (uint8_t)(val->val1 & 0xFF);
+	msb = (uint8_t)((val->val1 >> MAX86178_BITS_PER_BYTE) & MAX86178_NDIV_MSB_MASK);
+	lsb = (uint8_t)(val->val1 & MAX86178_BYTE_MASK);
 
 	ret = max86178_reg_update(dev, MAX86178_ECG_CAL_CFG1,
 				  MAX86178_ECG_CAL_CFG1_ECG_CAL_HIGH_MSB_MSK, msb);
@@ -3290,7 +3373,7 @@ static int max86178_get_ecg_cal_high(const struct device *dev, struct sensor_val
 		return ret;
 	}
 
-	val->val1 = ((uint16_t)msb << 8) | lsb;
+	val->val1 = ((uint16_t)msb << MAX86178_BITS_PER_BYTE) | lsb;
 	val->val2 = 0;
 	return 0;
 }
@@ -3670,6 +3753,7 @@ static int max86178_get_ecg_loff_freq(const struct device *dev, struct sensor_va
 	ret = ecg_loff_freq_from_enum(FIELD_GET(MAX86178_ECG_LEAD_CFG1_ECG_LOFF_FREQ_MSK, reg_val),
 				      &hz);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -3757,6 +3841,7 @@ static int max86178_get_ecg_loff_imag(const struct device *dev, struct sensor_va
 	ret = ecg_loff_imag_from_enum(FIELD_GET(MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IMAG_MSK, reg_val),
 				      &nanoamps);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -3842,6 +3927,7 @@ static int max86178_get_ecg_rbias_value(const struct device *dev, struct sensor_
 	ret = ecg_rbias_value_from_enum(
 		FIELD_GET(MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK, reg_val), &megaohms);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -4181,6 +4267,7 @@ static int max86178_get_rld_gain(const struct device *dev, struct sensor_value *
 	/* Convert enum to gain value */
 	ret = rld_gain_from_enum(FIELD_GET(MAX86178_RLD_CFG1_RLD_GAIN_MSK, reg_val), &gain);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -4380,6 +4467,7 @@ static int max86178_attr_get_bioz_adc_osr(const struct device *dev, struct senso
 	/* Convert enum to numeric OSR value */
 	ret = bioz_adc_osr_from_enum(FIELD_GET(MAX86178_BIOZ_CFG1_BIOZ_ADC_OSR_MSK, reg_val), &osr);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -4426,6 +4514,7 @@ static int max86178_attr_get_bioz_dac_osr(const struct device *dev, struct senso
 	/* Convert enum to numeric OSR value */
 	ret = bioz_dac_osr_from_enum(FIELD_GET(MAX86178_BIOZ_CFG1_BIOZ_DAC_OSR_MSK, reg_val), &osr);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -4666,6 +4755,7 @@ static int max86178_attr_get_bioz_vdrv_mag(const struct device *dev, struct sens
 	ret = bioz_vdrv_mag_from_enum(FIELD_GET(MAX86178_BIOZ_CFG3_BIOZ_VDRV_MAG_MSK, reg_val),
 				      &microvolts);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -4866,6 +4956,7 @@ static int max86178_attr_get_bioz_gain(const struct device *dev, struct sensor_v
 	/* Convert enum to gain value */
 	ret = bioz_gain_from_enum(FIELD_GET(MAX86178_BIOZ_CFG6_BIOZ_GAIN_MSK, reg_val), val);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -5528,8 +5619,8 @@ static int max86178_attr_set_bioz_lo_thresh(const struct device *dev,
 	}
 
 	/* Write 16-bit value (big-endian) */
-	reg_vals[0] = (uint8_t)((val->val1 >> 8) & 0xFF);
-	reg_vals[1] = (uint8_t)(val->val1 & 0xFF);
+	reg_vals[0] = (uint8_t)((val->val1 >> MAX86178_BITS_PER_BYTE) & MAX86178_BYTE_MASK);
+	reg_vals[1] = (uint8_t)(val->val1 & MAX86178_BYTE_MASK);
 	ret = max86178_reg_write(dev, MAX86178_BIOZ_LO_THRESH, reg_vals, 2);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ low threshold: %d", ret);
@@ -5551,7 +5642,7 @@ static int max86178_attr_get_bioz_lo_thresh(const struct device *dev, struct sen
 	}
 
 	/* Read 16-bit value (big-endian) */
-	val->val1 = ((uint16_t)reg_vals[0] << 8) | reg_vals[1];
+	val->val1 = ((uint16_t)reg_vals[0] << MAX86178_BITS_PER_BYTE) | reg_vals[1];
 	val->val2 = 0;
 	return 0;
 }
@@ -5570,8 +5661,8 @@ static int max86178_attr_set_bioz_hi_thresh(const struct device *dev,
 	}
 
 	/* Write 16-bit value (big-endian) */
-	reg_vals[0] = (uint8_t)((val->val1 >> 8) & 0xFF);
-	reg_vals[1] = (uint8_t)(val->val1 & 0xFF);
+	reg_vals[0] = (uint8_t)((val->val1 >> MAX86178_BITS_PER_BYTE) & MAX86178_BYTE_MASK);
+	reg_vals[1] = (uint8_t)(val->val1 & MAX86178_BYTE_MASK);
 	ret = max86178_reg_write(dev, MAX86178_BIOZ_HI_THRESH, reg_vals, 2);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ high threshold: %d", ret);
@@ -5593,7 +5684,7 @@ static int max86178_attr_get_bioz_hi_thresh(const struct device *dev, struct sen
 	}
 
 	/* Read 16-bit value (big-endian) */
-	val->val1 = ((uint16_t)reg_vals[0] << 8) | reg_vals[1];
+	val->val1 = ((uint16_t)reg_vals[0] << MAX86178_BITS_PER_BYTE) | reg_vals[1];
 	val->val2 = 0;
 	return 0;
 }
@@ -5791,6 +5882,7 @@ static int max86178_attr_get_bmux_rsel(const struct device *dev, struct sensor_v
 	/* Convert enum to ohm value */
 	ret = bmux_rsel_from_enum(FIELD_GET(MAX86178_BIOZ_MUX_CFG1_BMUX_RSEL_MSK, reg_val), &ohms);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -5950,6 +6042,7 @@ static int max86178_attr_get_bmux_gsr_rsel(const struct device *dev, struct sens
 	ret = bmux_gsr_rsel_from_enum(FIELD_GET(MAX86178_BIOZ_MUX_CFG2_BMUX_GSR_RSEL_MSK, reg_val),
 				      &kiloohms);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -6495,6 +6588,7 @@ static int max86178_attr_get_bioz_rbias_value(const struct device *dev, struct s
 	ret = bioz_rbias_value_from_enum(
 		FIELD_GET(MAX86178_BIOZ_LB_CFG1_BIOZ_RBIAS_VALUE_MSK, reg_val), &megaohms);
 	if (ret < 0) {
+		LOG_ERR("Enum conversion failed: %d", ret);
 		return ret;
 	}
 
@@ -7475,7 +7569,7 @@ static int max86178_get_mdiv(const struct device *dev, uint32_t *mdiv)
 		return ret;
 	}
 
-	*mdiv = FIELD_GET(MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val) << 8;
+	*mdiv = FIELD_GET(MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val) << MAX86178_BITS_PER_BYTE;
 
 	ret = max86178_reg_read(dev, MAX86178_PLL_CFG2, &reg_val, 1);
 	if (ret < 0) {
@@ -7540,7 +7634,8 @@ static int max86178_get_ecg_ndiv(const struct device *dev, uint32_t *ecg_ndiv)
 		return ret;
 	}
 
-	*ecg_ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val) << 8;
+	*ecg_ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val)
+		    << MAX86178_BITS_PER_BYTE;
 
 	ret = max86178_reg_read(dev, MAX86178_PLL_CFG5, &reg_val, 1);
 	if (ret < 0) {
@@ -7675,7 +7770,7 @@ static int max86178_get_pll_clk(const struct device *dev, uint32_t *pll_clk)
 		LOG_ERR("Failed to read MDIV MSB: %d", ret);
 		return ret;
 	}
-	mdiv |= FIELD_GET(MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val) << 8;
+	mdiv |= FIELD_GET(MAX86178_PLL_CFG1_MDIV_MSB_MSK, reg_val) << MAX86178_BITS_PER_BYTE;
 	mdiv = mdiv + 1; /* M = MDIV + 1 */
 
 	/* Read clock frequency selection */
@@ -7769,7 +7864,7 @@ static int max86178_get_ecg_adc_clk(const struct device *dev, uint32_t *ecg_adc_
 		LOG_ERR("Failed to read ECG NDIV and decimation rate: %d", ret);
 		return ret;
 	}
-	ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val) << 8;
+	ndiv = FIELD_GET(MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val) << MAX86178_BITS_PER_BYTE;
 
 	ret = max86178_reg_read(dev, MAX86178_PLL_CFG5, &reg_val, 1);
 	if (ret < 0) {
@@ -7937,7 +8032,7 @@ static int max86178_set_mdiv(const struct device *dev, uint16_t mdiv)
 		return ret;
 	}
 	/* Get LSB of mdiv */
-	reg_val = mdiv & 0xFF;
+	reg_val = mdiv & MAX86178_BYTE_MASK;
 	ret = max86178_reg_write(dev, MAX86178_PLL_CFG2, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set MDIV LSB: %d", ret);
@@ -7974,7 +8069,7 @@ static int max86178_set_ecg_ndiv(const struct device *dev, uint16_t ndiv)
 		return ret;
 	}
 	/* Get LSB of ndiv */
-	reg_val = ndiv & 0xFF;
+	reg_val = ndiv & MAX86178_BYTE_MASK;
 	ret = max86178_reg_write(dev, MAX86178_PLL_CFG5, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG NDIV LSB: %d", ret);
@@ -8485,7 +8580,7 @@ static int max86178_fr_clk_div_set(const struct device *dev, uint16_t fr_clk_div
 		return ret;
 	}
 
-	reg_val = fr_clk_div & 0xFF;
+	reg_val = fr_clk_div & MAX86178_BYTE_MASK;
 	ret = max86178_reg_write(dev, MAX86178_FR_CLK_DIV_LSB, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set FR_CLK_DIV LSB: %d", ret);
@@ -8593,7 +8688,7 @@ static int max86178_set_sequencer_meas_sel(const struct device *dev, uint8_t seq
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_SEL + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_SEL + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val =
 		FIELD_PREP(MAX86178_MEAS_SEL_DRVA_MSK, config->ppg_cfg.meas_cfg[seq_num - 1].drva) |
@@ -8613,7 +8708,7 @@ static int max86178_set_sequencer_meas_cfg1(const struct device *dev, uint8_t se
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG1 + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG1 + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = FIELD_PREP(MAX86178_MEAS_CFG1_AVER_MSK,
 			     config->ppg_cfg.meas_cfg[seq_num - 1].avg_num) |
@@ -8638,7 +8733,7 @@ static int max86178_set_sequencer_meas_cfg2(const struct device *dev, uint8_t se
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG2 + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG2 + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = FIELD_PREP(MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK,
 			     config->ppg_cfg.meas_cfg[seq_num - 1].ppg1_adc_rge) |
@@ -8657,7 +8752,7 @@ static int max86178_set_sequencer_meas_cfg3(const struct device *dev, uint8_t se
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG3 + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG3 + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = FIELD_PREP(MAX86178_MEAS_CFG3_PPG1_DACOFF_MSK,
 			     config->ppg_cfg.meas_cfg[seq_num - 1].ppg1_dac_off) |
@@ -8676,7 +8771,7 @@ static int max86178_set_sequencer_meas_cfg4(const struct device *dev, uint8_t se
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG4 + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG4 + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = FIELD_PREP(MAX86178_MEAS_CFG4_LED_RGE_MSK,
 			     config->ppg_cfg.meas_cfg[seq_num - 1].led_rge) |
@@ -8697,7 +8792,7 @@ static int max86178_set_sequencer_meas_cfg5(const struct device *dev, uint8_t se
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG5 + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_CFG5 + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = FIELD_PREP(MAX86178_MEAS_CFG5_PD1_SEL_MSK,
 			     config->ppg_cfg.meas_cfg[seq_num - 1].pd1_sel) |
@@ -8720,7 +8815,7 @@ static int max86178_set_sequencer_leda_current(const struct device *dev, uint8_t
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDA_PA + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDA_PA + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = config->ppg_cfg.meas_cfg[seq_num - 1].drva_pa;
 	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
@@ -8736,7 +8831,7 @@ static int max86178_set_sequencer_ledb_current(const struct device *dev, uint8_t
 	int ret = 0;
 	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
-	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDB_PA + ((seq_num - 1) * 8);
+	uint8_t seq_reg_addr = MAX86178_MEAS1_LEDB_PA + ((seq_num - 1) * MAX86178_MEAS_REG_STRIDE);
 
 	reg_val = config->ppg_cfg.meas_cfg[seq_num - 1].drvb_pa;
 	ret = max86178_reg_write(dev, seq_reg_addr, &reg_val, 1);
@@ -9065,7 +9160,8 @@ static int max86178_set_ecg_cal_cfg1(const struct device *dev)
 		  FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_FREQ_MSK,
 			     config->ecg_cfg.calibration.ecg_freq) |
 		  FIELD_PREP(MAX86178_ECG_CAL_CFG1_ECG_CAL_HIGH_MSB_MSK,
-			     (config->ecg_cfg.calibration.ecg_cal_high >> 8) & 0x07);
+			     (config->ecg_cfg.calibration.ecg_cal_high >> MAX86178_BITS_PER_BYTE) &
+				     MAX86178_NDIV_MSB_MASK);
 	ret = max86178_reg_write(dev, MAX86178_ECG_CAL_CFG1, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG calibration configuration: %d", ret);
@@ -9080,7 +9176,7 @@ static int max86178_set_ecg_cal_cfg2(const struct device *dev)
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val;
 
-	reg_val = config->ecg_cfg.calibration.ecg_cal_high & 0xFF;
+	reg_val = config->ecg_cfg.calibration.ecg_cal_high & MAX86178_BYTE_MASK;
 	ret = max86178_reg_write(dev, MAX86178_ECG_CAL_CFG2, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG calibration high byte: %d", ret);
@@ -10041,13 +10137,12 @@ static int max86178_init(const struct device *dev)
 /* Clock Oscillator Configuration */
 #define MAX86178_CLK_OSC_CFG(inst)                                                                 \
 	{                                                                                          \
-		.ref_clk = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc),             \
-				      ref_clk_sel, 0),                                             \
-		.clk_freq_sel = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc),        \
-					   clk_freq_sel, 0),                                       \
+		.ref_clk = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc), ref_clk_sel),  \
+		.clk_freq_sel =                                                                    \
+			DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc), clk_freq_sel),    \
 		.clk_fine_tune = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc),       \
 					    clk_fine_tune, 0),                                     \
-		.mdiv = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc), mdiv, 0),      \
+		.mdiv = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), osc), mdiv),            \
 	}
 
 /* PPG Clock Configuration */
@@ -10060,10 +10155,8 @@ static int max86178_init(const struct device *dev)
 /* ECG Clock Configuration */
 #define MAX86178_CLK_ECG_CFG(inst)                                                                 \
 	{                                                                                          \
-		.ecg_fdiv =                                                                        \
-			DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), ecg), ecg_fdiv, 0),  \
-		.ecg_ndiv =                                                                        \
-			DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), ecg), ecg_ndiv, 0),  \
+		.ecg_fdiv = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), ecg), ecg_fdiv),    \
+		.ecg_ndiv = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), ecg), ecg_ndiv),    \
 		.ecg_dec_rate = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), ecg),        \
 					   ecg_dec_rate, 0),                                       \
 	}
@@ -10071,10 +10164,8 @@ static int max86178_init(const struct device *dev)
 /* BioZ Clock Configuration */
 #define MAX86178_CLK_BIOZ_CFG(inst)                                                                \
 	{                                                                                          \
-		.bioz_kdiv = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz),          \
-					bioz_kdiv, 0),                                             \
-		.bioz_ndiv = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz),          \
-					bioz_ndiv, 0),                                             \
+		.bioz_kdiv = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz), bioz_kdiv), \
+		.bioz_ndiv = DT_PROP(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz), bioz_ndiv), \
 		.bioz_adc_osr = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz),       \
 					   bioz_adc_osr, 0),                                       \
 		.bioz_dac_osr = DT_PROP_OR(DT_CHILD(DT_CHILD(DT_DRV_INST(inst), clk), bioz),       \
@@ -10626,3 +10717,45 @@ static int max86178_init(const struct device *dev)
 				     CONFIG_SENSOR_INIT_PRIORITY, &max86178_api);
 
 DT_INST_FOREACH_STATUS_OKAY(MAX86178_DEFINE)
+
+/* Build-time validation of critical devicetree properties */
+#if DT_HAS_COMPAT_STATUS_OKAY(DT_DRV_COMPAT)
+
+#define MAX86178_INST_NODE DT_INST(0, DT_DRV_COMPAT)
+
+/* Validate clock/osc node properties */
+#if DT_NODE_EXISTS(DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), osc))
+#define OSC_NODE DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), osc)
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(OSC_NODE, mdiv), "clk/osc/mdiv is required for PLL configuration");
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(OSC_NODE, ref_clk_sel),
+	     "clk/osc/ref-clk-sel is required for clock source selection");
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(OSC_NODE, clk_freq_sel),
+	     "clk/osc/clk-freq-sel is required for reference clock frequency");
+#endif
+
+/* Validate clock/ecg node properties */
+#if DT_NODE_EXISTS(DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), ecg))
+#define ECG_CLK_NODE DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), ecg)
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(ECG_CLK_NODE, ecg_fdiv),
+	     "clk/ecg/ecg-fdiv is required when ECG clock is configured");
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(ECG_CLK_NODE, ecg_ndiv),
+	     "clk/ecg/ecg-ndiv is required when ECG clock is configured");
+#endif
+
+/* Validate clock/bioz node properties */
+#if DT_NODE_EXISTS(DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), bioz))
+#define BIOZ_CLK_NODE DT_CHILD(DT_CHILD(MAX86178_INST_NODE, clk), bioz)
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(BIOZ_CLK_NODE, bioz_kdiv),
+	     "clk/bioz/bioz-kdiv is required when BioZ clock is configured");
+
+BUILD_ASSERT(DT_NODE_HAS_PROP(BIOZ_CLK_NODE, bioz_ndiv),
+	     "clk/bioz/bioz-ndiv is required when BioZ clock is configured");
+#endif
+
+#endif /* DT_HAS_COMPAT_STATUS_OKAY */

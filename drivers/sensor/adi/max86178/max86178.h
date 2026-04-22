@@ -32,6 +32,21 @@
 #endif /* MAX86178_BUS_I2C */
 
 /*
+ * MAX86178 Hardware Constants
+ */
+
+/* MEAS register block stride - each MEAS block is 8 registers apart */
+#define MAX86178_MEAS_REG_STRIDE 8
+
+/* SPI protocol bit definitions */
+#define MAX86178_SPI_READ_BIT BIT(7)
+
+/* Bit manipulation constants */
+#define MAX86178_BITS_PER_BYTE     8
+#define MAX86178_NDIV_MSB_MASK     GENMASK(2, 0) /* 3-bit mask for NDIV MSB */
+#define MAX86178_BYTE_MASK         GENMASK(7, 0)
+
+/*
  * MAX86178 registers definition
  */
 
