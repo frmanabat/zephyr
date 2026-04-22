@@ -11,10 +11,10 @@
 LOG_MODULE_DECLARE(MAX86178);
 
 /* FIFO tag field is in bits 23:20 */
-#define MAX86178_FIFO_TAG_MASK GENMASK(23, 20)
-#define MAX86178_FIFO_TIMING_TAG_MASK GENMASK(19, 18)
-#define MAX86178_FIFO_DATA_FIELD GENMASK(19, 0)
-#define MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD GENMASK(9, 0)
+#define MAX86178_FIFO_TAG_MASK                     GENMASK(23, 20)
+#define MAX86178_FIFO_TIMING_TAG_MASK              GENMASK(19, 18)
+#define MAX86178_FIFO_DATA_FIELD                   GENMASK(19, 0)
+#define MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD  GENMASK(9, 0)
 #define MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD GENMASK(13, 0)
 
 static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_enabled_mask)
@@ -203,14 +203,18 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 			/* Only decode if we've skipped past already-decoded samples */
 			if (samples_seen >= start_offset) {
 				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG) {
-					/* For timing channel, decode the timing tag bits instead of sample value */
-					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD, fifo_data);
+					/* For timing channel, decode the timing tag bits instead of
+					 * sample value */
+					sample_value =
+						FIELD_GET(MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD,
+							  fifo_data);
 					out[count].readings[0].value = sample_value;
 				} else if (channel.chan_type == SENSOR_CHAN_TIMING_BIOZ_PPG) {
-					sample_value = FIELD_GET(MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD, fifo_data);
+					sample_value = FIELD_GET(
+						MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD,
+						fifo_data);
 					out[count].readings[0].value = sample_value;
-				}
-				else {
+				} else {
 					sample_value =
 						FIELD_GET(MAX86178_FIFO_DATA_FIELD, fifo_data);
 

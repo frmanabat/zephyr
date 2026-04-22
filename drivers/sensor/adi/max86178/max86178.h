@@ -36,147 +36,147 @@
  */
 
 /* Status Registers */
-#define MAX86178_STATUS1          0x00u /* Status Register 1 */
-#define MAX86178_STATUS2          0x01u /* Status Register 2 */
-#define MAX86178_STATUS3          0x02u /* Status Register 3 */
-#define MAX86178_STATUS4          0x03u /* Status Register 4 (ECG Status) */
-#define MAX86178_STATUS5          0x04u /* Status Register 5 (BioZ Status) */
+#define MAX86178_STATUS1 0x00u /* Status Register 1 */
+#define MAX86178_STATUS2 0x01u /* Status Register 2 */
+#define MAX86178_STATUS3 0x02u /* Status Register 3 */
+#define MAX86178_STATUS4 0x03u /* Status Register 4 (ECG Status) */
+#define MAX86178_STATUS5 0x04u /* Status Register 5 (BioZ Status) */
 
 /* FIFO Registers */
-#define MAX86178_FIFO_WR_PTR      0x08u /* FIFO Write Pointer */
-#define MAX86178_FIFO_RD_PTR      0x09u /* FIFO Read Pointer */
-#define MAX86178_FIFO_COUNTER1    0x0Au /* FIFO Counter 1 */
-#define MAX86178_FIFO_COUNTER2    0x0Bu /* FIFO Counter 2 */
-#define MAX86178_FIFO_DATA        0x0Cu /* FIFO Data Register */
-#define MAX86178_FIFO_CFG1        0x0Du /* FIFO Configuration 1 */
-#define MAX86178_FIFO_CFG2        0x0Eu /* FIFO Configuration 2 */
+#define MAX86178_FIFO_WR_PTR   0x08u /* FIFO Write Pointer */
+#define MAX86178_FIFO_RD_PTR   0x09u /* FIFO Read Pointer */
+#define MAX86178_FIFO_COUNTER1 0x0Au /* FIFO Counter 1 */
+#define MAX86178_FIFO_COUNTER2 0x0Bu /* FIFO Counter 2 */
+#define MAX86178_FIFO_DATA     0x0Cu /* FIFO Data Register */
+#define MAX86178_FIFO_CFG1     0x0Du /* FIFO Configuration 1 */
+#define MAX86178_FIFO_CFG2     0x0Eu /* FIFO Configuration 2 */
 
 /* System Control Registers */
-#define MAX86178_SYS_SYNC         0x10u /* System Sync */
-#define MAX86178_SYS_CFG1         0x11u /* System Configuration 1 */
-#define MAX86178_SYS_CFG2         0x12u /* System Configuration 2 */
-#define MAX86178_PIN_FUNC_CFG     0x13u /* Pin Functional Configuration */
-#define MAX86178_OUT_PIN_CFG      0x14u /* Output Pin Configuration */
-#define MAX86178_I2C_BCAST_ADDR   0x15u /* I2C Broadcast Address */
+#define MAX86178_SYS_SYNC       0x10u /* System Sync */
+#define MAX86178_SYS_CFG1       0x11u /* System Configuration 1 */
+#define MAX86178_SYS_CFG2       0x12u /* System Configuration 2 */
+#define MAX86178_PIN_FUNC_CFG   0x13u /* Pin Functional Configuration */
+#define MAX86178_OUT_PIN_CFG    0x14u /* Output Pin Configuration */
+#define MAX86178_I2C_BCAST_ADDR 0x15u /* I2C Broadcast Address */
 
 /* PLL Configuration Registers */
-#define MAX86178_PLL_CFG1         0x18u /* PLL Configuration 1 */
-#define MAX86178_PLL_CFG2         0x19u /* PLL Configuration 2 */
-#define MAX86178_PLL_CFG3         0x1Au /* PLL Configuration 3 */
-#define MAX86178_PLL_CFG4         0x1Bu /* PLL Configuration 4 */
-#define MAX86178_PLL_CFG5         0x1Cu /* PLL Configuration 5 */
-#define MAX86178_PLL_CFG6         0x1Du /* PLL Configuration 6 */
+#define MAX86178_PLL_CFG1 0x18u /* PLL Configuration 1 */
+#define MAX86178_PLL_CFG2 0x19u /* PLL Configuration 2 */
+#define MAX86178_PLL_CFG3 0x1Au /* PLL Configuration 3 */
+#define MAX86178_PLL_CFG4 0x1Bu /* PLL Configuration 4 */
+#define MAX86178_PLL_CFG5 0x1Cu /* PLL Configuration 5 */
+#define MAX86178_PLL_CFG6 0x1Du /* PLL Configuration 6 */
 
 /* PPG Setup Registers */
-#define MAX86178_PPG_CFG1         0x20u /* PPG Configuration 1 */
-#define MAX86178_PPG_CFG2         0x21u /* PPG Configuration 2 */
-#define MAX86178_PPG_CFG3         0x22u /* PPG Configuration 3 */
-#define MAX86178_PPG_CFG4         0x23u /* PPG Configuration 4 */
-#define MAX86178_PD_BIAS          0x24u /* Photodiode Bias */
+#define MAX86178_PPG_CFG1 0x20u /* PPG Configuration 1 */
+#define MAX86178_PPG_CFG2 0x21u /* PPG Configuration 2 */
+#define MAX86178_PPG_CFG3 0x22u /* PPG Configuration 3 */
+#define MAX86178_PPG_CFG4 0x23u /* PPG Configuration 4 */
+#define MAX86178_PD_BIAS  0x24u /* Photodiode Bias */
 
 /* PPG Frame Rate Clock */
-#define MAX86178_FR_CLK_DIV_MSB   0x28u /* Frame Clock Divider MSB */
-#define MAX86178_FR_CLK_DIV_LSB   0x29u /* Frame Clock Divider LSB */
+#define MAX86178_FR_CLK_DIV_MSB 0x28u /* Frame Clock Divider MSB */
+#define MAX86178_FR_CLK_DIV_LSB 0x29u /* Frame Clock Divider LSB */
 
 /* PPG MEAS1 Setup (0x30-0x37) */
-#define MAX86178_MEAS1_SEL        0x30u /* MEAS1 Selects */
-#define MAX86178_MEAS1_CFG1       0x31u /* MEAS1 Configuration 1 */
-#define MAX86178_MEAS1_CFG2       0x32u /* MEAS1 Configuration 2 */
-#define MAX86178_MEAS1_CFG3       0x33u /* MEAS1 Configuration 3 */
-#define MAX86178_MEAS1_CFG4       0x34u /* MEAS1 Configuration 4 */
-#define MAX86178_MEAS1_CFG5       0x35u /* MEAS1 Configuration 5 */
-#define MAX86178_MEAS1_LEDA_PA    0x36u /* MEAS1 LEDA Current */
-#define MAX86178_MEAS1_LEDB_PA    0x37u /* MEAS1 LEDB Current */
+#define MAX86178_MEAS1_SEL     0x30u /* MEAS1 Selects */
+#define MAX86178_MEAS1_CFG1    0x31u /* MEAS1 Configuration 1 */
+#define MAX86178_MEAS1_CFG2    0x32u /* MEAS1 Configuration 2 */
+#define MAX86178_MEAS1_CFG3    0x33u /* MEAS1 Configuration 3 */
+#define MAX86178_MEAS1_CFG4    0x34u /* MEAS1 Configuration 4 */
+#define MAX86178_MEAS1_CFG5    0x35u /* MEAS1 Configuration 5 */
+#define MAX86178_MEAS1_LEDA_PA 0x36u /* MEAS1 LEDA Current */
+#define MAX86178_MEAS1_LEDB_PA 0x37u /* MEAS1 LEDB Current */
 
 /* PPG MEAS2 Setup (0x38-0x3F) */
-#define MAX86178_MEAS2_SEL        0x38u /* MEAS2 Selects */
-#define MAX86178_MEAS2_CFG1       0x39u /* MEAS2 Configuration 1 */
-#define MAX86178_MEAS2_CFG2       0x3Au /* MEAS2 Configuration 2 */
-#define MAX86178_MEAS2_CFG3       0x3Bu /* MEAS2 Configuration 3 */
-#define MAX86178_MEAS2_CFG4       0x3Cu /* MEAS2 Configuration 4 */
-#define MAX86178_MEAS2_CFG5       0x3Du /* MEAS2 Configuration 5 */
-#define MAX86178_MEAS2_LEDA_PA    0x3Eu /* MEAS2 LEDA Current */
-#define MAX86178_MEAS2_LEDB_PA    0x3Fu /* MEAS2 LEDB Current */
+#define MAX86178_MEAS2_SEL     0x38u /* MEAS2 Selects */
+#define MAX86178_MEAS2_CFG1    0x39u /* MEAS2 Configuration 1 */
+#define MAX86178_MEAS2_CFG2    0x3Au /* MEAS2 Configuration 2 */
+#define MAX86178_MEAS2_CFG3    0x3Bu /* MEAS2 Configuration 3 */
+#define MAX86178_MEAS2_CFG4    0x3Cu /* MEAS2 Configuration 4 */
+#define MAX86178_MEAS2_CFG5    0x3Du /* MEAS2 Configuration 5 */
+#define MAX86178_MEAS2_LEDA_PA 0x3Eu /* MEAS2 LEDA Current */
+#define MAX86178_MEAS2_LEDB_PA 0x3Fu /* MEAS2 LEDB Current */
 
 /* PPG MEAS3 Setup (0x40-0x47) */
-#define MAX86178_MEAS3_SEL        0x40u /* MEAS3 Selects */
-#define MAX86178_MEAS3_CFG1       0x41u /* MEAS3 Configuration 1 */
-#define MAX86178_MEAS3_CFG2       0x42u /* MEAS3 Configuration 2 */
-#define MAX86178_MEAS3_CFG3       0x43u /* MEAS3 Configuration 3 */
-#define MAX86178_MEAS3_CFG4       0x44u /* MEAS3 Configuration 4 */
-#define MAX86178_MEAS3_CFG5       0x45u /* MEAS3 Configuration 5 */
-#define MAX86178_MEAS3_LEDA_PA    0x46u /* MEAS3 LEDA Current */
-#define MAX86178_MEAS3_LEDB_PA    0x47u /* MEAS3 LEDB Current */
+#define MAX86178_MEAS3_SEL     0x40u /* MEAS3 Selects */
+#define MAX86178_MEAS3_CFG1    0x41u /* MEAS3 Configuration 1 */
+#define MAX86178_MEAS3_CFG2    0x42u /* MEAS3 Configuration 2 */
+#define MAX86178_MEAS3_CFG3    0x43u /* MEAS3 Configuration 3 */
+#define MAX86178_MEAS3_CFG4    0x44u /* MEAS3 Configuration 4 */
+#define MAX86178_MEAS3_CFG5    0x45u /* MEAS3 Configuration 5 */
+#define MAX86178_MEAS3_LEDA_PA 0x46u /* MEAS3 LEDA Current */
+#define MAX86178_MEAS3_LEDB_PA 0x47u /* MEAS3 LEDB Current */
 
 /* PPG MEAS4 Setup (0x48-0x4F) */
-#define MAX86178_MEAS4_SEL        0x48u /* MEAS4 Selects */
-#define MAX86178_MEAS4_CFG1       0x49u /* MEAS4 Configuration 1 */
-#define MAX86178_MEAS4_CFG2       0x4Au /* MEAS4 Configuration 2 */
-#define MAX86178_MEAS4_CFG3       0x4Bu /* MEAS4 Configuration 3 */
-#define MAX86178_MEAS4_CFG4       0x4Cu /* MEAS4 Configuration 4 */
-#define MAX86178_MEAS4_CFG5       0x4Du /* MEAS4 Configuration 5 */
-#define MAX86178_MEAS4_LEDA_PA    0x4Eu /* MEAS4 LEDA Current */
-#define MAX86178_MEAS4_LEDB_PA    0x4Fu /* MEAS4 LEDB Current */
+#define MAX86178_MEAS4_SEL     0x48u /* MEAS4 Selects */
+#define MAX86178_MEAS4_CFG1    0x49u /* MEAS4 Configuration 1 */
+#define MAX86178_MEAS4_CFG2    0x4Au /* MEAS4 Configuration 2 */
+#define MAX86178_MEAS4_CFG3    0x4Bu /* MEAS4 Configuration 3 */
+#define MAX86178_MEAS4_CFG4    0x4Cu /* MEAS4 Configuration 4 */
+#define MAX86178_MEAS4_CFG5    0x4Du /* MEAS4 Configuration 5 */
+#define MAX86178_MEAS4_LEDA_PA 0x4Eu /* MEAS4 LEDA Current */
+#define MAX86178_MEAS4_LEDB_PA 0x4Fu /* MEAS4 LEDB Current */
 
 /* PPG MEAS5 Setup (0x50-0x57) */
-#define MAX86178_MEAS5_SEL        0x50u /* MEAS5 Selects */
-#define MAX86178_MEAS5_CFG1       0x51u /* MEAS5 Configuration 1 */
-#define MAX86178_MEAS5_CFG2       0x52u /* MEAS5 Configuration 2 */
-#define MAX86178_MEAS5_CFG3       0x53u /* MEAS5 Configuration 3 */
-#define MAX86178_MEAS5_CFG4       0x54u /* MEAS5 Configuration 4 */
-#define MAX86178_MEAS5_CFG5       0x55u /* MEAS5 Configuration 5 */
-#define MAX86178_MEAS5_LEDA_PA    0x56u /* MEAS5 LEDA Current */
-#define MAX86178_MEAS5_LEDB_PA    0x57u /* MEAS5 LEDB Current */
+#define MAX86178_MEAS5_SEL     0x50u /* MEAS5 Selects */
+#define MAX86178_MEAS5_CFG1    0x51u /* MEAS5 Configuration 1 */
+#define MAX86178_MEAS5_CFG2    0x52u /* MEAS5 Configuration 2 */
+#define MAX86178_MEAS5_CFG3    0x53u /* MEAS5 Configuration 3 */
+#define MAX86178_MEAS5_CFG4    0x54u /* MEAS5 Configuration 4 */
+#define MAX86178_MEAS5_CFG5    0x55u /* MEAS5 Configuration 5 */
+#define MAX86178_MEAS5_LEDA_PA 0x56u /* MEAS5 LEDA Current */
+#define MAX86178_MEAS5_LEDB_PA 0x57u /* MEAS5 LEDB Current */
 
 /* PPG MEAS6 Setup (0x58-0x5F) */
-#define MAX86178_MEAS6_SEL        0x58u /* MEAS6 Selects */
-#define MAX86178_MEAS6_CFG1       0x59u /* MEAS6 Configuration 1 */
-#define MAX86178_MEAS6_CFG2       0x5Au /* MEAS6 Configuration 2 */
-#define MAX86178_MEAS6_CFG3       0x5Bu /* MEAS6 Configuration 3 */
-#define MAX86178_MEAS6_CFG4       0x5Cu /* MEAS6 Configuration 4 */
-#define MAX86178_MEAS6_CFG5       0x5Du /* MEAS6 Configuration 5 */
-#define MAX86178_MEAS6_LEDA_PA    0x5Eu /* MEAS6 LEDA Current */
-#define MAX86178_MEAS6_LEDB_PA    0x5Fu /* MEAS6 LEDB Current */
+#define MAX86178_MEAS6_SEL     0x58u /* MEAS6 Selects */
+#define MAX86178_MEAS6_CFG1    0x59u /* MEAS6 Configuration 1 */
+#define MAX86178_MEAS6_CFG2    0x5Au /* MEAS6 Configuration 2 */
+#define MAX86178_MEAS6_CFG3    0x5Bu /* MEAS6 Configuration 3 */
+#define MAX86178_MEAS6_CFG4    0x5Cu /* MEAS6 Configuration 4 */
+#define MAX86178_MEAS6_CFG5    0x5Du /* MEAS6 Configuration 5 */
+#define MAX86178_MEAS6_LEDA_PA 0x5Eu /* MEAS6 LEDA Current */
+#define MAX86178_MEAS6_LEDB_PA 0x5Fu /* MEAS6 LEDB Current */
 
 /* PPG Threshold Interrupt Registers (0x70-0x75) */
-#define MAX86178_THRESH_MEAS_SEL  0x70u /* Threshold Measurement Select */
-#define MAX86178_THRESH_HYST      0x71u /* Threshold Hysteresis */
-#define MAX86178_PPG_HI_THRESH1   0x72u /* PPG High Threshold 1 */
-#define MAX86178_PPG_LO_THRESH1   0x73u /* PPG Low Threshold 1 */
-#define MAX86178_PPG_HI_THRESH2   0x74u /* PPG High Threshold 2 */
-#define MAX86178_PPG_LO_THRESH2   0x75u /* PPG Low Threshold 2 */
+#define MAX86178_THRESH_MEAS_SEL 0x70u /* Threshold Measurement Select */
+#define MAX86178_THRESH_HYST     0x71u /* Threshold Hysteresis */
+#define MAX86178_PPG_HI_THRESH1  0x72u /* PPG High Threshold 1 */
+#define MAX86178_PPG_LO_THRESH1  0x73u /* PPG Low Threshold 1 */
+#define MAX86178_PPG_HI_THRESH2  0x74u /* PPG High Threshold 2 */
+#define MAX86178_PPG_LO_THRESH2  0x75u /* PPG Low Threshold 2 */
 
 /* ECG Configuration and Control Registers (0x80-0x8F) */
-#define MAX86178_ECG_CFG1         0x80u /* ECG Configuration 1 */
-#define MAX86178_ECG_CFG2         0x81u /* ECG Configuration 2 */
-#define MAX86178_ECG_CFG3         0x82u /* ECG Configuration 3 */
-#define MAX86178_ECG_CFG4         0x83u /* ECG Configuration 4 */
-#define MAX86178_ECG_CAL_CFG1     0x84u /* ECG Calibration Configuration 1 */
-#define MAX86178_ECG_CAL_CFG2     0x85u /* ECG Calibration Configuration 2 */
-#define MAX86178_ECG_CAL_CFG3     0x86u /* ECG Calibration Configuration 3 */
-#define MAX86178_ECG_LD_CFG1      0x88u /* ECG Lead Detect Configuration 1 */
-#define MAX86178_ECG_LD_CFG2      0x89u /* ECG Lead Detect Configuration 2 */
-#define MAX86178_ECG_LB_CFG1      0x90u /* ECG Lead Bias Configuration 1 */
-#define MAX86178_RLD_CFG1         0x92u /* RLD Configuration 1 */
-#define MAX86178_RLD_CFG2         0x93u /* RLD Configuration 2 */
+#define MAX86178_ECG_CFG1     0x80u /* ECG Configuration 1 */
+#define MAX86178_ECG_CFG2     0x81u /* ECG Configuration 2 */
+#define MAX86178_ECG_CFG3     0x82u /* ECG Configuration 3 */
+#define MAX86178_ECG_CFG4     0x83u /* ECG Configuration 4 */
+#define MAX86178_ECG_CAL_CFG1 0x84u /* ECG Calibration Configuration 1 */
+#define MAX86178_ECG_CAL_CFG2 0x85u /* ECG Calibration Configuration 2 */
+#define MAX86178_ECG_CAL_CFG3 0x86u /* ECG Calibration Configuration 3 */
+#define MAX86178_ECG_LD_CFG1  0x88u /* ECG Lead Detect Configuration 1 */
+#define MAX86178_ECG_LD_CFG2  0x89u /* ECG Lead Detect Configuration 2 */
+#define MAX86178_ECG_LB_CFG1  0x90u /* ECG Lead Bias Configuration 1 */
+#define MAX86178_RLD_CFG1     0x92u /* RLD Configuration 1 */
+#define MAX86178_RLD_CFG2     0x93u /* RLD Configuration 2 */
 
 /* BioZ Configuration and Control Registers */
-#define MAX86178_BIOZ_CFG1        0xA0u /* BioZ Configuration 1 */
-#define MAX86178_BIOZ_CFG2        0xA1u /* BioZ Configuration 2 */
-#define MAX86178_BIOZ_CFG3        0xA2u /* BioZ Configuration 3 */
-#define MAX86178_BIOZ_CFG4        0xA3u /* BioZ Configuration 4 */
-#define MAX86178_BIOZ_CFG5        0xA4u /* BioZ Configuration 5 */
-#define MAX86178_BIOZ_CFG6        0xA5u /* BioZ Configuration 6 */
-#define MAX86178_BIOZ_CFG7        0xA6u /* BioZ Configuration 7 */
-#define MAX86178_BIOZ_CFG8        0xA7u /* BioZ Configuration 8 */
-#define MAX86178_BIOZ_LO_THRESH   0xA8u /* BioZ Low Threshold */
-#define MAX86178_BIOZ_HI_THRESH   0xA9u /* BioZ High Threshold */
+#define MAX86178_BIOZ_CFG1      0xA0u /* BioZ Configuration 1 */
+#define MAX86178_BIOZ_CFG2      0xA1u /* BioZ Configuration 2 */
+#define MAX86178_BIOZ_CFG3      0xA2u /* BioZ Configuration 3 */
+#define MAX86178_BIOZ_CFG4      0xA3u /* BioZ Configuration 4 */
+#define MAX86178_BIOZ_CFG5      0xA4u /* BioZ Configuration 5 */
+#define MAX86178_BIOZ_CFG6      0xA5u /* BioZ Configuration 6 */
+#define MAX86178_BIOZ_CFG7      0xA6u /* BioZ Configuration 7 */
+#define MAX86178_BIOZ_CFG8      0xA7u /* BioZ Configuration 8 */
+#define MAX86178_BIOZ_LO_THRESH 0xA8u /* BioZ Low Threshold */
+#define MAX86178_BIOZ_HI_THRESH 0xA9u /* BioZ High Threshold */
 
 /* BioZ Calibration Registers (0xAA-0xAD) */
-#define MAX86178_BIOZ_MUX_CFG1    0xAAu /* BioZ Mux Configuration 1 */
-#define MAX86178_BIOZ_MUX_CFG2    0xABu /* BioZ Mux Configuration 2 */
-#define MAX86178_BIOZ_MUX_CFG3    0xACu /* BioZ Mux Configuration 3 */
-#define MAX86178_BIOZ_MUX_CFG4    0xADu /* BioZ Mux Configuration 4 */
+#define MAX86178_BIOZ_MUX_CFG1 0xAAu /* BioZ Mux Configuration 1 */
+#define MAX86178_BIOZ_MUX_CFG2 0xABu /* BioZ Mux Configuration 2 */
+#define MAX86178_BIOZ_MUX_CFG3 0xACu /* BioZ Mux Configuration 3 */
+#define MAX86178_BIOZ_MUX_CFG4 0xADu /* BioZ Mux Configuration 4 */
 
 /* BioZ Lead Detect/Bias and Respiration Registers */
 #define MAX86178_BIOZ_LD_CFG1     0xB0u /* BioZ Lead Detect Configuration 1 */
@@ -185,35 +185,36 @@
 #define MAX86178_RESP_CFG1        0xB6u /* Respiration Configuration 1 */
 
 /* Interrupt Enable Registers */
-#define MAX86178_INT1_EN1         0xC0u /* Interrupt1 Enable 1 */
-#define MAX86178_INT1_EN2         0xC1u /* Interrupt1 Enable 2 */
-#define MAX86178_INT1_EN3         0xC2u /* Interrupt1 Enable 3 */
-#define MAX86178_INT1_EN4         0xC3u /* Interrupt1 Enable 4 */
-#define MAX86178_INT1_EN5         0xC4u /* Interrupt1 Enable 5 */
-#define MAX86178_INT2_EN1         0xC5u /* Interrupt2 Enable 1 */
-#define MAX86178_INT2_EN2         0xC6u /* Interrupt2 Enable 2 */
-#define MAX86178_INT2_EN3         0xC7u /* Interrupt2 Enable 3 */
-#define MAX86178_INT2_EN4         0xC8u /* Interrupt2 Enable 4 */
-#define MAX86178_INT2_EN5         0xC9u /* Interrupt2 Enable 5 */
+#define MAX86178_INT1_EN1 0xC0u /* Interrupt1 Enable 1 */
+#define MAX86178_INT1_EN2 0xC1u /* Interrupt1 Enable 2 */
+#define MAX86178_INT1_EN3 0xC2u /* Interrupt1 Enable 3 */
+#define MAX86178_INT1_EN4 0xC3u /* Interrupt1 Enable 4 */
+#define MAX86178_INT1_EN5 0xC4u /* Interrupt1 Enable 5 */
+#define MAX86178_INT2_EN1 0xC5u /* Interrupt2 Enable 1 */
+#define MAX86178_INT2_EN2 0xC6u /* Interrupt2 Enable 2 */
+#define MAX86178_INT2_EN3 0xC7u /* Interrupt2 Enable 3 */
+#define MAX86178_INT2_EN4 0xC8u /* Interrupt2 Enable 4 */
+#define MAX86178_INT2_EN5 0xC9u /* Interrupt2 Enable 5 */
 
-#define MAX86178_INT1_INT2_OFFSET 5u /* Offset to convert INT1 interrupt bits to INT2 interrupt bits */
+#define MAX86178_INT1_INT2_OFFSET                                                                  \
+	5u /* Offset to convert INT1 interrupt bits to INT2 interrupt bits */
 
 /* Device Identification Registers */
-#define MAX86178_PART_ID          0xFFu /* Part ID Register */
-#define MAX86178_PART_ID_MSK      GENMASK(7, 0)
-#define MAX86178_PART_ID_VAL      0x43u /* Reset value of PART_ID[7:0] */
+#define MAX86178_PART_ID     0xFFu /* Part ID Register */
+#define MAX86178_PART_ID_MSK GENMASK(7, 0)
+#define MAX86178_PART_ID_VAL 0x43u /* Reset value of PART_ID[7:0] */
 
 /* REGISTER BIT MASKS */
 
 /* STATUS1 (0x00) */
-#define MAX86178_STATUS1_PWR_RDY_MSK         BIT(0)
+#define MAX86178_STATUS1_PWR_RDY_MSK          BIT(0)
 #define MAX86178_STATUS1_PPG_THRESH1_HILO_MSK BIT(1)
 #define MAX86178_STATUS1_PPG_THRESH2_HILO_MSK BIT(2)
-#define MAX86178_STATUS1_EXP_OVF_MSK         BIT(3)
-#define MAX86178_STATUS1_ALC_OVF_MSK         BIT(4)
-#define MAX86178_STATUS1_FIFO_DATA_RDY_MSK   BIT(5)
-#define MAX86178_STATUS1_PPG_FRAME_RDY_MSK   BIT(6)
-#define MAX86178_STATUS1_A_FULL_MSK          BIT(7)
+#define MAX86178_STATUS1_EXP_OVF_MSK          BIT(3)
+#define MAX86178_STATUS1_ALC_OVF_MSK          BIT(4)
+#define MAX86178_STATUS1_FIFO_DATA_RDY_MSK    BIT(5)
+#define MAX86178_STATUS1_PPG_FRAME_RDY_MSK    BIT(6)
+#define MAX86178_STATUS1_A_FULL_MSK           BIT(7)
 
 /* STATUS2 (0x01) */
 #define MAX86178_STATUS2_LED1_COMPB_MSK      BIT(0)
@@ -225,29 +226,29 @@
 #define MAX86178_STATUS2_INVALID_PPG_CFG_MSK BIT(7)
 
 /* STATUS3 (0x02) */
-#define MAX86178_STATUS3_PHASE_LOCK_MSK      BIT(1)
-#define MAX86178_STATUS3_PHASE_UNLOCK_MSK    BIT(2)
-#define MAX86178_STATUS3_FREQ_LOCK_MSK       BIT(3)
-#define MAX86178_STATUS3_FREQ_UNLOCK_MSK     BIT(4)
+#define MAX86178_STATUS3_PHASE_LOCK_MSK   BIT(1)
+#define MAX86178_STATUS3_PHASE_UNLOCK_MSK BIT(2)
+#define MAX86178_STATUS3_FREQ_LOCK_MSK    BIT(3)
+#define MAX86178_STATUS3_FREQ_UNLOCK_MSK  BIT(4)
 
 /* STATUS4 (0x03) - ECG Status */
-#define MAX86178_STATUS4_ECG_LOFF_NL_MSK     BIT(0)
-#define MAX86178_STATUS4_ECG_LOFF_NH_MSK     BIT(1)
-#define MAX86178_STATUS4_ECG_LOFF_PL_MSK     BIT(2)
-#define MAX86178_STATUS4_ECG_LOFF_PH_MSK     BIT(3)
-#define MAX86178_STATUS4_RLD_OOR_MSK         BIT(4)
-#define MAX86178_STATUS4_ECG_FAST_REC_MSK    BIT(5)
-#define MAX86178_STATUS4_ECG_LON_MSK         BIT(7)
+#define MAX86178_STATUS4_ECG_LOFF_NL_MSK  BIT(0)
+#define MAX86178_STATUS4_ECG_LOFF_NH_MSK  BIT(1)
+#define MAX86178_STATUS4_ECG_LOFF_PL_MSK  BIT(2)
+#define MAX86178_STATUS4_ECG_LOFF_PH_MSK  BIT(3)
+#define MAX86178_STATUS4_RLD_OOR_MSK      BIT(4)
+#define MAX86178_STATUS4_ECG_FAST_REC_MSK BIT(5)
+#define MAX86178_STATUS4_ECG_LON_MSK      BIT(7)
 
 /* STATUS5 (0x04) - BioZ Status */
-#define MAX86178_STATUS5_BIOZ_LOFF_NL_MSK    BIT(0)
-#define MAX86178_STATUS5_BIOZ_LOFF_NH_MSK    BIT(1)
-#define MAX86178_STATUS5_BIOZ_LOFF_PL_MSK    BIT(2)
-#define MAX86178_STATUS5_BIOZ_LOFF_PH_MSK    BIT(3)
-#define MAX86178_STATUS5_BIOZ_DRV_OOR_MSK    BIT(4)
-#define MAX86178_STATUS5_BIOZ_UNDR_MSK       BIT(5)
-#define MAX86178_STATUS5_BIOZ_OVER_MSK       BIT(6)
-#define MAX86178_STATUS5_BIOZ_LON_MSK        BIT(7)
+#define MAX86178_STATUS5_BIOZ_LOFF_NL_MSK BIT(0)
+#define MAX86178_STATUS5_BIOZ_LOFF_NH_MSK BIT(1)
+#define MAX86178_STATUS5_BIOZ_LOFF_PL_MSK BIT(2)
+#define MAX86178_STATUS5_BIOZ_LOFF_PH_MSK BIT(3)
+#define MAX86178_STATUS5_BIOZ_DRV_OOR_MSK BIT(4)
+#define MAX86178_STATUS5_BIOZ_UNDR_MSK    BIT(5)
+#define MAX86178_STATUS5_BIOZ_OVER_MSK    BIT(6)
+#define MAX86178_STATUS5_BIOZ_LON_MSK     BIT(7)
 
 /* FIFO_COUNTER1 (0x0A) */
 #define MAX86178_FIFO_COUNTER1_OVF_COUNTER_MSK GENMASK(6, 0)
@@ -267,109 +268,109 @@
 #define MAX86178_SYS_SYNC_TIMING_SYS_RESET_MSK BIT(7)
 
 /* SYS_CFG1 (0x11) */
-#define MAX86178_SYS_CFG1_RESET_MSK          BIT(0)
-#define MAX86178_SYS_CFG1_SHDN_MSK           BIT(1)
+#define MAX86178_SYS_CFG1_RESET_MSK                BIT(0)
+#define MAX86178_SYS_CFG1_SHDN_MSK                 BIT(1)
 #define MAX86178_SYS_CFG1_ECG_BIOZ_TIMING_DATA_MSK BIT(3)
 #define MAX86178_SYS_CFG1_BIOZ_PPG_TIMING_DATA_MSK BIT(4)
 #define MAX86178_SYS_CFG1_ECG_PPG_TIMING_DATA_MSK  BIT(5)
-#define MAX86178_SYS_CFG1_DISABLE_I2C_MSK    BIT(6)
+#define MAX86178_SYS_CFG1_DISABLE_I2C_MSK          BIT(6)
 
 /* SYS_CFG2 (0x12) */
 #define MAX86178_SYS_CFG2_ECG_SAMP_SYNC_FREQ_MSK GENMASK(4, 0)
-#define MAX86178_SYS_CFG2_BYP_DLY_MSK        BIT(7)
+#define MAX86178_SYS_CFG2_BYP_DLY_MSK            BIT(7)
 
 /* PIN_FUNC_CFG (0x13) */
-#define MAX86178_PIN_FUNC_CFG_TRIG_FCFG_MSK  GENMASK(7, 5)
-#define MAX86178_PIN_FUNC_CFG_TRIG_ICFG_MSK  BIT(4)
-#define MAX86178_PIN_FUNC_CFG_INT2_FCFG_MSK  GENMASK(3, 2)
-#define MAX86178_PIN_FUNC_CFG_INT1_FCFG_MSK  GENMASK(1, 0)
+#define MAX86178_PIN_FUNC_CFG_TRIG_FCFG_MSK GENMASK(7, 5)
+#define MAX86178_PIN_FUNC_CFG_TRIG_ICFG_MSK BIT(4)
+#define MAX86178_PIN_FUNC_CFG_INT2_FCFG_MSK GENMASK(3, 2)
+#define MAX86178_PIN_FUNC_CFG_INT1_FCFG_MSK GENMASK(1, 0)
 
 /* OUT_PIN_CFG (0x14) */
-#define MAX86178_OUT_PIN_CFG_TRIG_OCFG_MSK  GENMASK(7, 6)
-#define MAX86178_OUT_PIN_CFG_INT2_OCFG_MSK  GENMASK(3, 2)
-#define MAX86178_OUT_PIN_CFG_INT1_OCFG_MSK  GENMASK(1, 0)
+#define MAX86178_OUT_PIN_CFG_TRIG_OCFG_MSK GENMASK(7, 6)
+#define MAX86178_OUT_PIN_CFG_INT2_OCFG_MSK GENMASK(3, 2)
+#define MAX86178_OUT_PIN_CFG_INT1_OCFG_MSK GENMASK(1, 0)
 
 /* I2C_BCAST_ADDR (0x15) */
-#define MAX86178_I2C_BCAST_EN_MSK            BIT(0)
-#define MAX86178_I2C_BCAST_ADDR_MSK          GENMASK(7, 1)
+#define MAX86178_I2C_BCAST_EN_MSK   BIT(0)
+#define MAX86178_I2C_BCAST_ADDR_MSK GENMASK(7, 1)
 
 /* PLL_CFG1 (0x18) */
-#define MAX86178_PLL_CFG1_PLL_EN_MSK         BIT(0)
-#define MAX86178_PLL_CFG1_PLL_LOCK_WNDW_MSK  BIT(1)
-#define MAX86178_PLL_CFG1_MDIV_MSB_MSK           GENMASK(7, 6)
+#define MAX86178_PLL_CFG1_PLL_EN_MSK        BIT(0)
+#define MAX86178_PLL_CFG1_PLL_LOCK_WNDW_MSK BIT(1)
+#define MAX86178_PLL_CFG1_MDIV_MSB_MSK      GENMASK(7, 6)
 
 /* PLL_CFG3 (0x1A) */
-#define MAX86178_PLL_CFG3_BIOZ_KDIV_MSK      GENMASK(3, 0)
-#define MAX86178_PLL_CFG3_BIOZ_NDIV_MSK      GENMASK(7, 6)
+#define MAX86178_PLL_CFG3_BIOZ_KDIV_MSK GENMASK(3, 0)
+#define MAX86178_PLL_CFG3_BIOZ_NDIV_MSK GENMASK(7, 6)
 
 /* PLL_CFG4 (0x1B) */
-#define MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK       GENMASK(7, 5)
-#define MAX86178_PLL_CFG4_ECG_FDIV_MSK       GENMASK(2, 0)
+#define MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK GENMASK(7, 5)
+#define MAX86178_PLL_CFG4_ECG_FDIV_MSK     GENMASK(2, 0)
 
 /* PLL_CFG6 (0x1D) */
-#define MAX86178_PLL_CFG6_CLK_FINE_TUNE_MSK  GENMASK(4, 0)
-#define MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK   BIT(5)
-#define MAX86178_PLL_CFG6_REF_CLK_SEL_MSK    BIT(6)
+#define MAX86178_PLL_CFG6_CLK_FINE_TUNE_MSK GENMASK(4, 0)
+#define MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK  BIT(5)
+#define MAX86178_PLL_CFG6_REF_CLK_SEL_MSK   BIT(6)
 
 /* PPG_CFG1 (0x20) */
-#define MAX86178_PPG_CFG1_MEAS1_EN_MSK       BIT(0)
-#define MAX86178_PPG_CFG1_MEAS2_EN_MSK       BIT(1)
-#define MAX86178_PPG_CFG1_MEAS3_EN_MSK       BIT(2)
-#define MAX86178_PPG_CFG1_MEAS4_EN_MSK       BIT(3)
-#define MAX86178_PPG_CFG1_MEAS5_EN_MSK       BIT(4)
-#define MAX86178_PPG_CFG1_MEAS6_EN_MSK       BIT(5)
+#define MAX86178_PPG_CFG1_MEAS1_EN_MSK BIT(0)
+#define MAX86178_PPG_CFG1_MEAS2_EN_MSK BIT(1)
+#define MAX86178_PPG_CFG1_MEAS3_EN_MSK BIT(2)
+#define MAX86178_PPG_CFG1_MEAS4_EN_MSK BIT(3)
+#define MAX86178_PPG_CFG1_MEAS5_EN_MSK BIT(4)
+#define MAX86178_PPG_CFG1_MEAS6_EN_MSK BIT(5)
 
 /* PPG_CFG2 (0x21) */
-#define MAX86178_PPG_CFG2_PPG1_PWRDN_MSK     BIT(2)
-#define MAX86178_PPG_CFG2_PPG2_PWRDN_MSK     BIT(3)
-#define MAX86178_PPG_CFG2_PPG_SYNC_MODE_MSK  BIT(5)
+#define MAX86178_PPG_CFG2_PPG1_PWRDN_MSK    BIT(2)
+#define MAX86178_PPG_CFG2_PPG2_PWRDN_MSK    BIT(3)
+#define MAX86178_PPG_CFG2_PPG_SYNC_MODE_MSK BIT(5)
 
 /* PPG_CFG3 (0x22) */
 #define MAX86178_PPG_CFG3_MEAS1_CONFIG_SEL_MSK BIT(0)
 #define MAX86178_PPG_CFG3_COLLECT_RAW_DATA_MSK BIT(2)
-#define MAX86178_PPG_CFG3_ALC_DISABLE_MSK    BIT(3)
-#define MAX86178_PPG_CFG3_SMP_AVE_MSK        GENMASK(6, 4)
+#define MAX86178_PPG_CFG3_ALC_DISABLE_MSK      BIT(3)
+#define MAX86178_PPG_CFG3_SMP_AVE_MSK          GENMASK(6, 4)
 
 /* PPG_CFG4 (0x23) */
-#define MAX86178_PPG_CFG4_PROX_DATA_EN_MSK   BIT(4)
-#define MAX86178_PPG_CFG4_PROX_AUTO_MSK      BIT(3)
+#define MAX86178_PPG_CFG4_PROX_DATA_EN_MSK BIT(4)
+#define MAX86178_PPG_CFG4_PROX_AUTO_MSK    BIT(3)
 
 /* PD_BIAS (0x24) */
-#define MAX86178_PD_BIAS_PD1_MSK             GENMASK(1, 0)
-#define MAX86178_PD_BIAS_PD2_MSK             GENMASK(3, 2)
-#define MAX86178_PD_BIAS_PD3_MSK             GENMASK(5, 4)
-#define MAX86178_PD_BIAS_PD4_MSK             GENMASK(7, 6)
+#define MAX86178_PD_BIAS_PD1_MSK GENMASK(1, 0)
+#define MAX86178_PD_BIAS_PD2_MSK GENMASK(3, 2)
+#define MAX86178_PD_BIAS_PD3_MSK GENMASK(5, 4)
+#define MAX86178_PD_BIAS_PD4_MSK GENMASK(7, 6)
 
 /* FR_CLK_DIV_MSB (0x28) */
-#define MAX86178_FR_CLK_DIV_MSB_MSK              GENMASK(6, 0)
+#define MAX86178_FR_CLK_DIV_MSB_MSK GENMASK(6, 0)
 
 /* MEAS Configuration Bit Masks (applies to MEAS1-6) */
 /* MEAS Selects */
-#define MAX86178_MEAS_SEL_DRVA_MSK           GENMASK(2, 0)
-#define MAX86178_MEAS_SEL_DRVB_MSK           GENMASK(5, 3)
-#define MAX86178_MEAS_SEL_AMB_MSK            BIT(6)
+#define MAX86178_MEAS_SEL_DRVA_MSK          GENMASK(2, 0)
+#define MAX86178_MEAS_SEL_DRVB_MSK          GENMASK(5, 3)
+#define MAX86178_MEAS_SEL_AMB_MSK           BIT(6)
 /* MEAS CONFIG 1 */
-#define MAX86178_MEAS_CFG1_AVER_MSK          GENMASK(2, 0)
-#define MAX86178_MEAS_CFG1_TINT_MSK		  	 GENMASK(4, 3)
-#define MAX86178_MEAS_CFG1_FILT_SEL_MSK      BIT(5)
-#define MAX86178_MEAS_CFG1_FILT2_SEL_MSK     BIT(6)
-#define MAX86178_MEAS_CFG1_SINC3_SEL_MSK     BIT(7)
+#define MAX86178_MEAS_CFG1_AVER_MSK         GENMASK(2, 0)
+#define MAX86178_MEAS_CFG1_TINT_MSK         GENMASK(4, 3)
+#define MAX86178_MEAS_CFG1_FILT_SEL_MSK     BIT(5)
+#define MAX86178_MEAS_CFG1_FILT2_SEL_MSK    BIT(6)
+#define MAX86178_MEAS_CFG1_SINC3_SEL_MSK    BIT(7)
 /* MEAS CONFIG 2 */
-#define MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK   GENMASK(1, 0)
-#define MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK  GENMASK(5, 4)
+#define MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK GENMASK(1, 0)
+#define MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK GENMASK(5, 4)
 /* MEAS CONFIG 3 */
-#define MAX86178_MEAS_CFG3_PPG1_DACOFF_MSK   GENMASK(3, 0)
-#define MAX86178_MEAS_CFG3_PPG2_DACOFF_MSK   GENMASK(7, 4)
+#define MAX86178_MEAS_CFG3_PPG1_DACOFF_MSK  GENMASK(3, 0)
+#define MAX86178_MEAS_CFG3_PPG2_DACOFF_MSK  GENMASK(7, 4)
 /* MEAS CONFIG 4 */
-#define MAX86178_MEAS_CFG4_LED_RGE_MSK     GENMASK(1, 0)
-#define MAX86178_MEAS_CFG4_LED_SETLNG_MSK     GENMASK(3, 2)
-#define MAX86178_MEAS_CFG4_PD_SETLNG_MSK     GENMASK(7, 6)
+#define MAX86178_MEAS_CFG4_LED_RGE_MSK      GENMASK(1, 0)
+#define MAX86178_MEAS_CFG4_LED_SETLNG_MSK   GENMASK(3, 2)
+#define MAX86178_MEAS_CFG4_PD_SETLNG_MSK    GENMASK(7, 6)
 
 /* MEAS CONFIG 5 */
-#define MAX86178_MEAS_CFG5_PD1_SEL_MSK       GENMASK(1, 0)
-#define MAX86178_MEAS_CFG5_PD2_SEL_MSK       GENMASK(3, 2)
-#define MAX86178_MEAS_CFG5_PD3_SEL_MSK         GENMASK(5, 4)
-#define MAX86178_MEAS_CFG5_PD4_SEL_MSK      GENMASK(7, 6)
+#define MAX86178_MEAS_CFG5_PD1_SEL_MSK GENMASK(1, 0)
+#define MAX86178_MEAS_CFG5_PD2_SEL_MSK GENMASK(3, 2)
+#define MAX86178_MEAS_CFG5_PD3_SEL_MSK GENMASK(5, 4)
+#define MAX86178_MEAS_CFG5_PD4_SEL_MSK GENMASK(7, 6)
 
 /* PPG Threshold Interrupts */
 /* THRESHOLD_MEAS_SEL (0x70) */
@@ -377,86 +378,86 @@
 #define MAX86178_THRESH_MEAS_SEL_THRESH2_MEAS_SEL_MSK GENMASK(6, 4)
 
 /* THRESHOLD_HYST (0x71) */
-#define MAX86178_THRESH_HYST_LEVEL_HYST_MSK GENMASK(2, 0)
-#define MAX86178_THRESH_HYST_TIME_HYST_MSK GENMASK(4, 3)
+#define MAX86178_THRESH_HYST_LEVEL_HYST_MSK      GENMASK(2, 0)
+#define MAX86178_THRESH_HYST_TIME_HYST_MSK       GENMASK(4, 3)
 #define MAX86178_THRESH_HYST_THRESH1_PPG_SEL_MSK BIT(6)
 #define MAX86178_THRESH_HYST_THRESH2_PPG_SEL_MSK BIT(7)
 
 /* ECG_CFG1 (0x80) */
-#define MAX86178_ECG_CFG1_ECG_EN_MSK         BIT(0)
-#define MAX86178_ECG_CFG1_ECG_DEC_RATE_MSK	 GENMASK(3, 1)
+#define MAX86178_ECG_CFG1_ECG_EN_MSK       BIT(0)
+#define MAX86178_ECG_CFG1_ECG_DEC_RATE_MSK GENMASK(3, 1)
 
 /* ECG_CFG2 (0x81) */
-#define MAX86178_ECG_CFG2_ECG_INA_GAIN_MSK  GENMASK(1, 0)
+#define MAX86178_ECG_CFG2_ECG_INA_GAIN_MSK GENMASK(1, 0)
 #define MAX86178_ECG_CFG2_ECG_INA_RGE_MSK  GENMASK(3, 2)
-#define MAX86178_ECG_CFG2_ECG_PGA_GAIN_MSK  GENMASK(6, 4)
-#define MAX86178_ECG_CFG2_ECG_IPOL_MASK 	BIT(7)
+#define MAX86178_ECG_CFG2_ECG_PGA_GAIN_MSK GENMASK(6, 4)
+#define MAX86178_ECG_CFG2_ECG_IPOL_MASK    BIT(7)
 
 /* ECG_CFG3 (0x82) */
 #define MAX86178_ECG_CFG3_ECG_MUX_SEL_MSK  GENMASK(1, 0)
-#define MAX86178_ECG_CFG3_ECG_AUTO_REC_MSK  BIT(2)
-#define MAX86178_ECG_CFG3_ECG_IMP_HI_MSK	BIT(3)
+#define MAX86178_ECG_CFG3_ECG_AUTO_REC_MSK BIT(2)
+#define MAX86178_ECG_CFG3_ECG_IMP_HI_MSK   BIT(3)
 
 /* ECG_CFG4 (0x83) */
 #define MAX86178_ECG_CFG4_ECG_FAST_REC_THRESHOLD_MSK GENMASK(5, 0)
-#define MAX86178_ECG_CFG4_EN_ECG_FAST_REC_MSK 		GENMASK(7, 6)
+#define MAX86178_ECG_CFG4_EN_ECG_FAST_REC_MSK        GENMASK(7, 6)
 
 /* ECG_CAL_CFG1 (0x84) */
-#define MAX86178_ECG_CAL_CFG1_ECG_CAL_EN_MSK  BIT(0)
-#define MAX86178_ECG_CAL_CFG1_ECG_CAL_DUTY_MSK BIT(1)
-#define MAX86178_ECG_CAL_CFG1_ECG_CAL_FREQ_MSK GENMASK(4, 2)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_EN_MSK       BIT(0)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_DUTY_MSK     BIT(1)
+#define MAX86178_ECG_CAL_CFG1_ECG_CAL_FREQ_MSK     GENMASK(4, 2)
 #define MAX86178_ECG_CAL_CFG1_ECG_CAL_HIGH_MSB_MSK GENMASK(7, 5)
 
 /* ECG_CAL_CFG3 (0x86) */
 #define MAX86178_ECG_CAL_CFG3_ECG_CAL_N_SEL_MSK GENMASK(1, 0)
 #define MAX86178_ECG_CAL_CFG3_ECG_CAL_P_SEL_MSK GENMASK(3, 2)
-#define MAX86178_ECG_CAL_CFG3_ECG_CAL_MAG_MASK BIT(4)
-#define MAX86178_ECG_CAL_CFG3_ECG_CAL_MODE_MSK BIT(5)
-#define MAX86178_ECG_CAL_CFG3_ECG_OPEN_P_MSK BIT(6)
-#define MAX86178_ECG_CAL_CFG3_ECG_OPEN_N_MSK BIT(7)
+#define MAX86178_ECG_CAL_CFG3_ECG_CAL_MAG_MASK  BIT(4)
+#define MAX86178_ECG_CAL_CFG3_ECG_CAL_MODE_MSK  BIT(5)
+#define MAX86178_ECG_CAL_CFG3_ECG_OPEN_P_MSK    BIT(6)
+#define MAX86178_ECG_CAL_CFG3_ECG_OPEN_N_MSK    BIT(7)
 
 /* ECG_LEAD_CFG1 (0x88) */
-#define MAX86178_ECG_LEAD_CFG1_ECG_LOFF_FREQ_MSK  GENMASK(2, 0)
-#define MAX86178_ECG_LEAD_CFG1_ECG_LOFF_MODE_MSK     BIT(3)
-#define MAX86178_ECG_LEAD_CFG1_EN_ECG_LOFF_MSK       BIT(6)
-#define MAX86178_ECG_LEAD_CFG1_EN_ECG_LON_MSK       BIT(7)
+#define MAX86178_ECG_LEAD_CFG1_ECG_LOFF_FREQ_MSK GENMASK(2, 0)
+#define MAX86178_ECG_LEAD_CFG1_ECG_LOFF_MODE_MSK BIT(3)
+#define MAX86178_ECG_LEAD_CFG1_EN_ECG_LOFF_MSK   BIT(6)
+#define MAX86178_ECG_LEAD_CFG1_EN_ECG_LON_MSK    BIT(7)
 
 /* ECG_LEAD_CFG2 (0x89) */
-#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_THRESH_MSK  GENMASK(3, 0)
+#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_THRESH_MSK GENMASK(3, 0)
 #define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IMAG_MSK   GENMASK(6, 4)
-#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IPOL_MSK	 BIT(7)
+#define MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IPOL_MSK   BIT(7)
 
 /* ECG_LEAD_BIAS (0x90) */
-#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_N_MSK  BIT(0)
-#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_P_MSK  BIT(1)
-#define MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK     GENMASK(4, 2)
+#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_N_MSK BIT(0)
+#define MAX86178_ECG_LEAD_BIAS_EN_ECG_RBIAS_P_MSK BIT(1)
+#define MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK  GENMASK(4, 2)
 
 /* ECG_RLD_CFG1 (0x92) */
-#define MAX86178_RLD_CFG1_RLD_GAIN_MSK          GENMASK(1, 0)
-#define MAX86178_RLD_CFG1_ACTV_CM_N_MSK         BIT(2)
-#define MAX86178_RLD_CFG1_ACTV_CM_P_MSK         BIT(3)
-#define MAX86178_RLD_CFG1_EN_RLD_OOR_MSK		BIT(4)
-#define MAX86178_RLD_CFG1_RLD_BIAS_MSK	 		BIT(5)
-#define MAX86178_RLD_CFG1_RLD_MODE_MSK 	 		BIT(6)
-#define MAX86178_RLD_CFG1_RLD_EN_MSK		 	BIT(7)
+#define MAX86178_RLD_CFG1_RLD_GAIN_MSK   GENMASK(1, 0)
+#define MAX86178_RLD_CFG1_ACTV_CM_N_MSK  BIT(2)
+#define MAX86178_RLD_CFG1_ACTV_CM_P_MSK  BIT(3)
+#define MAX86178_RLD_CFG1_EN_RLD_OOR_MSK BIT(4)
+#define MAX86178_RLD_CFG1_RLD_BIAS_MSK   BIT(5)
+#define MAX86178_RLD_CFG1_RLD_MODE_MSK   BIT(6)
+#define MAX86178_RLD_CFG1_RLD_EN_MSK     BIT(7)
 
 /* ECG_RLD_CFG2 (0x93) */
-#define MAX86178_RLD_CFG2_BODY_BIAS_DAC_MSK  GENMASK(3, 0)
-#define MAX86178_RLD_CFG2_RLD_BW_MSK	   GENMASK(5, 4)
-#define MAX86178_RLD_CFG2_RLD_SEL_ECG_MSK  BIT(6)
-#define MAX86178_RLD_CFG2_RLD_EXT_RES_MSK  BIT(7)
+#define MAX86178_RLD_CFG2_BODY_BIAS_DAC_MSK GENMASK(3, 0)
+#define MAX86178_RLD_CFG2_RLD_BW_MSK        GENMASK(5, 4)
+#define MAX86178_RLD_CFG2_RLD_SEL_ECG_MSK   BIT(6)
+#define MAX86178_RLD_CFG2_RLD_EXT_RES_MSK   BIT(7)
 
 /* BIOZ Setup */
 /* BIOZ_CFG1 (0xA0) */
 #define MAX86178_BIOZ_CFG1_BIOZ_EN_MSK        GENMASK(1, 0)
 #define MAX86178_BIOZ_CFG1_ECG_BIOZ_BG_EN_MSK BIT(2)
-#define MAX86178_BIOZ_CFG1_BIOZ_ADC_OSR_MSK  GENMASK(5, 3)
-#define MAX86178_BIOZ_CFG1_BIOZ_DAC_OSR_MSK  GENMASK(7, 6)
+#define MAX86178_BIOZ_CFG1_BIOZ_ADC_OSR_MSK   GENMASK(5, 3)
+#define MAX86178_BIOZ_CFG1_BIOZ_DAC_OSR_MSK   GENMASK(7, 6)
 
 /* BIOZ_CFG2 (0xA1) */
 #define MAX86178_BIOZ_CFG2_EN_BIOZ_THRESH_MSK BIT(0)
-#define MAX86178_BIOZ_CFG2_BIOZ_DLPF_MSK	 GENMASK(5, 3)
-#define MAX86178_BIOZ_CFG2_BIOZ_DHPF_MSK	 GENMASK(7, 6)
+#define MAX86178_BIOZ_CFG2_BIOZ_DLPF_MSK      GENMASK(5, 3)
+#define MAX86178_BIOZ_CFG2_BIOZ_DHPF_MSK      GENMASK(7, 6)
 
 /* BIOZ_CFG3 (0xA2) */
 #define MAX86178_BIOZ_CFG3_BIOZ_DRV_MODE_MSK GENMASK(1, 0)
@@ -465,82 +466,81 @@
 #define MAX86178_BIOZ_CFG3_BIOZ_EXT_RES_MSK  BIT(7)
 
 /* BIOZ_CFG4 (0xA3) */
-#define MAX86178_BIOZ_CFG4_EN_UTIL_MODE_MSK  BIT(7)
+#define MAX86178_BIOZ_CFG4_EN_UTIL_MODE_MSK BIT(7)
 
 /* BIOZ_CFG5 (0xA4) */
 #define MAX86178_BIOZ_CFG5_BIOZ_DC_DAC_CODE_MSK GENMASK(6, 0)
 #define MAX86178_BIOZ_CFG5_BIOZ_DC_CODE_SEL_MSK BIT(7)
 
 /* BIOZ_CFG6 (0xA5) */
-#define MAX86178_BIOZ_CFG6_BIOZ_GAIN_MSK	   GENMASK(1, 0)
-#define MAX86178_BIOZ_CFG6_DM_DIS_MSK              BIT(2)
+#define MAX86178_BIOZ_CFG6_BIOZ_GAIN_MSK     GENMASK(1, 0)
+#define MAX86178_BIOZ_CFG6_DM_DIS_MSK        BIT(2)
 #define MAX86178_BIOZ_CFG6_BIOZ_INA_MODE_MSK BIT(3)
-#define MAX86178_BIOZ_CFG6_BIOZ_AHPF_MSK GENMASK(7, 4)
+#define MAX86178_BIOZ_CFG6_BIOZ_AHPF_MSK     GENMASK(7, 4)
 
 /* BIOZ_CFG7 (0xA6) */
-#define MAX86178_BIOZ_CFG7_BIOZ_AMP_BW_MSK		GENMASK(1, 0)
-#define MAX86178_BIOZ_CFG7_BIOZ_AMP_RGE_MSK		GENMASK(3, 2)
-#define MAX86178_BIOZ_CFG7_BIOZ_DAC_RESET_MSK	BIT(4)
-#define MAX86178_BIOZ_CFG7_BIOZ_DRV_RESET_MSK	BIT(5)
-#define MAX86178_BIOZ_CFG7_BIOZ_DC_RESTORE_MSK	BIT(6)
-#define MAX86178_BIOZ_CFG7_BIOZ_EXT_CAP_MSK		BIT(7)
+#define MAX86178_BIOZ_CFG7_BIOZ_AMP_BW_MSK     GENMASK(1, 0)
+#define MAX86178_BIOZ_CFG7_BIOZ_AMP_RGE_MSK    GENMASK(3, 2)
+#define MAX86178_BIOZ_CFG7_BIOZ_DAC_RESET_MSK  BIT(4)
+#define MAX86178_BIOZ_CFG7_BIOZ_DRV_RESET_MSK  BIT(5)
+#define MAX86178_BIOZ_CFG7_BIOZ_DC_RESTORE_MSK BIT(6)
+#define MAX86178_BIOZ_CFG7_BIOZ_EXT_CAP_MSK    BIT(7)
 
 /* BIOZ_CFG8 (0xA7) */
-#define MAX86178_BIOZ_CFG8_BIOZ_CH_FSEL_MSK		BIT(0)
-#define MAX86178_BIOZ_CFG8_BIOZ_INA_CHOP_EN_MSK	BIT(1)
-#define MAX86178_BIOZ_CFG8_BIOZ_FAST_MSK	    BIT(2)
-#define MAX86178_BIOZ_CFG8_BIOZ_IPOL_MSK	    BIT(3)
-#define MAX86178_BIOZ_CFG8_BIOZ_STBYON_MSK	    BIT(4)
-#define MAX86178_BIOZ_CFG8_BIOZ_CMRES_DIS_MSK	BIT(5)
-#define MAX86178_BIOZ_CFG8_BIOZ_RLD_DRV_MSK		BIT(6)
-#define MAX86178_BIOZ_CFG8_BIOZ_RLD_SEK_BIOZ_MSK	BIT(7)
-
+#define MAX86178_BIOZ_CFG8_BIOZ_CH_FSEL_MSK      BIT(0)
+#define MAX86178_BIOZ_CFG8_BIOZ_INA_CHOP_EN_MSK  BIT(1)
+#define MAX86178_BIOZ_CFG8_BIOZ_FAST_MSK         BIT(2)
+#define MAX86178_BIOZ_CFG8_BIOZ_IPOL_MSK         BIT(3)
+#define MAX86178_BIOZ_CFG8_BIOZ_STBYON_MSK       BIT(4)
+#define MAX86178_BIOZ_CFG8_BIOZ_CMRES_DIS_MSK    BIT(5)
+#define MAX86178_BIOZ_CFG8_BIOZ_RLD_DRV_MSK      BIT(6)
+#define MAX86178_BIOZ_CFG8_BIOZ_RLD_SEK_BIOZ_MSK BIT(7)
 
 /* BIOZ Calibration */
 /* BIOZ_MUX_CFG1 (0xAA) */
-#define MAX86178_BIOZ_MUX_CFG1_BIOZ_CAL_EN_MSK  BIT(0)
-#define MAX86178_BIOZ_MUX_CFG1_BIOZ_MUX_EN_MSK BIT(1)
+#define MAX86178_BIOZ_MUX_CFG1_BIOZ_CAL_EN_MSK           BIT(0)
+#define MAX86178_BIOZ_MUX_CFG1_BIOZ_MUX_EN_MSK           BIT(1)
 #define MAX86178_BIOZ_MUX_CFG1_BIOZ_CONNECT_CAL_ONLY_MSK BIT(2)
-#define MAX86178_BIOZ_MUX_CFG1_BMUX_BIST_EN_MSK BIT(5)
-#define MAX86178_BIOZ_MUX_CFG1_BMUX_RSEL_MSK GENMASK(7, 6)
+#define MAX86178_BIOZ_MUX_CFG1_BMUX_BIST_EN_MSK          BIT(5)
+#define MAX86178_BIOZ_MUX_CFG1_BMUX_RSEL_MSK             GENMASK(7, 6)
 
 /* BIOZ_MUX_CFG2 (0xAB) */
 #define MAX86178_BIOZ_MUX_CFG2_EN_INT_INLOAD_MSK BIT(0)
 #define MAX86178_BIOZ_MUX_CFG2_EN_EXT_INLOAD_MSK BIT(1)
-#define MAX86178_BIOZ_MUX_CFG2_GSR_LOAD_EN_MSK BIT(5)
+#define MAX86178_BIOZ_MUX_CFG2_GSR_LOAD_EN_MSK   BIT(5)
 #define MAX86178_BIOZ_MUX_CFG2_BMUX_GSR_RSEL_MSK GENMASK(7, 6)
 
 /* BIOZ_MUX_CFG3 (0xAC) */
 #define MAX86178_BIOZ_MUX_CFG3_DRVN_ASSIGN_MSK GENMASK(1, 0)
 #define MAX86178_BIOZ_MUX_CFG3_DRVP_ASSIGN_MSK GENMASK(3, 2)
-#define MAX86178_BIOZ_MUX_CFG3_BIN_ASSIGN_MSK GENMASK(5, 4)
-#define MAX86178_BIOZ_MUX_CFG3_BIP_ASSIGN_MSK GENMASK(7, 6)
+#define MAX86178_BIOZ_MUX_CFG3_BIN_ASSIGN_MSK  GENMASK(5, 4)
+#define MAX86178_BIOZ_MUX_CFG3_BIP_ASSIGN_MSK  GENMASK(7, 6)
 
 /* BIOZ Lead Detect */
 /* BIOZ_Lead_Detect_CFG1 (0xB0) */
-#define MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IMAG_MSK GENMASK(2, 0)
-#define MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IPOL_MSK BIT(3)
-#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_DRV_OOR_MSK BIT(4)
+#define MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IMAG_MSK   GENMASK(2, 0)
+#define MAX86178_BIOZ_LD_CFG1_BIOZ_LOFF_IPOL_MSK   BIT(3)
+#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_DRV_OOR_MSK  BIT(4)
 #define MAX86178_BIOZ_LD_CFG1_EN_EXT_BIOZ_LOFF_MSK BIT(5)
-#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LOFF_MSK BIT(6)
-#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LON_MSK BIT(7)
+#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LOFF_MSK     BIT(6)
+#define MAX86178_BIOZ_LD_CFG1_EN_BIOZ_LON_MSK      BIT(7)
 
 /* BIOZ_Lead_off_Threshold (0xB1) */
 #define MAX86178_BIOZ_LOFF_THRESH_BIOZ_LOFF_THRESH_MSK GENMASK(3, 0)
-#define MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_MSK GENMASK(6, 4)
-#define MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_4X_MSK BIT(7)
+#define MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_MSK      GENMASK(6, 4)
+#define MAX86178_BIOZ_LOFF_THRESH_RESP_CG_MAG_4X_MSK   BIT(7)
 
 /* BIOZ Lead Bias */
 /* BIOZ_Lead_Bias_CFG1 (0xB4) */
-#define MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_N_MSK BIT(0)
-#define MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_P_MSK BIT(1)
+#define MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_N_MSK  BIT(0)
+#define MAX86178_BIOZ_LB_CFG1_EN_BIOZ_RBIAS_P_MSK  BIT(1)
 #define MAX86178_BIOZ_LB_CFG1_BIOZ_RBIAS_VALUE_MSK GENMASK(3, 2)
 
 /* RESP_CFG1 (0xB6) */
-#define MAX86178_RESP_CFG1_RESP_EN_MSK       BIT(0)
-#define MAX86178_RESP_CFG1_CG_MODE			GENMASK(2, 1)
-#define MAX86178_RESP_CFG1_CG_CHOP_CLK 	GENMASK(4, 3)
-#define MAX86178_RESP_CFG1_CG_LPF_DUTY		GENMASK(7, 5)
+#define MAX86178_RESP_CFG1_RESP_EN_MSK BIT(0)
+#define MAX86178_RESP_CFG1_CG_MODE     GENMASK(2, 1)
+#define MAX86178_RESP_CFG1_CG_CHOP_CLK GENMASK(4, 3)
+#define MAX86178_RESP_CFG1_CG_LPF_DUTY GENMASK(7, 5)
 
 /* Common Interrupt Enable Masks (shared by INT1_ENx and INT2_ENx) */
 /* INTx_EN1 layout (x = 1,2) */
@@ -553,41 +553,41 @@
 #define MAX86178_INT_EN1_A_FULL_MSK           BIT(7)
 
 /* INTx_EN2 layout (x = 1,2) */
-#define MAX86178_INT_EN2_LED1_COMPB_MSK       BIT(0)
-#define MAX86178_INT_EN2_LED2_COMPB_MSK       BIT(1)
-#define MAX86178_INT_EN2_LED3_COMPB_MSK       BIT(2)
-#define MAX86178_INT_EN2_LED4_COMPB_MSK       BIT(3)
-#define MAX86178_INT_EN2_LED5_COMPB_MSK       BIT(4)
-#define MAX86178_INT_EN2_LED6_COMPB_MSK       BIT(5)
-#define MAX86178_INT_EN2_INVALID_PPG_CFG_MSK  BIT(7)
+#define MAX86178_INT_EN2_LED1_COMPB_MSK      BIT(0)
+#define MAX86178_INT_EN2_LED2_COMPB_MSK      BIT(1)
+#define MAX86178_INT_EN2_LED3_COMPB_MSK      BIT(2)
+#define MAX86178_INT_EN2_LED4_COMPB_MSK      BIT(3)
+#define MAX86178_INT_EN2_LED5_COMPB_MSK      BIT(4)
+#define MAX86178_INT_EN2_LED6_COMPB_MSK      BIT(5)
+#define MAX86178_INT_EN2_INVALID_PPG_CFG_MSK BIT(7)
 
 /* INTx_EN3 layout (x = 1,2) */
-#define MAX86178_INT_EN3_PHASE_LOCK_MSK       BIT(0)
-#define MAX86178_INT_EN3_PHASE_UNLOCK_MSK     BIT(1)
-#define MAX86178_INT_EN3_FREQ_LOCK_MSK        BIT(2)
-#define MAX86178_INT_EN3_FREQ_UNLOCK_MSK      BIT(3)
+#define MAX86178_INT_EN3_PHASE_LOCK_MSK   BIT(0)
+#define MAX86178_INT_EN3_PHASE_UNLOCK_MSK BIT(1)
+#define MAX86178_INT_EN3_FREQ_LOCK_MSK    BIT(2)
+#define MAX86178_INT_EN3_FREQ_UNLOCK_MSK  BIT(3)
 
 /* INTx_EN4 layout (x = 1,2) */
-#define MAX86178_INT_EN4_ECG_LOFF_NL_MSK      BIT(0)
-#define MAX86178_INT_EN4_ECG_LOFF_NH_MSK      BIT(1)
-#define MAX86178_INT_EN4_ECG_LOFF_PL_MSK      BIT(2)
-#define MAX86178_INT_EN4_ECG_LOFF_PH_MSK      BIT(3)
-#define MAX86178_INT_EN4_RLD_OOR_MSK          BIT(4)
-#define MAX86178_INT_EN4_ECG_FAST_REC_MSK     BIT(5)
-#define MAX86178_INT_EN4_ECG_LON_MSK          BIT(7)
+#define MAX86178_INT_EN4_ECG_LOFF_NL_MSK  BIT(0)
+#define MAX86178_INT_EN4_ECG_LOFF_NH_MSK  BIT(1)
+#define MAX86178_INT_EN4_ECG_LOFF_PL_MSK  BIT(2)
+#define MAX86178_INT_EN4_ECG_LOFF_PH_MSK  BIT(3)
+#define MAX86178_INT_EN4_RLD_OOR_MSK      BIT(4)
+#define MAX86178_INT_EN4_ECG_FAST_REC_MSK BIT(5)
+#define MAX86178_INT_EN4_ECG_LON_MSK      BIT(7)
 
 /* INTx_EN5 layout (x = 1,2) */
-#define MAX86178_INT_EN5_BIOZ_LOFF_NL_MSK     BIT(0)
-#define MAX86178_INT_EN5_BIOZ_LOFF_NH_MSK     BIT(1)
-#define MAX86178_INT_EN5_BIOZ_LOFF_PL_MSK     BIT(2)
-#define MAX86178_INT_EN5_BIOZ_LOFF_PH_MSK     BIT(3)
-#define MAX86178_INT_EN5_BIOZ_DRVP_OFF_MSK    BIT(4)
-#define MAX86178_INT_EN5_BIOZ_UNDR_MSK        BIT(5)
-#define MAX86178_INT_EN5_BIOZ_OVER_MSK        BIT(6)
-#define MAX86178_INT_EN5_BIOZ_LON_MSK         BIT(7)
+#define MAX86178_INT_EN5_BIOZ_LOFF_NL_MSK  BIT(0)
+#define MAX86178_INT_EN5_BIOZ_LOFF_NH_MSK  BIT(1)
+#define MAX86178_INT_EN5_BIOZ_LOFF_PL_MSK  BIT(2)
+#define MAX86178_INT_EN5_BIOZ_LOFF_PH_MSK  BIT(3)
+#define MAX86178_INT_EN5_BIOZ_DRVP_OFF_MSK BIT(4)
+#define MAX86178_INT_EN5_BIOZ_UNDR_MSK     BIT(5)
+#define MAX86178_INT_EN5_BIOZ_OVER_MSK     BIT(6)
+#define MAX86178_INT_EN5_BIOZ_LON_MSK      BIT(7)
 
-#define MAX86178_MDIV_MSB_MSK              GENMASK(9, 8)
-#define MAX86178_NDIV_MSB_MSK              GENMASK(10, 8)
+#define MAX86178_MDIV_MSB_MSK GENMASK(9, 8)
+#define MAX86178_NDIV_MSB_MSK GENMASK(10, 8)
 
 #define MAX86178_ECG_ADC_CLK_MIN 19000U
 #define MAX86178_ECG_ADC_CLK_MAX 32768U
@@ -603,23 +603,21 @@
 #define MAX86178_SAMPLE_SIZE_BYTES 3u
 
 /* FIFO Tags */
-#define MAX86178_PPG_MEAS1_TAG 0x0u
-#define MAX86178_PPG_MEAS2_TAG 0x1u
-#define MAX86178_PPG_MEAS3_TAG 0x2u
-#define MAX86178_PPG_MEAS4_TAG 0x3u
-#define MAX86178_PPG_MEAS5_TAG 0x4u
-#define MAX86178_PPG_MEAS6_TAG 0x5u
-#define MAX86178_PPG_DARK_TAG 0x6u
-#define MAX86178_PPG_ALC_OVF_TAG 0x7u
-#define MAX86178_PPG_EXP_OVF_TAG 0x8u
-#define MAX86178_BIOZ_I_TAG 0x9u
-#define MAX86178_BIOZ_Q_TAG 0xAu
+#define MAX86178_PPG_MEAS1_TAG             0x0u
+#define MAX86178_PPG_MEAS2_TAG             0x1u
+#define MAX86178_PPG_MEAS3_TAG             0x2u
+#define MAX86178_PPG_MEAS4_TAG             0x3u
+#define MAX86178_PPG_MEAS5_TAG             0x4u
+#define MAX86178_PPG_MEAS6_TAG             0x5u
+#define MAX86178_PPG_DARK_TAG              0x6u
+#define MAX86178_PPG_ALC_OVF_TAG           0x7u
+#define MAX86178_PPG_EXP_OVF_TAG           0x8u
+#define MAX86178_BIOZ_I_TAG                0x9u
+#define MAX86178_BIOZ_Q_TAG                0xAu
 #define MAX86178_ECG_AND_FAST_RECOVERY_TAG 0xBu
-#define MAX86178_ECGP_ECGN_TAG 0xCu
-#define MAX86178_CAPP_CAPN_TAG 0xDu
-#define MAX86178_TIMING_TAG 0xEu
-
-
+#define MAX86178_ECGP_ECGN_TAG             0xCu
+#define MAX86178_CAPP_CAPN_TAG             0xDu
+#define MAX86178_TIMING_TAG                0xEu
 
 enum clk_ref_sel {
 	MAX86178_REF_CLK_32000 = 0,
@@ -704,7 +702,7 @@ enum max86178_bioz_adc_osr {
 	MAX86178_BIOZ_ADC_OSR_256,
 	MAX86178_BIOZ_ADC_OSR_512,
 	MAX86178_BIOZ_ADC_OSR_1024,
-	MAX86178_BIOZ_ADC_OSR_COUNT,	
+	MAX86178_BIOZ_ADC_OSR_COUNT,
 };
 
 enum max86178_bioz_dac_osr {
@@ -712,7 +710,7 @@ enum max86178_bioz_dac_osr {
 	MAX86178_BIOZ_DAC_OSR_64,
 	MAX86178_BIOZ_DAC_OSR_128,
 	MAX86178_BIOZ_DAC_OSR_256,
-	MAX86178_BIOZ_DAC_OSR_COUNT,	
+	MAX86178_BIOZ_DAC_OSR_COUNT,
 };
 
 enum max86178_ecg_dec_rate {
@@ -956,7 +954,7 @@ enum max86178_ecg_cal_mag {
 	MAX86178_ECG_CAL_MAG_1mV,
 };
 
-enum max86178_ecg_cal_sel{
+enum max86178_ecg_cal_sel {
 	MAX86178_ECG_CAL_SEL_NO_CAL = 0,
 	MAX86178_ECG_CAL_SEL_CONN_VMID_ECG,
 	MAX86178_ECG_CAL_SEL_CONN_VCALP,
@@ -1011,7 +1009,7 @@ enum max86178_ecg_rbias_value {
 	MAX86178_ECG_RBIAS_200M,
 };
 
-enum max86178_en_ecg_rbias{
+enum max86178_en_ecg_rbias {
 	MAX86178_EN_ECG_RBIAS_DISCONNECTED = 0,
 	MAX86178_EN_ECG_RBIAS_CONNECTED,
 };
@@ -1104,15 +1102,15 @@ enum max86178_bioz_idrv_rge {
 };
 
 enum max86178_bioz_drv_mode {
-	MAX86178_BIOZ_DRV_MODE_CURRENT = 0,   /* Current Drive - sine-wave current */
-	MAX86178_BIOZ_DRV_MODE_VOLTAGE,       /* Voltage Drive - sine-wave voltage */
-	MAX86178_BIOZ_DRV_MODE_H_BRIDGE,      /* H-Bridge Drive - alternating switching */
-	MAX86178_BIOZ_DRV_MODE_STANDBY,       /* Standby - low-power state */
+	MAX86178_BIOZ_DRV_MODE_CURRENT = 0, /* Current Drive - sine-wave current */
+	MAX86178_BIOZ_DRV_MODE_VOLTAGE,     /* Voltage Drive - sine-wave voltage */
+	MAX86178_BIOZ_DRV_MODE_H_BRIDGE,    /* H-Bridge Drive - alternating switching */
+	MAX86178_BIOZ_DRV_MODE_STANDBY,     /* Standby - low-power state */
 };
 
 enum max86178_bioz_dc_code_sel {
-	MAX86178_BIOZ_DC_CODE_SEL_DDS = 0,    /* DDS DAC code (sine-wave sample) */
-	MAX86178_BIOZ_DC_CODE_SEL_DC_CODE,    /* BIOZ_DC_DAC_CODE[6:0] for upper 7 bits */
+	MAX86178_BIOZ_DC_CODE_SEL_DDS = 0, /* DDS DAC code (sine-wave sample) */
+	MAX86178_BIOZ_DC_CODE_SEL_DC_CODE, /* BIOZ_DC_DAC_CODE[6:0] for upper 7 bits */
 };
 
 enum max86178_bioz_ahpf {
@@ -1123,20 +1121,20 @@ enum max86178_bioz_ahpf {
 	MAX86178_BIOZ_AHPF_2000Hz,
 	MAX86178_BIOZ_AHPF_5000Hz,
 	MAX86178_BIOZ_AHPF_10000Hz,
-	MAX86178_BIOZ_AHPF_BYPASS,            /* Resistor opened, capacitors shorted */
-	MAX86178_BIOZ_AHPF_42_4M,             /* 42.4MΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_21_2M,             /* 21.2MΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_8_4M,              /* 8.4MΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_4_2M,              /* 4.2MΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_2_2M,              /* 2.2MΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_848K,              /* 848kΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_848K_2,            /* 848kΩ, capacitors shorted */
-	MAX86178_BIOZ_AHPF_BYPASS_2,          /* Resistor opened, capacitor shorted */
+	MAX86178_BIOZ_AHPF_BYPASS,   /* Resistor opened, capacitors shorted */
+	MAX86178_BIOZ_AHPF_42_4M,    /* 42.4MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_21_2M,    /* 21.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_8_4M,     /* 8.4MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_4_2M,     /* 4.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_2_2M,     /* 2.2MΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_848K,     /* 848kΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_848K_2,   /* 848kΩ, capacitors shorted */
+	MAX86178_BIOZ_AHPF_BYPASS_2, /* Resistor opened, capacitor shorted */
 };
 
 enum max86178_bioz_ina_mode {
-	MAX86178_BIOZ_INA_MODE_HIGH_POWER = 0,  /* High-power mode (low noise) */
-	MAX86178_BIOZ_INA_MODE_LOW_POWER,       /* Low-power mode */
+	MAX86178_BIOZ_INA_MODE_HIGH_POWER = 0, /* High-power mode (low noise) */
+	MAX86178_BIOZ_INA_MODE_LOW_POWER,      /* Low-power mode */
 };
 
 enum max86178_bioz_dm_dis {
@@ -1152,8 +1150,8 @@ enum max86178_bioz_gain {
 };
 
 enum max86178_bioz_ext_cap {
-	MAX86178_BIOZ_EXT_CAP_INTERNAL = 0,   /* No ext cap - internal switch shorts pins (~35Ω) */
-	MAX86178_BIOZ_EXT_CAP_EXTERNAL,       /* External cap - internal switch open */
+	MAX86178_BIOZ_EXT_CAP_INTERNAL = 0, /* No ext cap - internal switch shorts pins (~35Ω) */
+	MAX86178_BIOZ_EXT_CAP_EXTERNAL,     /* External cap - internal switch open */
 };
 
 enum max86178_bioz_dc_restore {
@@ -1290,7 +1288,7 @@ enum max86178_bioz_rbias_value {
 };
 
 /**
- * 
+ *
  * @brief MAX86178 bus configuration
  *
  */
@@ -1319,12 +1317,12 @@ typedef int (*max86178_reg_access_fn)(const struct device *dev, bool read, uint8
 
 /* Clock Configuration Structs */
 struct max86178_clk_ppg_cfg {
-	uint16_t ppg_fr_clk_div : 15;
+	uint16_t ppg_fr_clk_div: 15;
 };
 
 struct max86178_clk_ecg_cfg {
-	uint8_t ecg_fdiv : 3;
-	uint16_t ecg_ndiv : 11;
+	uint8_t ecg_fdiv: 3;
+	uint16_t ecg_ndiv: 11;
 	enum max86178_ecg_dec_rate ecg_dec_rate;
 };
 
@@ -1339,7 +1337,7 @@ struct max86190_clk_osc_cfg {
 	enum ref_clk_sel ref_clk;
 	enum clk_ref_sel clk_freq_sel;
 	enum max86178_clk_fine_tune clk_fine_tune;
-	uint16_t mdiv : 10;
+	uint16_t mdiv: 10;
 };
 
 struct max86178_clk_cfg {
@@ -1411,17 +1409,17 @@ struct max86178_ecg_setup {
 	bool ecg_en;
 	enum max86178_ecg_input_pol ecg_input_pol;
 	enum max86178_ecg_pga_gain ecg_pga_gain;
-	uint8_t ecg_ina_rge : 2;
-	uint8_t ecg_ina_gain : 3;
+	uint8_t ecg_ina_rge: 2;
+	uint8_t ecg_ina_gain: 3;
 	bool ecg_imp_hi;
 	enum max86178_ecg_auto_rec ecg_auto_rec;
-	uint8_t ecg_mux_sel : 2;
+	uint8_t ecg_mux_sel: 2;
 	enum max86178_en_ecg_fast_rec en_ecg_fast_rec;
-	uint8_t ecg_fast_rec_thres : 6;
+	uint8_t ecg_fast_rec_thres: 6;
 };
 
 struct max86178_ecg_calibration {
-	uint16_t ecg_cal_high : 11;
+	uint16_t ecg_cal_high: 11;
 	enum max86178_ecg_cal_freq ecg_freq;
 	enum max86178_ecg_cal_duty ecg_cal_duty;
 	enum max86178_ecg_cal_en ecg_cal_en;
@@ -1440,7 +1438,7 @@ struct max86178_ecg_lead_detect {
 	enum max86178_ecg_loff_freq ecg_loff_freq;
 	enum max86178_ecg_loff_ipol ecg_loff_ipol;
 	enum max86178_ecg_loff_imag ecg_loff_current_mag;
-	uint8_t ecg_loff_thresh : 4;
+	uint8_t ecg_loff_thresh: 4;
 };
 
 struct max86178_ecg_lead_bias {
@@ -1459,8 +1457,8 @@ struct max86178_rld_cfg {
 	enum max86178_ecg_rld_gain rld_gain;
 	bool rld_ext_res;
 	bool rld_sel_ecg;
-	uint8_t rld_bw : 2;
-	uint8_t body_bias_dac : 4;
+	uint8_t rld_bw: 2;
+	uint8_t body_bias_dac: 4;
 };
 
 struct max86178_ecg_cfg {
@@ -1470,7 +1468,6 @@ struct max86178_ecg_cfg {
 	struct max86178_ecg_lead_bias lead_bias;
 	struct max86178_rld_cfg rld_cfg;
 };
-
 
 struct max86178_bioz_setup {
 	enum max86178_ecg_bioz_bg_en ecg_bioz_bg_en;
@@ -1484,7 +1481,7 @@ struct max86178_bioz_setup {
 	enum max86178_bioz_drv_mode bioz_drv_mode;
 	bool en_util_mode;
 	enum max86178_bioz_dc_code_sel bioz_dc_code_sel;
-	uint8_t bioz_dc_dac_code : 7;
+	uint8_t bioz_dc_dac_code: 7;
 	enum max86178_bioz_ahpf bioz_ahpf;
 	enum max86178_bioz_ina_mode bioz_ina_mode;
 	enum max86178_bioz_dm_dis bioz_dm_dis;
@@ -1519,8 +1516,8 @@ struct max86178_bioz_calibration {
 	enum max86178_en_int_inload en_int_inload;
 	enum max86178_bioz_bip_assign bip_assign;
 	enum max86178_bioz_bin_assign bin_assign;
-	uint8_t drvp_assign : 2;
-	uint8_t drvn_assign : 2;
+	uint8_t drvp_assign: 2;
+	uint8_t drvn_assign: 2;
 	uint8_t bist_r_err;
 };
 
@@ -1530,10 +1527,10 @@ struct max86178_bioz_lead_detect {
 	enum max86178_en_ext_bioz_loff en_ext_bioz_loff;
 	enum max86178_en_bioz_drv_oor en_bioz_drv_oor;
 	bool bioz_loff_ipol;
-	uint8_t bioz_loff_current_mag : 3;
+	uint8_t bioz_loff_current_mag: 3;
 	bool resp_cg_mag4x;
-	uint8_t resp_cg_mag : 3;
-	uint8_t bioz_loff_thresh : 4;
+	uint8_t resp_cg_mag: 3;
+	uint8_t bioz_loff_thresh: 4;
 };
 
 struct max86178_bioz_lead_bias {
@@ -1551,9 +1548,9 @@ struct max86178_bioz_cfg {
 
 struct max86178_resp_setup {
 	bool resp_en;
-	uint8_t cg_mode : 2;
-	uint8_t cg_chop_clk : 2;
-	uint8_t cg_lpf_duty : 3;
+	uint8_t cg_mode: 2;
+	uint8_t cg_chop_clk: 2;
+	uint8_t cg_lpf_duty: 3;
 };
 
 struct max86178_sys_cfg {
@@ -1565,7 +1562,7 @@ struct max86178_sys_cfg {
 struct max86178_fifo_cfg {
 	bool fifo_rollover_en;
 	bool fifo_a_full_type;
-	uint16_t fifo_watermark : 9;
+	uint16_t fifo_watermark: 9;
 };
 
 /**
@@ -1668,7 +1665,7 @@ struct max86178_data {
 	struct rtio *rtio_ctx;
 	struct rtio_iodev *iodev;
 	uint8_t status1;
-	uint8_t fifo_counter [2];
+	uint8_t fifo_counter[2];
 	uint64_t timestamp;
 	struct rtio *r_cb;
 	uint8_t fifo_watermark_irq;
@@ -1685,7 +1682,6 @@ struct max86178_fifo_data {
 	uint16_t fifo_byte_count;
 	uint8_t sample_set_size;
 };
-
 
 /**
  * @brief MAX86178 device configuration structure
@@ -1745,21 +1741,21 @@ int max86178_reg_update(const struct device *dev, uint8_t reg_addr, uint8_t mask
 #ifdef CONFIG_MAX86178_TRIGGER
 /**
  * @brief Initialize the MAX86178 trigger
- * 
+ *
  * @param dev Device pointer
  * @return int 0 on success, negative error code on failure
  */
 int max86178_init_interrupt(const struct device *dev);
 /**
  * @brief Set a trigger for the MAX86178
- * 
+ *
  * @param dev Device pointer
  * @param trig Trigger configuration
  * @param handler Trigger handler function
  * @return int 0 on success, negative error code on failure
  */
 int max86178_trigger_set(const struct device *dev, const struct sensor_trigger *trig,
-			      sensor_trigger_handler_t handler);
+			 sensor_trigger_handler_t handler);
 #endif /* CONFIG_MAX86178_TRIGGER */
 
 #ifdef CONFIG_MAX86178_STREAM

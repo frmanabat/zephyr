@@ -1934,7 +1934,8 @@ static int max86178_set_ppg_avg_num(const struct device *dev, enum sensor_channe
 
 	ret = ppg_avg_num_to_enum(val->val1, &enum_val);
 	if (ret < 0) {
-		LOG_ERR("Invalid AVG NUM value: %d (valid: 1, 2, 4, 8, 16, 32, 64, 128)", val->val1);
+		LOG_ERR("Invalid AVG NUM value: %d (valid: 1, 2, 4, 8, 16, 32, 64, 128)",
+			val->val1);
 		return -EINVAL;
 	}
 
@@ -2217,8 +2218,7 @@ static int max86178_set_ppg1_adc_rge(const struct device *dev, enum sensor_chann
 	}
 
 	base_reg = max86178_meas_base_reg(meas_idx);
-	ret = max86178_reg_update(dev, base_reg + 2, MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK,
-				  enum_val);
+	ret = max86178_reg_update(dev, base_reg + 2, MAX86178_MEAS_CFG2_PPG1_ADC_RGE_MSK, enum_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set MEAS%d PPG1 ADC RGE: %d", meas_idx + 1, ret);
 		return ret;
@@ -2279,8 +2279,7 @@ static int max86178_set_ppg2_adc_rge(const struct device *dev, enum sensor_chann
 	}
 
 	base_reg = max86178_meas_base_reg(meas_idx);
-	ret = max86178_reg_update(dev, base_reg + 2, MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK,
-				  enum_val);
+	ret = max86178_reg_update(dev, base_reg + 2, MAX86178_MEAS_CFG2_PPG2_ADC_RGE_MSK, enum_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set MEAS%d PPG2 ADC RGE: %d", meas_idx + 1, ret);
 		return ret;
@@ -2447,8 +2446,7 @@ static int max86178_set_ppg_led_rge(const struct device *dev, enum sensor_channe
 	}
 
 	base_reg = max86178_meas_base_reg(meas_idx);
-	ret = max86178_reg_update(dev, base_reg + 4, MAX86178_MEAS_CFG4_LED_RGE_MSK,
-				  enum_val);
+	ret = max86178_reg_update(dev, base_reg + 4, MAX86178_MEAS_CFG4_LED_RGE_MSK, enum_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set MEAS%d LED RGE: %d", meas_idx + 1, ret);
 		return ret;
@@ -3640,7 +3638,8 @@ static int max86178_set_ecg_loff_freq(const struct device *dev, const struct sen
 	/* Convert Hz value to enum */
 	ret = ecg_loff_freq_to_enum(val->val1, &enum_val);
 	if (ret < 0) {
-		LOG_ERR("Invalid ECG lead off frequency: %d Hz (valid: 0, 4, 8, 16, 32, 64, 128, 256)",
+		LOG_ERR("Invalid ECG lead off frequency: %d Hz (valid: 0, 4, 8, 16, 32, 64, 128, "
+			"256)",
 			val->val1);
 		return -EINVAL;
 	}
@@ -3669,7 +3668,7 @@ static int max86178_get_ecg_loff_freq(const struct device *dev, struct sensor_va
 
 	/* Convert enum to Hz value */
 	ret = ecg_loff_freq_from_enum(FIELD_GET(MAX86178_ECG_LEAD_CFG1_ECG_LOFF_FREQ_MSK, reg_val),
-				       &hz);
+				      &hz);
 	if (ret < 0) {
 		return ret;
 	}
@@ -3726,7 +3725,8 @@ static int max86178_set_ecg_loff_imag(const struct device *dev, const struct sen
 	/* Convert nA value to enum */
 	ret = ecg_loff_imag_to_enum(val->val1, &enum_val);
 	if (ret < 0) {
-		LOG_ERR("Invalid ECG lead off current: %d nA (valid: 0, 5, 10, 20, 50, 100, 200, 400)",
+		LOG_ERR("Invalid ECG lead off current: %d nA (valid: 0, 5, 10, 20, 50, 100, 200, "
+			"400)",
 			val->val1);
 		return -EINVAL;
 	}
@@ -3755,7 +3755,7 @@ static int max86178_get_ecg_loff_imag(const struct device *dev, struct sensor_va
 
 	/* Convert enum to nA value */
 	ret = ecg_loff_imag_from_enum(FIELD_GET(MAX86178_ECG_LEAD_CFG2_ECG_LOFF_IMAG_MSK, reg_val),
-				       &nanoamps);
+				      &nanoamps);
 	if (ret < 0) {
 		return ret;
 	}
@@ -3839,8 +3839,8 @@ static int max86178_get_ecg_rbias_value(const struct device *dev, struct sensor_
 	}
 
 	/* Convert enum to megaohm value */
-	ret = ecg_rbias_value_from_enum(FIELD_GET(MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK, reg_val),
-					&megaohms);
+	ret = ecg_rbias_value_from_enum(
+		FIELD_GET(MAX86178_ECG_LEAD_BIAS_ECG_RBIAS_VAL_MSK, reg_val), &megaohms);
 	if (ret < 0) {
 		return ret;
 	}
@@ -4338,7 +4338,6 @@ static int max86178_get_body_bias_dac(const struct device *dev, struct sensor_va
 	return 0;
 }
 
-
 /* BioZ Setup Configuration setter/getter functions */
 
 /* BIOZ_ADC_OSR setter/getter - accepts numeric OSR value (8, 16, 32, ..., 1024) */
@@ -4350,7 +4349,8 @@ static int max86178_attr_set_bioz_adc_osr(const struct device *dev, const struct
 	/* Convert numeric OSR value to enum */
 	ret = bioz_adc_osr_to_enum(val->val1, &enum_val);
 	if (ret < 0) {
-		LOG_ERR("Invalid BioZ ADC OSR value: %d (valid: 8, 16, 32, 64, 128, 256, 512, 1024)",
+		LOG_ERR("Invalid BioZ ADC OSR value: %d (valid: 8, 16, 32, 64, 128, 256, 512, "
+			"1024)",
 			val->val1);
 		return -EINVAL;
 	}
@@ -4624,7 +4624,8 @@ static int max86178_attr_get_bioz_idrv_rge(const struct device *dev, struct sens
 }
 
 /* BIOZ_VDRV_MAG setter/getter */
-/* BIOZ_VDRV_MAG setter/getter - accepts voltage in µV (50000, 100000, 250000, 500000) as volts in val2 */
+/* BIOZ_VDRV_MAG setter/getter - accepts voltage in µV (50000, 100000, 250000, 500000) as volts in
+ * val2 */
 static int max86178_attr_set_bioz_vdrv_mag(const struct device *dev, const struct sensor_value *val)
 {
 	uint8_t enum_val;
@@ -4633,7 +4634,8 @@ static int max86178_attr_set_bioz_vdrv_mag(const struct device *dev, const struc
 	/* Convert µV value (in val2) to enum */
 	ret = bioz_vdrv_mag_to_enum(val->val2, &enum_val);
 	if (ret < 0) {
-		LOG_ERR("Invalid BioZ voltage drive magnitude: %d µV (valid: 50000, 100000, 250000, 500000)",
+		LOG_ERR("Invalid BioZ voltage drive magnitude: %d µV (valid: 50000, 100000, "
+			"250000, 500000)",
 			val->val2);
 		return -EINVAL;
 	}
@@ -5946,7 +5948,7 @@ static int max86178_attr_get_bmux_gsr_rsel(const struct device *dev, struct sens
 
 	/* Convert enum to kilohm value */
 	ret = bmux_gsr_rsel_from_enum(FIELD_GET(MAX86178_BIOZ_MUX_CFG2_BMUX_GSR_RSEL_MSK, reg_val),
-				       &kiloohms);
+				      &kiloohms);
 	if (ret < 0) {
 		return ret;
 	}
@@ -6490,9 +6492,8 @@ static int max86178_attr_get_bioz_rbias_value(const struct device *dev, struct s
 	}
 
 	/* Convert enum to megaohm value */
-	ret = bioz_rbias_value_from_enum(FIELD_GET(MAX86178_BIOZ_LB_CFG1_BIOZ_RBIAS_VALUE_MSK,
-						    reg_val),
-					 &megaohms);
+	ret = bioz_rbias_value_from_enum(
+		FIELD_GET(MAX86178_BIOZ_LB_CFG1_BIOZ_RBIAS_VALUE_MSK, reg_val), &megaohms);
 	if (ret < 0) {
 		return ret;
 	}
@@ -8851,37 +8852,32 @@ static int max86178_set_ppg_threshold_hyst(const struct device *dev)
 static int max86178_set_ppg_threshold_level(const struct device *dev)
 {
 	int ret = 0;
-	uint8_t reg_val;
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val = 0;
 
 	reg_val = config->ppg_cfg.threshold_cfg.thresh1_hi;
-	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH1,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH1, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PPG HI threshold 1 level: %d", ret);
 		return ret;
 	}
 
 	reg_val = config->ppg_cfg.threshold_cfg.thresh1_lo;
-	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH1,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH1, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PPG LOW threshold 1 level: %d", ret);
 		return ret;
 	}
 
 	reg_val = config->ppg_cfg.threshold_cfg.thresh2_hi;
-	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH2,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_PPG_HI_THRESH2, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PPG HI threshold 2 level: %d", ret);
 		return ret;
 	}
 
 	reg_val = config->ppg_cfg.threshold_cfg.thresh2_lo;
-	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH2,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_PPG_LO_THRESH2, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PPG LOW threshold 2 level: %d", ret);
 		return ret;
@@ -8970,13 +8966,6 @@ static int max86178_ppg_init(const struct device *dev)
 		return ret;
 	}
 
-	/* I think this should be done after the pll_en  */
-	// /* Set PPG measurement enables */
-	// ret = max86178_set_ppg_meas_en(dev);
-	// if (ret < 0) {
-	// 	LOG_ERR("Failed to set PPG measurement enable: %d", ret);
-	// 	return ret;
-	// }
 	return 0;
 }
 
@@ -9491,8 +9480,7 @@ static int max86178_init_bioz_lo_thresh(const struct device *dev)
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val = config->bioz_cfg.setup.bioz_lo_thresh;
 
-	ret = max86178_reg_write(dev, MAX86178_BIOZ_LO_THRESH,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_LO_THRESH, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ low threshold: %d", ret);
 		return ret;
@@ -9506,8 +9494,7 @@ static int max86178_init_bioz_hi_thresh(const struct device *dev)
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val = config->bioz_cfg.setup.bioz_hi_thresh;
 
-	ret = max86178_reg_write(dev, MAX86178_BIOZ_HI_THRESH,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_HI_THRESH, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ high threshold: %d", ret);
 		return ret;
@@ -9662,8 +9649,7 @@ static int max86178_set_bioz_mux4(const struct device *dev)
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val = config->bioz_cfg.calibration.bist_r_err;
 
-	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG4,
-				 &reg_val, 1);
+	ret = max86178_reg_write(dev, MAX86178_BIOZ_MUX_CFG4, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set BioZ MUX configuration 4: %d", ret);
 		return ret;
@@ -9919,9 +9905,12 @@ static int max86178_sys_cfg_init(const struct device *dev)
 	const struct max86178_dev_config *config = dev->config;
 	uint8_t reg_val;
 
-	reg_val = FIELD_PREP(MAX86178_SYS_CFG1_ECG_BIOZ_TIMING_DATA_MSK, config->sys_cfg.ecg_bioz_timing_data_en) |
-		  FIELD_PREP(MAX86178_SYS_CFG1_BIOZ_PPG_TIMING_DATA_MSK, config->sys_cfg.bioz_ppg_timing_data_en) |
-		  FIELD_PREP(MAX86178_SYS_CFG1_ECG_PPG_TIMING_DATA_MSK, config->sys_cfg.ecg_ppg_timing_data_en);
+	reg_val = FIELD_PREP(MAX86178_SYS_CFG1_ECG_BIOZ_TIMING_DATA_MSK,
+			     config->sys_cfg.ecg_bioz_timing_data_en) |
+		  FIELD_PREP(MAX86178_SYS_CFG1_BIOZ_PPG_TIMING_DATA_MSK,
+			     config->sys_cfg.bioz_ppg_timing_data_en) |
+		  FIELD_PREP(MAX86178_SYS_CFG1_ECG_PPG_TIMING_DATA_MSK,
+			     config->sys_cfg.ecg_ppg_timing_data_en);
 	ret = max86178_reg_write(dev, MAX86178_SYS_CFG1, &reg_val, 1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set system configuration: %d", ret);
@@ -10542,11 +10531,14 @@ static int max86178_init(const struct device *dev)
 /*******************************************************************************
  * SYSTEM CONFIGURATION PARSING MACROS
  ******************************************************************************/
-#define MAX86178_SYS_CFG(inst)                                                                    \
+#define MAX86178_SYS_CFG(inst)                                                                     \
 	{                                                                                          \
-		.ecg_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), ecg_ppg_timing_data_en, false), \
-		.bioz_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), bioz_ppg_timing_data_en, false), \
-		.ecg_bioz_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg), ecg_bioz_timing_data_en, false), \
+		.ecg_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg),         \
+						     ecg_ppg_timing_data_en, false),               \
+		.bioz_ppg_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg),        \
+						      bioz_ppg_timing_data_en, false),             \
+		.ecg_bioz_timing_data_en = DT_PROP_OR(DT_CHILD(DT_DRV_INST(inst), sys_cfg),        \
+						      ecg_bioz_timing_data_en, false),             \
 	}
 
 /*******************************************************************************
@@ -10581,7 +10573,7 @@ static int max86178_init(const struct device *dev)
 	 .bioz_cfg = MAX86178_BIOZ_CFG(inst),                                                      \
 	 .fifo_cfg = MAX86178_FIFO_CFG(inst),                                                      \
 	 .resp_cfg = MAX86178_RESP_CFG(inst),                                                      \
-	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                       \
+	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                        \
 	 COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) }
 
 #define MAX86178_CONFIG_SPI(inst)                                                                  \
@@ -10595,7 +10587,7 @@ static int max86178_init(const struct device *dev)
 	 .bioz_cfg = MAX86178_BIOZ_CFG(inst),                                                      \
 	 .fifo_cfg = MAX86178_FIFO_CFG(inst),                                                      \
 	 .resp_cfg = MAX86178_RESP_CFG(inst),                                                      \
-	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                       \
+	 .sys_cfg = MAX86178_SYS_CFG(inst),                                                        \
 	 COND_CODE_1(UTIL_OR(DT_INST_NODE_HAS_PROP(inst, int1_gpios), DT_INST_NODE_HAS_PROP(inst, int2_gpios)), (MAX86178_CFG_IRQ(inst)), ()) }
 
 #ifdef CONFIG_MAX86178_STREAM

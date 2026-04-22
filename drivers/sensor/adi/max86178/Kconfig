@@ -25,12 +25,12 @@ config MAX86178_TRIGGER_NONE
 
 config MAX86178_TRIGGER_GLOBAL_THREAD
 	bool "Use global thread"
-	depends on GPIO
+	select GPIO
 	select MAX86178_TRIGGER
 
 config MAX86178_TRIGGER_OWN_THREAD
 	bool "Use own thread"
-	depends on GPIO
+	select GPIO
 	select MAX86178_TRIGGER
 endchoice
 
@@ -61,8 +61,9 @@ config MAX86178_INIT_PRIORITY
 config MAX86178_STREAM
 	bool "Use streaming mode"
 	select MAX86178_TRIGGER
-	depends on (SPI_RTIO || I2C_RTIO)
-	depends on SENSOR_ASYNC_API
+	select SPI_RTIO if $(dt_compat_on_bus,$(DT_COMPAT_ADI_MAX86178),spi)
+	select I2C_RTIO if $(dt_compat_on_bus,$(DT_COMPAT_ADI_MAX86178),i2c)
+	select SENSOR_ASYNC_API
 	help
 	  Use this configuration option to enable streaming sensor data via RTIO.
 
