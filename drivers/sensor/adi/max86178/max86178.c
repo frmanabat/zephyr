@@ -6673,7 +6673,8 @@ static int max86178_attr_get_en_bioz_rbias_n(const struct device *dev, struct se
 	return 0;
 }
 
-static int max86178_attr_set_measx_en(const struct device *dev, enum sensor_attribute attr, const struct sensor_value *val)
+static int max86178_attr_set_measx_en(const struct device *dev, enum sensor_attribute attr,
+				      const struct sensor_value *val)
 {
 	int ret;
 	uint8_t reg_val;
@@ -6730,7 +6731,8 @@ static int max86178_attr_set_measx_en(const struct device *dev, enum sensor_attr
 	return 0;
 }
 
-static int max86178_attr_get_measx_en(const struct device *dev, enum sensor_attribute attr, struct sensor_value *val)
+static int max86178_attr_get_measx_en(const struct device *dev, enum sensor_attribute attr,
+				      struct sensor_value *val)
 {
 	int ret;
 	uint8_t reg_val;
@@ -6838,7 +6840,8 @@ static int max86178_attr_set_bioz_en(const struct device *dev, const struct sens
 		return ret;
 	}
 
-	if (!(FIELD_GET(MAX86178_PLL_CFG1_PLL_EN_MSK, reg_val)) && (val->val1 != MAX86178_BIOZ_EN_DISABLED)) {
+	if (!(FIELD_GET(MAX86178_PLL_CFG1_PLL_EN_MSK, reg_val)) &&
+	    (val->val1 != MAX86178_BIOZ_EN_DISABLED)) {
 		LOG_ERR("Cannot enable BioZ measurement: PLL is disabled");
 		return -EINVAL;
 	}
@@ -6869,18 +6872,20 @@ static int max86178_attr_get_bioz_en(const struct device *dev, struct sensor_val
 	return 0;
 }
 
-static int max86178_attr_set_ecg_bioz_bg_en(const struct device *dev, const struct sensor_value *val)
+static int max86178_attr_set_ecg_bioz_bg_en(const struct device *dev,
+					    const struct sensor_value *val)
 {
 	int ret;
 
 	/* Validate range (0-1) */
-	if (val->val1 < MAX86178_ECG_BIOZ_BG_EN_DISABLED || val->val1 > MAX86178_ECG_BIOZ_BG_EN_ENABLED) {
+	if (val->val1 < MAX86178_ECG_BIOZ_BG_EN_DISABLED ||
+	    val->val1 > MAX86178_ECG_BIOZ_BG_EN_ENABLED) {
 		LOG_ERR("Invalid ECG/BioZ background enable value: %d", val->val1);
 		return -EINVAL;
 	}
 
-	ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1,
-				  MAX86178_BIOZ_CFG1_ECG_BIOZ_BG_EN_MSK, (uint8_t)val->val1);
+	ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_ECG_BIOZ_BG_EN_MSK,
+				  (uint8_t)val->val1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG/BioZ background enable: %d", ret);
 		return ret;
@@ -6919,11 +6924,12 @@ static int max86178_attr_set_pll_en(const struct device *dev, const struct senso
 	if (val->val1 == MAX86178_PLL_DISABLED) {
 		/* If disabling PLL, also disable all measurements that depend on it */
 		LOG_INF("Disabling PLL, also disabling dependent measurements");
-		ret = max86178_reg_update(dev, MAX86178_PPG_CFG1,
-					  MAX86178_PPG_CFG1_MEAS1_EN_MSK | MAX86178_PPG_CFG1_MEAS2_EN_MSK |
-					  MAX86178_PPG_CFG1_MEAS3_EN_MSK | MAX86178_PPG_CFG1_MEAS4_EN_MSK |
-					  MAX86178_PPG_CFG1_MEAS5_EN_MSK | MAX86178_PPG_CFG1_MEAS6_EN_MSK,
-					  0);
+		ret = max86178_reg_update(
+			dev, MAX86178_PPG_CFG1,
+			MAX86178_PPG_CFG1_MEAS1_EN_MSK | MAX86178_PPG_CFG1_MEAS2_EN_MSK |
+				MAX86178_PPG_CFG1_MEAS3_EN_MSK | MAX86178_PPG_CFG1_MEAS4_EN_MSK |
+				MAX86178_PPG_CFG1_MEAS5_EN_MSK | MAX86178_PPG_CFG1_MEAS6_EN_MSK,
+			0);
 		if (ret < 0) {
 			LOG_ERR("Failed to disable measurements when disabling PLL: %d", ret);
 			return ret;
@@ -6935,12 +6941,14 @@ static int max86178_attr_set_pll_en(const struct device *dev, const struct senso
 			return ret;
 		}
 
-		ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_BIOZ_EN_MSK, 0);
+		ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_BIOZ_EN_MSK,
+					  0);
 		if (ret < 0) {
 			LOG_ERR("Failed to disable BioZ when disabling PLL: %d", ret);
 			return ret;
 		}
-		ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1, MAX86178_BIOZ_CFG1_ECG_BIOZ_BG_EN_MSK, 0);
+		ret = max86178_reg_update(dev, MAX86178_BIOZ_CFG1,
+					  MAX86178_BIOZ_CFG1_ECG_BIOZ_BG_EN_MSK, 0);
 		if (ret < 0) {
 			LOG_ERR("Failed to disable ECG/BioZ Bandgap when disabling PLL: %d", ret);
 			return ret;
@@ -6961,10 +6969,10 @@ static int max86178_attr_set_pll_en(const struct device *dev, const struct senso
 				LOG_ERR("Failed to read STATUS3 register: %d", ret);
 				return ret;
 			}
-		} while (!(FIELD_GET(MAX86178_STATUS3_FREQ_LOCK_MSK, status3) && (FIELD_GET(MAX86178_STATUS3_PHASE_LOCK_MSK, status3))));
+		} while (!(FIELD_GET(MAX86178_STATUS3_FREQ_LOCK_MSK, status3) &&
+			   (FIELD_GET(MAX86178_STATUS3_PHASE_LOCK_MSK, status3))));
 		LOG_INF("PLL locked");
-	}
-	else {
+	} else {
 		LOG_INF("PLL disabled");
 	}
 	return 0;
@@ -7008,7 +7016,8 @@ static int max86178_attr_set_mdiv(const struct device *dev, const struct sensor_
 	ref_clk = (FIELD_GET(MAX86178_PLL_CFG6_REF_CLK_SEL_MSK, reg_val));
 	if (ref_clk == MAX86178_REF_CLK_SEL_EXTERNAL) {
 		LOG_INF("External reference clock selected, cannot validate MDIV value");
-		ret = max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_MDIV_MSB_MSK, mdiv_msb);
+		ret = max86178_reg_update(dev, MAX86178_PLL_CFG1, MAX86178_PLL_CFG1_MDIV_MSB_MSK,
+					  mdiv_msb);
 		if (ret < 0) {
 			LOG_ERR("Failed to set MDIV MSB: %d", ret);
 			return ret;
@@ -7025,17 +7034,18 @@ static int max86178_attr_set_mdiv(const struct device *dev, const struct sensor_
 	clk_freq = (FIELD_GET(MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK, reg_val));
 	if (clk_freq == MAX86178_REF_CLK_32000) {
 		if (mdiv_eff < MAX86178_32000_MDIV_MIN || mdiv_eff > MAX86178_32000_MDIV_MAX) {
-			LOG_ERR("Invalid MDIV value: %d (valid range: %d-%d for 32 kHz ref clock)", val->val1, MAX86178_32000_MDIV_MIN, MAX86178_32000_MDIV_MAX);
+			LOG_ERR("Invalid MDIV value: %d (valid range: %d-%d for 32 kHz ref clock)",
+				val->val1, MAX86178_32000_MDIV_MIN, MAX86178_32000_MDIV_MAX);
 			return -EINVAL;
 		}
-	}
-	else if (clk_freq == MAX86178_REF_CLK_32768) {
+	} else if (clk_freq == MAX86178_REF_CLK_32768) {
 		if (mdiv_eff < MAX86178_32768_MDIV_MIN || mdiv_eff > MAX86178_32768_MDIV_MAX) {
-			LOG_ERR("Invalid MDIV value: %d (valid range: %d-%d for 32.768 kHz ref clock)", val->val1, MAX86178_32768_MDIV_MIN, MAX86178_32768_MDIV_MAX);
+			LOG_ERR("Invalid MDIV value: %d (valid range: %d-%d for 32.768 kHz ref "
+				"clock)",
+				val->val1, MAX86178_32768_MDIV_MIN, MAX86178_32768_MDIV_MAX);
 			return -EINVAL;
 		}
-	}
-	else {
+	} else {
 		LOG_ERR("Unknown internal reference clock frequency, cannot validate MDIV value");
 		return -EINVAL;
 	}
@@ -7075,7 +7085,8 @@ static int max86178_attr_get_mdiv(const struct device *dev, struct sensor_value 
 	return 0;
 }
 
-static int max86178_attr_set_ppg_fr_clk_div(const struct device *dev, const struct sensor_value *val)
+static int max86178_attr_set_ppg_fr_clk_div(const struct device *dev,
+					    const struct sensor_value *val)
 {
 	int ret;
 	uint8_t reg_val;
@@ -7122,7 +7133,8 @@ static int max86178_attr_get_ppg_fr_clk_div(const struct device *dev, struct sen
 		return ret;
 	}
 
-	val->val1 = FIELD_PREP(MAX86178_PPG_FR_CLK_DIV_MSB_MSK, reg_val_msb) | FIELD_PREP(MAX86178_PPG_FR_CLK_DIV_LSB_MSK, reg_val_lsb);
+	val->val1 = FIELD_PREP(MAX86178_PPG_FR_CLK_DIV_MSB_MSK, reg_val_msb) |
+		    FIELD_PREP(MAX86178_PPG_FR_CLK_DIV_LSB_MSK, reg_val_lsb);
 	val->val2 = 0;
 	return 0;
 }
@@ -7137,7 +7149,8 @@ static int max86178_attr_set_ecg_fdiv(const struct device *dev, const struct sen
 		return -EINVAL;
 	}
 
-	ret = max86178_reg_update(dev, MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_FDIV_MSK, (uint8_t)val->val1);
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_FDIV_MSK,
+				  (uint8_t)val->val1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG FDIV: %d", ret);
 		return ret;
@@ -7162,7 +7175,8 @@ static int max86178_attr_get_ecg_fdiv(const struct device *dev, struct sensor_va
 	return 0;
 }
 
-static int max86178_attr_set_ecg_ndiv(const struct device *dev, const struct sensor_value *val) {
+static int max86178_attr_set_ecg_ndiv(const struct device *dev, const struct sensor_value *val)
+{
 	int ret;
 	uint8_t reg_val;
 
@@ -7173,7 +7187,8 @@ static int max86178_attr_set_ecg_ndiv(const struct device *dev, const struct sen
 
 	/* Write MSB */
 	reg_val = FIELD_GET(MAX86178_ECG_NDIV_MSB_MSK, val->val1);
-	ret = max86178_reg_update(dev, MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK, reg_val);
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG4, MAX86178_PLL_CFG4_ECG_NDIV_MSB_MSK,
+				  reg_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG NDIV MSB: %d", ret);
 		return ret;
@@ -7186,11 +7201,12 @@ static int max86178_attr_set_ecg_ndiv(const struct device *dev, const struct sen
 		LOG_ERR("Failed to set ECG NDIV LSB: %d", ret);
 		return ret;
 	}
-	
+
 	return 0;
 }
 
-static int max86178_attr_get_ecg_ndiv(const struct device *dev, struct sensor_value *val) {
+static int max86178_attr_get_ecg_ndiv(const struct device *dev, struct sensor_value *val)
+{
 	int ret;
 	uint8_t reg_val_msb;
 	uint8_t reg_val_lsb;
@@ -7223,7 +7239,8 @@ static int max86178_attr_set_ecg_dec_rate(const struct device *dev, const struct
 	}
 
 	reg_val = val->val1;
-	ret = max86178_reg_update(dev, MAX86178_ECG_CFG1, MAX86178_ECG_CFG1_ECG_DEC_RATE_MSK, reg_val);
+	ret = max86178_reg_update(dev, MAX86178_ECG_CFG1, MAX86178_ECG_CFG1_ECG_DEC_RATE_MSK,
+				  reg_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set ECG decimation rate: %d", ret);
 		return ret;
@@ -7247,7 +7264,6 @@ static int max86178_attr_get_ecg_dec_rate(const struct device *dev, struct senso
 	val->val2 = 0;
 	return 0;
 }
-
 
 static int max86178_attr_set_bioz_kdiv(const struct device *dev, const struct sensor_value *val)
 {
@@ -7332,8 +7348,7 @@ static int max86178_attr_set_resp_en(const struct device *dev, const struct sens
 	}
 
 	reg_val = val->val1;
-	ret = max86178_reg_update(dev, MAX86178_RESP_CFG1, MAX86178_RESP_CFG1_RESP_EN_MSK,
-				  reg_val);
+	ret = max86178_reg_update(dev, MAX86178_RESP_CFG1, MAX86178_RESP_CFG1_RESP_EN_MSK, reg_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set respiration measurement enable: %d", ret);
 		return ret;
@@ -7685,7 +7700,7 @@ static int max86178_attr_get_ecg_adc_clk(const struct device *dev, struct sensor
 	}
 
 	ecg_adc_clk_freq = ecg_pll_clk / ecg_ndiv;
-	
+
 	val->val1 = ecg_adc_clk_freq;
 	val->val2 = 0;
 	return 0;
@@ -7702,13 +7717,16 @@ static int max86178_attr_get_bioz_adc_clk(const struct device *dev, struct senso
 
 	ret = max86178_get_pll_clk(dev, &pll_clk_freq);
 	if (ret < 0) {
-		LOG_ERR("Failed to get PLL clock frequency for BioZ ADC clock calculation: %d", ret);
+		LOG_ERR("Failed to get PLL clock frequency for BioZ ADC clock calculation: %d",
+			ret);
 		return ret;
 	}
 
 	ret = max86178_get_resp_en(dev, &resp_en);
 	if (ret < 0) {
-		LOG_ERR("Failed to get respiration measurement enable for BioZ ADC clock calculation: %d", ret);
+		LOG_ERR("Failed to get respiration measurement enable for BioZ ADC clock "
+			"calculation: %d",
+			ret);
 		return ret;
 	}
 
@@ -7721,22 +7739,24 @@ static int max86178_attr_get_bioz_adc_clk(const struct device *dev, struct senso
 	if (resp_en) {
 		ret = max86178_get_ecg_fdiv(dev, &ecg_fdiv);
 		if (ret < 0) {
-			LOG_ERR("Failed to get ECG frequency divider for BioZ ADC clock calculation: %d", ret);
+			LOG_ERR("Failed to get ECG frequency divider for BioZ ADC clock "
+				"calculation: %d",
+				ret);
 			return ret;
 		}
-		
+
 		if (ecg_fdiv == 0) {
-			LOG_ERR("ECG frequency divider is set to 0 (disabled), cannot calculate BioZ ADC clock");
+			LOG_ERR("ECG frequency divider is set to 0 (disabled), cannot calculate "
+				"BioZ ADC clock");
 			return -EINVAL;
 		}
 		bioz_adc_clk = pll_clk_freq / (ecg_fdiv * bioz_ndiv);
-	}
-	else {
+	} else {
 		bioz_adc_clk = pll_clk_freq / bioz_ndiv;
 	}
 	val->val1 = bioz_adc_clk;
 	val->val2 = 0;
-	
+
 	return 0;
 }
 
@@ -7751,13 +7771,16 @@ static int max86178_attr_get_bioz_synth_clk(const struct device *dev, struct sen
 
 	ret = max86178_get_pll_clk(dev, &pll_clk_freq);
 	if (ret < 0) {
-		LOG_ERR("Failed to get PLL clock frequency for BioZ synth clock calculation: %d", ret);
-		return ret;	
+		LOG_ERR("Failed to get PLL clock frequency for BioZ synth clock calculation: %d",
+			ret);
+		return ret;
 	}
 
 	ret = max86178_get_resp_en(dev, &resp_en);
 	if (ret < 0) {
-		LOG_ERR("Failed to get respiration measurement enable for BioZ synth clock calculation: %d", ret);
+		LOG_ERR("Failed to get respiration measurement enable for BioZ synth clock "
+			"calculation: %d",
+			ret);
 		return ret;
 	}
 
@@ -7770,17 +7793,19 @@ static int max86178_attr_get_bioz_synth_clk(const struct device *dev, struct sen
 	if (resp_en) {
 		ret = max86178_get_ecg_fdiv(dev, &ecg_fdiv);
 		if (ret < 0) {
-			LOG_ERR("Failed to get ECG frequency divider for BioZ synth clock calculation: %d", ret);
+			LOG_ERR("Failed to get ECG frequency divider for BioZ synth clock "
+				"calculation: %d",
+				ret);
 			return ret;
 		}
-		
+
 		if (ecg_fdiv == 0) {
-			LOG_ERR("ECG frequency divider is set to 0 (disabled), cannot calculate BioZ synth clock");
+			LOG_ERR("ECG frequency divider is set to 0 (disabled), cannot calculate "
+				"BioZ synth clock");
 			return -EINVAL;
 		}
 		bioz_synth_clk = pll_clk_freq / (ecg_fdiv * bioz_kdiv);
-	}
-	else {
+	} else {
 		bioz_synth_clk = pll_clk_freq / bioz_kdiv;
 	}
 	val->val1 = bioz_synth_clk / 1000; /* Return kHz in val1 */
@@ -7796,16 +7821,15 @@ static int max86178_attr_set_clk_freq_sel(const struct device *dev, const struct
 
 	if (val->val1 == 32000) {
 		reg_val = MAX86178_REF_CLK_32000;
-	}
-	else if (val->val1 == 32768) {
+	} else if (val->val1 == 32768) {
 		reg_val = MAX86178_REF_CLK_32768;
-	}
-	else {
+	} else {
 		LOG_ERR("Invalid PLL reference clock frequency selection: %d", val->val1);
 		return -EINVAL;
 	}
 
-	ret = max86178_reg_update(dev, MAX86178_PLL_CFG6, MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK, reg_val);
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG6, MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK,
+				  reg_val);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PLL reference clock frequency selection: %d", ret);
 		return ret;
@@ -7829,11 +7853,9 @@ static int max86178_attr_get_clk_freq_sel(const struct device *dev, struct senso
 	clk_freq = FIELD_GET(MAX86178_PLL_CFG6_CLK_FREQ_SEL_MSK, reg_val);
 	if (clk_freq == MAX86178_REF_CLK_32000) {
 		val->val1 = 32000;
-	}
-	else if (clk_freq == MAX86178_REF_CLK_32768) {
+	} else if (clk_freq == MAX86178_REF_CLK_32768) {
 		val->val1 = 32768;
-	}
-	else {
+	} else {
 		LOG_ERR("Unknown PLL reference clock frequency selection value: %d", clk_freq);
 		return -EINVAL;
 	}
@@ -7844,12 +7866,13 @@ static int max86178_attr_get_clk_freq_sel(const struct device *dev, struct senso
 static int max86178_attr_set_ref_clk_sel(const struct device *dev, const struct sensor_value *val)
 {
 	int ret = 0;
-	
+
 	if (val->val1 < 0 || val->val1 > 1) {
 		LOG_ERR("Invalid PLL reference clock source selection: %d", val->val1);
 		return -EINVAL;
 	}
-	ret = max86178_reg_update(dev, MAX86178_PLL_CFG6, MAX86178_PLL_CFG6_REF_CLK_SEL_MSK, (uint8_t)val->val1);
+	ret = max86178_reg_update(dev, MAX86178_PLL_CFG6, MAX86178_PLL_CFG6_REF_CLK_SEL_MSK,
+				  (uint8_t)val->val1);
 	if (ret < 0) {
 		LOG_ERR("Failed to set PLL reference clock frequency selection: %d", ret);
 		return ret;
@@ -7873,7 +7896,6 @@ static int max86178_attr_get_ref_clk_sel(const struct device *dev, struct sensor
 	val->val2 = 0;
 	return 0;
 }
-
 
 static int max86178_attr_set(const struct device *dev, enum sensor_channel chan,
 			     enum sensor_attribute attr, const struct sensor_value *val)
@@ -8183,7 +8205,7 @@ static int max86178_attr_set(const struct device *dev, enum sensor_channel chan,
 	case SENSOR_ATTR_MAX86178_MEAS6_EN:
 		return max86178_attr_set_measx_en(dev, attr, val);
 	case SENSOR_ATTR_MAX86178_ECG_EN:
-		 return max86178_attr_set_ecg_en(dev, val);
+		return max86178_attr_set_ecg_en(dev, val);
 	case SENSOR_ATTR_MAX86178_BIOZ_EN:
 		return max86178_attr_set_bioz_en(dev, val);
 	case SENSOR_ATTR_MAX86178_ECG_BIOZ_BG_EN:
@@ -8589,7 +8611,8 @@ static int max86178_osc_enable(const struct device *dev, bool enable)
 	}
 
 	if (enable) {
-		while ((FIELD_GET(MAX86178_STATUS3_PHASE_LOCK_MSK, reg_val) == 0) && (FIELD_GET(MAX86178_STATUS3_FREQ_LOCK_MSK, reg_val) == 0)) {
+		while ((FIELD_GET(MAX86178_STATUS3_PHASE_LOCK_MSK, reg_val) == 0) &&
+		       (FIELD_GET(MAX86178_STATUS3_FREQ_LOCK_MSK, reg_val) == 0)) {
 			ret = max86178_reg_read(dev, MAX86178_STATUS3, &reg_val, 1);
 			if (ret < 0) {
 				LOG_ERR("Failed to read PLL lock status: %d", ret);

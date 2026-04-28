@@ -72,11 +72,9 @@ static bool count_instance_from_fifo_data(uint32_t fifo_data, uint32_t channel_e
 			tag_bit_mask = BIT(14); /* ECG/PPG timing */
 		} else if (tag_timing == 1) {
 			tag_bit_mask = BIT(15); /* BIOZ/PPG timing */
-		}
-		 else if (tag_timing == 2) {
+		} else if (tag_timing == 2) {
 			tag_bit_mask = BIT(16); /* ECG/BIOZ timing */
-		}
-		else {
+		} else {
 			return false;
 		}
 		break;
@@ -211,7 +209,8 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 		if (count_instance_from_fifo_data(fifo_data, channel_enabled_mask)) {
 			/* Only decode if we've skipped past already-decoded samples */
 			if (samples_seen >= start_offset) {
-				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG || channel.chan_type == SENSOR_CHAN_TIMING_ECG_BIOZ) {
+				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG ||
+				    channel.chan_type == SENSOR_CHAN_TIMING_ECG_BIOZ) {
 					/* For timing channel, decode the timing tag bits instead of
 					 * sample value */
 					sample_value =
