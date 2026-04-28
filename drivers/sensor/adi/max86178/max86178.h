@@ -601,8 +601,23 @@
 #define MAX86178_INT_EN5_BIOZ_OVER_MSK     BIT(6)
 #define MAX86178_INT_EN5_BIOZ_LON_MSK      BIT(7)
 
+#define MAX86178_32000_MDIV_MIN 125u
+#define MAX86178_32000_MDIV_MAX 875u
+#define MAX86178_32768_MDIV_MIN 123u
+#define MAX86178_32768_MDIV_MAX 854u
+
+#define MAX86178_PPG_FR_CLK_DIV_MIN 1u
+#define MAX86178_PPG_FR_CLK_DIV_MAX 0x7FFEu
+#define MAX86178_PPG_FR_CLK_DIV_MSB_MSK GENMASK(14, 8)
+#define MAX86178_PPG_FR_CLK_DIV_LSB_MSK GENMASK(7, 0)
+
 #define MAX86178_MDIV_MSB_MSK GENMASK(9, 8)
 #define MAX86178_NDIV_MSB_MSK GENMASK(10, 8)
+
+#define MAX86178_ECG_NDIV_MIN 16u
+#define MAX86178_ECG_NDIV_MAX 2047u
+#define MAX86178_ECG_NDIV_MSB_MSK GENMASK(10, 8)
+#define MAX86178_ECG_NDIV_LSB_MSK GENMASK(7, 0)
 
 #define MAX86178_ECG_ADC_CLK_MIN 19000U
 #define MAX86178_ECG_ADC_CLK_MAX 32768U
@@ -634,6 +649,10 @@
 #define MAX86178_CAPP_CAPN_TAG             0xDu
 #define MAX86178_TIMING_TAG                0xEu
 
+enum max86178_pll_en {
+	MAX86178_PLL_DISABLED = 0,
+	MAX86178_PLL_ENABLED,
+};
 enum clk_ref_sel {
 	MAX86178_REF_CLK_32000 = 0,
 	MAX86178_REF_CLK_32768,
@@ -678,6 +697,15 @@ enum max86178_clk_fine_tune {
 	MAX86178_CLK_FINE_TUNE_SHIFT_NEG_0_4,
 	MAX86178_CLK_FINE_TUNE_SHIFT_NEG_0_2,
 	MAX86178_CLK_FINE_TUNE_SHIFT_COUNT,
+};
+
+enum max86178_ecg_fdiv {
+	MAX86178_ECG_FDIV_ECG_ADC_DISABLED = 0,
+	MAX86178_ECG_FDIV_1,
+	MAX86178_ECG_FDIV_2,
+	MAX86178_ECG_FDIV_4,
+	MAX86178_ECG_FDIV_8,
+	MAX86178_ECG_FDIV_16,
 };
 
 enum max86178_bioz_ndiv {
@@ -908,6 +936,11 @@ enum max86178_ppg_pd_bias {
 	MAX86178_PPG_PD_BIAS_0_TO_125pF,
 	MAX86178_PPG_PD_BIAS_125pF_TO_250pF,
 	MAX86178_PPG_PD_BIAS_250pF_TO_500pF,
+};
+
+enum max86178_ecg_en {
+	MAX86178_ECG_DISABLED = 0,
+	MAX86178_ECG_ENABLED,
 };
 
 enum max86178_ecg_input_pol {
@@ -1336,7 +1369,7 @@ struct max86178_clk_ppg_cfg {
 };
 
 struct max86178_clk_ecg_cfg {
-	uint8_t ecg_fdiv: 3;
+	enum max86178_ecg_fdiv ecg_fdiv: 3;
 	uint16_t ecg_ndiv: 11;
 	enum max86178_ecg_dec_rate ecg_dec_rate;
 };
@@ -1421,7 +1454,7 @@ struct max86178_ppg_cfg {
 
 /* ECG Structs */
 struct max86178_ecg_setup {
-	bool ecg_en;
+	enum max86178_ecg_en ecg_en;
 	enum max86178_ecg_input_pol ecg_input_pol;
 	enum max86178_ecg_pga_gain ecg_pga_gain;
 	uint8_t ecg_ina_rge: 2;

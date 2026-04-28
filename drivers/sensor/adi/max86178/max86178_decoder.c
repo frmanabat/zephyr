@@ -17,11 +17,11 @@ LOG_MODULE_DECLARE(MAX86178);
 #define MAX86178_FIFO_TIMING_PPG_ECG_SAMPLE_FIELD  GENMASK(9, 0)
 #define MAX86178_FIFO_TIMING_PPG_BIOZ_SAMPLE_FIELD GENMASK(13, 0)
 
-static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_enabled_mask)
+static bool count_instance_from_fifo_data(uint32_t fifo_data, uint32_t channel_enabled_mask)
 {
 	uint8_t tag = FIELD_GET(MAX86178_FIFO_TAG_MASK, fifo_data);
 	uint8_t tag_timing = FIELD_GET(MAX86178_FIFO_TIMING_TAG_MASK, fifo_data);
-	uint16_t tag_bit_mask = 0;
+	uint32_t tag_bit_mask = 0;
 
 	/* Map tag value to corresponding bit position */
 	switch (tag) {
@@ -73,6 +73,12 @@ static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_e
 		} else if (tag_timing == 1) {
 			tag_bit_mask = BIT(15); /* BIOZ/PPG timing */
 		}
+		 else if (tag_timing == 2) {
+			tag_bit_mask = BIT(16); /* ECG/BIOZ timing */
+		}
+		else {
+			return false;
+		}
 		break;
 	default:
 		break;
@@ -82,9 +88,9 @@ static bool count_instance_from_fifo_data(uint32_t fifo_data, uint16_t channel_e
 	return (channel_enabled_mask & tag_bit_mask) != 0;
 }
 
-static uint16_t get_channel_mask(enum sensor_channel chan_type)
+static uint32_t get_channel_mask(enum sensor_channel chan_type)
 {
-	uint16_t channel_enabled_mask = 0;
+	uint32_t channel_enabled_mask = 0;
 
 	/* Channel Check */
 	switch ((int)chan_type) {
@@ -136,8 +142,11 @@ static uint16_t get_channel_mask(enum sensor_channel chan_type)
 	case SENSOR_CHAN_TIMING_BIOZ_PPG:
 		channel_enabled_mask = BIT(15);
 		break;
+	case SENSOR_CHAN_TIMING_ECG_BIOZ:
+		channel_enabled_mask = BIT(16);
+		break;
 	case SENSOR_CHAN_ALL:
-		channel_enabled_mask = GENMASK(15, 0);
+		channel_enabled_mask = GENMASK(16, 0);
 		break;
 	default:
 		break;
@@ -153,7 +162,7 @@ static int max86178_decoder_get_frame_count(const uint8_t *buffer, struct sensor
 	return -ENOTSUP;
 #endif
 	const struct max86178_fifo_data *data = (const struct max86178_fifo_data *)buffer;
-	uint16_t channel_enabled_mask = get_channel_mask(channel.chan_type);
+	uint32_t channel_enabled_mask = get_channel_mask(channel.chan_type);
 
 	if (channel_enabled_mask == 0) {
 		return -ENOTSUP;
@@ -183,7 +192,7 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 #endif
 	const struct max86178_fifo_data *data = (const struct max86178_fifo_data *)buffer;
 	struct sensor_q31_data *out = (struct sensor_q31_data *)data_out;
-	uint16_t channel_enabled_mask = get_channel_mask(channel.chan_type);
+	uint32_t channel_enabled_mask = get_channel_mask(channel.chan_type);
 
 	if (channel_enabled_mask == 0) {
 		LOG_ERR("Unsupported channel type %d for MAX86178 decoder", channel.chan_type);
@@ -202,7 +211,7 @@ static int max86178_decoder_decode(const uint8_t *buffer, struct sensor_chan_spe
 		if (count_instance_from_fifo_data(fifo_data, channel_enabled_mask)) {
 			/* Only decode if we've skipped past already-decoded samples */
 			if (samples_seen >= start_offset) {
-				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG) {
+				if (channel.chan_type == SENSOR_CHAN_TIMING_ECG_PPG || channel.chan_type == SENSOR_CHAN_TIMING_ECG_BIOZ) {
 					/* For timing channel, decode the timing tag bits instead of
 					 * sample value */
 					sample_value =

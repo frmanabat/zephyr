@@ -390,8 +390,7 @@ child-binding:
 
       mdiv:
         type: int
-        description: PLL M divider value
-        default: 0
+        description: PLL M divider value (Actual Mdiv = mdiv_reg + 1, where mdiv_reg is the value specified in the overlay)
 
       # ---------------------------------------------------------------------------
       # PPG Clock Configuration (in "ppg_clk" node)
@@ -399,7 +398,6 @@ child-binding:
       fr-clk-div:
         type: int
         description: PPG frame rate clock divider (15-bit value)
-        default: 0
 
       # ---------------------------------------------------------------------------
       # ECG Clock Configuration (in "ecg_clk" node)
@@ -407,12 +405,10 @@ child-binding:
       ecg-fdiv:
         type: int
         description: ECG F divider (3-bit value)
-        default: 0
 
       ecg-ndiv:
         type: int
         description: ECG N divider (11-bit value)
-        default: 0
 
       ecg-dec-rate:
         type: int
